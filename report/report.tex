@@ -1,0 +1,59 @@
+%
+% OWD
+% 2026
+%
+\documentclass{article}
+
+\usepackage[a4paper]{geometry}
+\usepackage[en-GB]{datetime2}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{hyperref}
+
+\renewcommand\theenumi{\roman{enumi}}
+\renewcommand\theenumii{\alph{enumii}}
+
+\newcommand\sectionbreak{\ifnum\value{section}>0\clearpage\fi}
+\newcommand\subsectionbreak{\clearpage}
+
+\title{EMBS-H Assessment Submission}
+\date{\today}
+\author{Exam Candidate Y3898772}
+
+\makeatletter
+\let\savetitle\@title
+\let\saveauthor\@author
+\makeatother
+
+\fancyhf{}
+
+\fancyhead[LH]{\savetitle}
+\fancyhead[RH]{Part~\Roman{section}}
+\fancyfoot[LF]{\saveauthor}
+\fancyfoot[RF]{Page~\thepage~of~\pageref*{LastPage}}
+
+\pagestyle{fancy}
+
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{Embedded Systems Design}
+\subsection{Question 1}
+\subsection{Question 2}
+\begin{enumerate}
+    \item \begin{enumerate}
+        \item ABC
+    \end{enumerate}
+\end{enumerate}
+\subsection{Question 3}
+
+\section{Real-Time Systems Theory and Analysis}
+\subsection{Question 4}
+\subsection{Question 5}
+
+\section{Custom Hardware and System Design}
+The solution sources have been submitted as a separate archive.
+
+\end{document}
