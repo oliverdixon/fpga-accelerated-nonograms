@@ -1,0 +1,51 @@
+#ifndef PUZZLE_METADATA_H
+#define PUZZLE_METADATA_H
+
+#include <stdint.h>
+#include <stdbool.h>
+
+enum MessageType
+{
+	MSG_REQUEST_INFO = 0x01,
+	MSG_PUZZLE_INFO = 0x02,
+	MSG_REQUEST_CHUNK = 0x03,
+	MSG_CHUNK_DATA = 0x04,
+	MSG_SUBMIT_SOLUTION = 0x05,
+	MSG_RESULT = 0x06,
+	MSG_ERROR = 0xFF
+};
+
+enum DifficultyTier
+{
+	DIFFICULTY_CUSTOM = 0,
+	DIFFICULTY_EASY = 1,
+	DIFFICULTY_MEDIUM = 2,
+	DIFFICULTY_HARD = 3,
+};
+
+enum SizeIndex
+{
+    SIZE_INDEX_5X5 = 0,
+    SIZE_INDEX_6X6 = 1,
+    SIZE_INDEX_7X7 = 2,
+    SIZE_INDEX_8X8 = 3,
+
+    SIZE_INDEX_MAX = 4 // TODO
+};
+
+struct PuzzleMetadata
+{
+    bool valid;
+	uint32_t seed;
+	struct
+	{
+		enum SizeIndex size_index : 4;
+		enum DifficultyTier tier : 2;
+	} difficulty;
+};
+
+uint8_t * metadata_hton(const struct PuzzleMetadata * data, uint8_t * buffer_head);
+const uint8_t * metadata_parse(struct PuzzleMetadata * metadata, const uint8_t * payload);
+void metadata_print(const struct PuzzleMetadata * metadata);
+
+#endif // PUZZLE_METADATA_H
