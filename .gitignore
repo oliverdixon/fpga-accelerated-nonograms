@@ -6,3 +6,7 @@ report/*.out
 report/*.synctex*
 report/*.toc
 report/*.aux
+
+# Ignore generated platform from Vivado
+vitis_workspace/Nonogram
+

@@ -1,0 +1,56 @@
+# Vivado generated directories
+/Nonogram.cache/
+/Nonogram.gen/
+/Nonogram.sim/
+/Nonogram.runs/
+
+# Logs / reports / temp
+*.jou
+*.log
+*.pb
+*.str
+*.wdf
+*.wpc
+*.rpt
+*.vds
+webtalk*
+usage_statistics_webtalk.html
+
+# Generated implementation / synthesis markers and scripts
+**/__synthesis_is_complete__
+**/runme.sh
+**/runme.bat
+**/runme.log
+**/ISEWrap.sh
+**/ISEWrap.js
+**/gen_run.xml
+**/htr.txt
+**/rundef.js
+
+# Generated design products
+**/*.dcp
+**/*_sim_netlist.v
+**/*_sim_netlist.vhdl
+**/*_stub.v
+**/*_stub.vhdl
+**/*.bda
+**/*.bxml
+**/*.hwdef
+**/*.hwh
+*.xsa
+
+# Generated PS init files
+**/ps7_init.c
+**/ps7_init.h
+**/ps7_init_gpl.c
+**/ps7_init_gpl.h
+**/ps7_init.html
+**/ps7_init.tcl
+
+# Keep actual sources
+!/Nonogram.xpr
+!/Nonogram.srcs/
+!/Nonogram.srcs/**/*.bd
+!/Nonogram.srcs/**/*.xdc
+!/Nonogram.srcs/**/*.xci
+
