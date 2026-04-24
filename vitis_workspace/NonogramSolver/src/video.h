@@ -18,7 +18,6 @@ struct MessagePuzzleInfo;
 void video_initialise(struct VideoState * video_state);
 
 void video_draw_puzzle(const struct VideoState * video_state,
-    const struct MessageChunkData * chunk_data,
     const struct MessagePuzzleInfo * puzzle_info);
 
 #endif // VIDEO_H

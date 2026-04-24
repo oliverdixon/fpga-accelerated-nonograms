@@ -5,6 +5,23 @@
 
 #include "metadata.h"
 
+/*
+ * Message ID (1 byte)
+ * Metadata
+ * Chunk ID (1 byte)
+ * Number of chunks (1 byte)
+ * Offset (2 bytes)
+ * Data length (2 bytes)
+ */
+#define MESSAGE_CHUNK_DATA_MIN_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1 + 1 + 2 + 2)
+
+/*
+ * Message ID (1 byte)
+ * Metadata
+ * Chunk ID (1 byte)
+ */
+#define MESSAGE_REQUEST_CHUNK_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1)
+
 struct MessageRequestChunk
 {
     struct PuzzleMetadata metadata;

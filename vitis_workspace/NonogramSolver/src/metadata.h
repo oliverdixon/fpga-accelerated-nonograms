@@ -4,6 +4,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*
+ * Seed (4 bytes)
+ * Difficulty (1 byte)
+ */
+#define MESSAGE_METADATA_LENGTH (4 + 1)
+
 enum MessageType
 {
 	MSG_NO_MESSAGE = 0x00,

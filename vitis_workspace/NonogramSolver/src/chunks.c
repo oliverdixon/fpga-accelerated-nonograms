@@ -4,7 +4,7 @@
 
 #include "chunks.h"
 
-static uint8_t send_buf[16]; // TODO reduce size
+static uint8_t send_buf[MESSAGE_REQUEST_CHUNK_LENGTH];
 
 void chunk_request(const struct MessageRequestChunk * data,
         const int sock, const struct sockaddr_in * const dst_addr)

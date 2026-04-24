@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "metadata.h"
 #include "xparameters.h"
 #include "netif/xadapter.h"
 #include "xuartps_hw.h"
@@ -12,11 +11,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-#include "lwip/sockets.h"
 #include "lwipopts.h"
 #include <lwip/ip_addr.h>
-#include <lwip/tcp.h>
 #include <lwip/udp.h>
+#include <lwip/sockets.h>
 
 #include <queue.h>
 
@@ -29,14 +27,22 @@
 
 void network_init(unsigned char* mac_address, lwip_thread_fn app);
 
-void application_task(void *);
-void request_protocol_task(void * const data);
+static void request_protocol_task(void * const data);
+static void draw_puzzles_task(void * const data);
 
 struct VideoState video_state;
+
+QueueHandle_t requests_queue; // REQUEST_INFO messages for puzzle procurement.
+QueueHandle_t graphics_queue; // PUZZLE_INFO/CHUNK_DATA messages for drawing.
+QueueHandle_t challenge_queue; // PUZZLE_INFO/CHUNK_DATA messages for solving.
 
 int main(void)
 {
     static unsigned char mac[] = { 0x00, 0x11, 0x22, 0x33, 0x00, 0x19 };
+
+    requests_queue = xQueueCreate(1, sizeof(struct MessageRequestInfo));
+    graphics_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
+    challenge_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
 
     video_initialise(&video_state);
     network_init(mac, request_protocol_task);
@@ -44,6 +50,18 @@ int main(void)
     vTaskStartScheduler();
 
     return 0;
+}
+
+static void draw_puzzles_task(void * const data)
+{
+    (void) data;
+    
+    struct MessagePuzzleInfo puzzle_info;
+    
+    if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+        xil_printf("draw_puzzles_task: drawing to framebuffer...\r\n");
+        video_draw_puzzle(&video_state, &puzzle_info);
+    }
 }
 
 static int udp_receive_message(const int sock, struct sockaddr_in * const src,
@@ -60,8 +78,6 @@ static int udp_receive_message(const int sock, struct sockaddr_in * const src,
         if (*buffer == MSG_ERROR) {
             if (error_parse(&error, buffer) == 0)
                 error_print(&error);
-            
-            error_free(&error);
 
             // Well-defined error handled.
             return -1;
@@ -127,7 +143,7 @@ static void prepare_dst_addr(struct sockaddr_in * const dst_addr)
     dst_addr->sin_addr.s_addr = inet_addr("192.168.10.1");
 }
 
-void request_protocol_task(void * const data)
+static void request_protocol_task(void * const data)
 {
     (void) data;
 
@@ -143,9 +159,11 @@ void request_protocol_task(void * const data)
     }
 
     prepare_dst_addr(&dst_addr);
+    xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
+    // TODO: create solver task
 
     struct MessagePuzzleInfo puzzle_info;
-    struct MessageChunkData chunk_data;
+    struct MessageChunkData * const chunk_data = &puzzle_info.chunk;
     struct MessageRequestChunk request_chunk;
 
     const struct MessageRequestInfo request_info = {
@@ -171,20 +189,19 @@ void request_protocol_task(void * const data)
             for (uint8_t chunk_id = 0; chunk_id < puzzle_info.num_chunks; ++chunk_id) {
                 request_chunk.chunk_id = chunk_id;
                 chunk_request(&request_chunk, sock, &dst_addr);
-                if (udp_receive_message(sock, &src_addr, &chunk_data, MSG_CHUNK_DATA) == 0) {
-                    assert(chunk_data.chunk_id == chunk_id);
-                    assert(metadata_equal(&chunk_data.metadata, &request_chunk.metadata));
-                    chunk_print(&chunk_data);
+                if (udp_receive_message(sock, &src_addr, chunk_data, MSG_CHUNK_DATA) == 0) {
+                    assert(chunk_data->chunk_id == chunk_id);
+                    assert(metadata_equal(&chunk_data->metadata, &request_chunk.metadata));
+                    chunk_print(chunk_data);
                     
-                    if (chunk_data.max_clue_data_count > puzzle_info.global_max_clue_data_count)
-                        puzzle_info.global_max_clue_data_count = chunk_data.max_clue_data_count;
+                    if (chunk_data->max_clue_data_count > puzzle_info.global_max_clue_data_count)
+                        puzzle_info.global_max_clue_data_count = chunk_data->max_clue_data_count;
                 }
             }
 
-            // Now received a full puzzle with all clue data.
-            // TODO: push to queue or something?  To get picked up by video driver and HLS solver.
+            xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
+            xQueueSend(challenge_queue, &puzzle_info, portMAX_DELAY);
 
-            video_draw_puzzle(&video_state, &chunk_data, &puzzle_info);
             break;
         } else
             xil_printf("request_task: did not receive expected MSG_PUZZLE_INFO.\r\n");

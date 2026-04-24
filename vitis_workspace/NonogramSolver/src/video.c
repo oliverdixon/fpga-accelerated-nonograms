@@ -91,7 +91,6 @@ void video_initialise(struct VideoState * video_state)
 }
 
 void video_draw_puzzle(const struct VideoState * video_state,
-    	const struct MessageChunkData * chunk_data,
 	    const struct MessagePuzzleInfo * puzzle_info)
 {
 	// Blank the entire frame to black.
@@ -120,13 +119,16 @@ void video_draw_puzzle(const struct VideoState * video_state,
     unsigned int col_clue_idx = puzzle_info->height;
 	unsigned int row_clue_idx = 0;
 
+	// TODO: will need to be updated to support multiple chunks.
+	const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
+
 	for (unsigned int x_idx = 0; x_idx < puzzle_info->width; ++x_idx) {
         /*
          * Topmost box on this column, so we might have some column clues.
          * By convention, column clues immediately succeed row clues. There are precisely
          * as many clues as rows/columns, so we just offset the index.
          */
-        const struct ClueData * const col_clue = &chunk_data->clue_data[col_clue_idx++];
+        const struct ClueData * const col_clue = &clue_data[col_clue_idx++];
         const uint32_t start_x = x_pos + (box_extent / 2) - (glyph_width / 2);
         for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
             draw_clue_element(video_state, col_clue->blocks[element_idx], start_x,
@@ -139,7 +141,7 @@ void video_draw_puzzle(const struct VideoState * video_state,
                  * Leftmost box on this row, so we might have some row clues.
                  * By convention, row clues come first, so we don't have to offset the index.
                  */
-				const struct ClueData * const row_clue = &chunk_data->clue_data[row_clue_idx++];
+				const struct ClueData * const row_clue = &clue_data[row_clue_idx++];
                 const uint32_t start_y = y_pos + (box_extent / 2) - (glyph_height / 2);
 				for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
 					draw_clue_element(video_state, row_clue->blocks[element_idx],

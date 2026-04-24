@@ -28,17 +28,7 @@ set(USER_UNDEFINED_SYMBOLS
 set(USER_INCLUDE_DIRECTORIES
 )
 set(USER_COMPILE_SOURCES
-"zybo_z7_hdmi/display_ctrl.c"
-"zybo_z7_hdmi/dynclk.c"
-"main.c"
-"network.c"
-"metadata.c"
-"chunks.c"
-"puzzle.c"
 "video.c"
-"video.h"
-"error.c"
-"error.h"
 )
 
 # -----------------------------------------

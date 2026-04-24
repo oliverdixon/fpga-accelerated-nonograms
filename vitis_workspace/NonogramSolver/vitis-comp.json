@@ -12,5 +12,6 @@
   },
   "domainRealName": "freertos_ps7_cortexa9_0",
   "useSysrootToolchain": false,
-  "applicationFlow": "EMBEDDED"
+  "applicationFlow": "EMBEDDED",
+  "templateFlow": "VITIS"
 }

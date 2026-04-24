@@ -3,7 +3,7 @@
 
 #include "puzzle.h"
 
-static uint8_t send_buf[16]; // TODO reduce size
+static uint8_t send_buf[MESSAGE_REQUEST_INFO_LENGTH];
 
 void puzzle_request(const struct MessageRequestInfo * const data,
      const int sock, const struct sockaddr_in * const dst_addr)
