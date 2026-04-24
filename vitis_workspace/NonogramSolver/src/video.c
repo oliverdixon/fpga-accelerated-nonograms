@@ -63,6 +63,19 @@ static void draw_rectangle(const struct VideoState * const state,
 	}
 }
 
+static void draw_clue_element(const struct VideoState * const state, uint8_t clue,
+    uint32_t x_pos, const uint32_t y_pos, const uint32_t glyph_advance_extent)
+{
+	if (clue > 9)
+		x_pos -= glyph_advance_extent / 2;
+	
+    while (clue != 0) {
+        draw_character(state, (clue % 10) + '0', x_pos, y_pos);
+        clue /= 10;
+        x_pos += glyph_advance_extent;
+    }
+}
+
 void video_initialise(struct VideoState * video_state)
 {
 	for (unsigned int fb_idx = 0; fb_idx < DISPLAY_NUM_FRAMES; ++fb_idx)
@@ -92,26 +105,46 @@ void video_draw_puzzle(const struct VideoState * video_state,
 	 * Clues take a maximum of two digits' worth of space (since the maximum grid
 	 * size is 15x15).
 	 */
-	const unsigned int box_extent = 50;
-	const unsigned int internal_padding = 10;
-	const unsigned int stride = box_extent + internal_padding;
-	const unsigned int external_padding = (glyph_width + internal_padding) * 2 *
-		puzzle_info->global_max_clue_data_count;
+    static const unsigned int max_digits = 2;
+	static const unsigned int box_extent = 50; // Pixel extent of boxes in both directions
+	static const unsigned int internal_padding = 15; // Padding between boxes and clues
+	static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
+    static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
+    
+	const unsigned int external_padding = (glyph_width + internal_padding + glyph_spacing)
+        * max_digits * puzzle_info->global_max_clue_data_count;
 
 	unsigned int x_pos = external_padding;
 	unsigned int y_pos = external_padding;
 
-	unsigned int clue_idx = 0;
+    unsigned int col_clue_idx = puzzle_info->height;
+	unsigned int row_clue_idx = 0;
 
 	for (unsigned int x_idx = 0; x_idx < puzzle_info->width; ++x_idx) {
+        /*
+         * Topmost box on this column, so we might have some column clues.
+         * By convention, column clues immediately succeed row clues. There are precisely
+         * as many clues as rows/columns, so we just offset the index.
+         */
+        const struct ClueData * const col_clue = &chunk_data->clue_data[col_clue_idx++];
+        const uint32_t start_x = x_pos + (box_extent / 2) - (glyph_width / 2);
+        for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
+            draw_clue_element(video_state, col_clue->blocks[element_idx], start_x,
+                (element_idx + 1) * (internal_padding + glyph_height),
+                glyph_width + glyph_spacing);
+        
 		for (unsigned int y_idx = 0; y_idx < puzzle_info->height; ++y_idx) {
 			if (x_idx == 0) {
-				// Leftmost box on this row, so we might have some row clues.
-				const struct ClueData * const clue = &chunk_data->clue_data[clue_idx++];
-				const unsigned int element_count = clue->count;
-				for (unsigned int element_idx = 0; element_idx < element_count; ++element_idx)
-					draw_character(video_state, clue->blocks[element_idx] + '0',
-                        (element_idx + 1) * (internal_padding + glyph_width), y_pos);
+				/*
+                 * Leftmost box on this row, so we might have some row clues.
+                 * By convention, row clues come first, so we don't have to offset the index.
+                 */
+				const struct ClueData * const row_clue = &chunk_data->clue_data[row_clue_idx++];
+                const uint32_t start_y = y_pos + (box_extent / 2) - (glyph_height / 2);
+				for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
+					draw_clue_element(video_state, row_clue->blocks[element_idx],
+                        (element_idx + 1) * (internal_padding + glyph_width), start_y,
+                        glyph_width + glyph_spacing);
 			}
 
 			draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
