@@ -3,20 +3,12 @@
 
 #include "puzzle.h"
 
-void puzzle_request(const struct MessageRequestInfo * const data,
-    struct udp_pcb * const pcb, const ip_addr_t * dst_ip, const uint16_t dst_port)
-{
-    if (!pcb)
-        return;
-	
-    const size_t payload_size = sizeof(struct MessageRequestInfo);
-    struct pbuf * const buffer = pbuf_alloc(PBUF_TRANSPORT, payload_size, PBUF_RAM);
-    if (!buffer) {
-        xil_printf("puzzle_request: pbuf_alloc failed\r\n");
-        return;
-    }
+static uint8_t send_buf[16]; // TODO reduce size
 
-    uint8_t * buffer_head = buffer->payload;
+void puzzle_request(const struct MessageRequestInfo * const data,
+     const int sock, const struct sockaddr_in * const dst_addr)
+{
+    uint8_t * buffer_head = send_buf;
 
     // 1. Message ID (1 byte)
     *buffer_head++ = MSG_REQUEST_INFO;
@@ -24,34 +16,30 @@ void puzzle_request(const struct MessageRequestInfo * const data,
     // 2. Puzzle metadata
     buffer_head = metadata_hton(&data->metadata, buffer_head);
 
-    const err_t status = udp_sendto(pcb, buffer, dst_ip, dst_port);
-    if (status != ERR_OK)
-        xil_printf("puzzle_request: udp_sendto failed: %d\r\n", status);
-
-    pbuf_free(buffer);
+    sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
+        sizeof(struct sockaddr_in));
 }
 
-struct MessagePuzzleInfo puzzle_parse(const uint8_t * payload)
+int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
 {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
 
-    struct MessagePuzzleInfo puzzle_info;
-    payload = metadata_parse(&puzzle_info.metadata, payload);
+    payload = metadata_parse(&dst->metadata, payload);
 
-    if (!puzzle_info.metadata.valid) {
+    if (!dst->metadata.valid) {
         xil_printf("puzzle_parse: quitting early due to bad metadata.\r\n");
-        return puzzle_info;
+        return -1;
     }
 
-    puzzle_info.width = *payload++;
-    puzzle_info.height = *payload++;
-    puzzle_info.num_chunks = *payload++;
+    dst->width = *payload++;
+    dst->height = *payload++;
+    dst->num_chunks = *payload++;
 
-    puzzle_info.clue_bytes = *payload++ << 8;
-    puzzle_info.clue_bytes |= *payload;
+    dst->clue_bytes = *payload++ << 8;
+    dst->clue_bytes |= *payload;
 
-    return puzzle_info;
+    return 0;
 }
 
 void puzzle_print(const struct MessagePuzzleInfo * const puzzle_info)

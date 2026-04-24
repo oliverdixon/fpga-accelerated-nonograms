@@ -46,3 +46,11 @@ void metadata_print(const struct PuzzleMetadata * const metadata)
     xil_printf("Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n",
         metadata->seed, metadata->difficulty.size_index, metadata->difficulty.tier);
 }
+
+bool metadata_equal(const struct PuzzleMetadata * const lhs,
+        const struct PuzzleMetadata * const rhs)
+{
+    return lhs->valid == rhs->valid && lhs->seed == rhs->seed &&
+        lhs->difficulty.size_index == rhs->difficulty.size_index &&
+        lhs->difficulty.tier == rhs->difficulty.tier;
+}

@@ -6,6 +6,8 @@
 
 enum MessageType
 {
+	MSG_NO_MESSAGE = 0x00,
+
 	MSG_REQUEST_INFO = 0x01,
 	MSG_PUZZLE_INFO = 0x02,
 	MSG_REQUEST_CHUNK = 0x03,
@@ -47,5 +49,6 @@ struct PuzzleMetadata
 uint8_t * metadata_hton(const struct PuzzleMetadata * data, uint8_t * buffer_head);
 const uint8_t * metadata_parse(struct PuzzleMetadata * metadata, const uint8_t * payload);
 void metadata_print(const struct PuzzleMetadata * metadata);
+bool metadata_equal(const struct PuzzleMetadata * lhs, const struct PuzzleMetadata * rhs);
 
 #endif // PUZZLE_METADATA_H

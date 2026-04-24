@@ -1,4 +1,4 @@
-domain_path: /home/userfs/o/od641/Documents/embs-practicals/vitis_workspace/Nonogram/export/Nonogram/sw/freertos_ps7_cortexa9_0
+domain_path: /home/userfs/o/od641/Documents/embs-assessment/vitis_workspace/Nonogram/export/Nonogram/sw/freertos_ps7_cortexa9_0
 app_src_dir: /opt/york/cs/net/xilinx_vivado-2025.1-x86_64-1/2025.1/Vitis/data/embeddedsw/lib/sw_apps/empty_application
 template: empty_application
 lang: c

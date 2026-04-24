@@ -1,8 +1,7 @@
 #ifndef MESSAGE_REQUEST_CHUNK_H
 #define MESSAGE_REQUEST_CHUNK_H
 
-#include <lwip/udp.h>
-#include <lwip/ip.h>
+#include <lwip/sockets.h>
 
 #include "metadata.h"
 
@@ -26,14 +25,15 @@ struct MessageChunkData
     uint16_t offset;
     uint16_t data_length;
     struct ClueData * clue_data;
-    size_t clue_count;
+    unsigned int clue_count;
+    unsigned int max_clue_data_count;
 };
 
-void chunk_request(const struct MessageRequestChunk * data, struct udp_pcb * pcb,
-	const ip_addr_t * dst_ip, uint16_t dst_port);
+void chunk_request(const struct MessageRequestChunk * data,
+    int sock, const struct sockaddr_in * dst_addr);
 
-struct MessageChunkData chunk_parse(const uint8_t * payload);
-void chunk_free(struct MessageChunkData * chunk_data);
+int chunk_parse(struct MessageChunkData * dst, const uint8_t * payload);
+void chunk_free(const struct MessageChunkData * chunk_data);
 void chunk_print(const struct MessageChunkData * chunk_data);
 
 #endif // MESSAGE_REQUEST_CHUNK_H

@@ -1,8 +1,7 @@
 #ifndef MESSAGE_PUZZLE_INFO_H
 #define MESSAGE_PUZZLE_INFO_H
 
-#include <lwip/udp.h>
-#include <lwip/ip.h>
+#include <lwip/sockets.h>
 
 #include "metadata.h"
 
@@ -20,10 +19,10 @@ struct MessageRequestInfo
 	struct PuzzleMetadata metadata;
 };
 
-void puzzle_request(const struct MessageRequestInfo * data, struct udp_pcb * pcb,
-	const ip_addr_t * dst_ip, uint16_t dst_port);
+void puzzle_request(const struct MessageRequestInfo * data,
+	int sock, const struct sockaddr_in * dst_addr);
 
-struct MessagePuzzleInfo puzzle_parse(const uint8_t * payload);
+int puzzle_parse(struct MessagePuzzleInfo * dst, const uint8_t * payload);
 void puzzle_print(const struct MessagePuzzleInfo * puzzle_info);
 
 #endif // MESSAGE_PUZZLE_INFO_H

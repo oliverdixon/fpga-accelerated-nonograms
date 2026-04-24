@@ -37,6 +37,8 @@ set(USER_COMPILE_SOURCES
 "puzzle.c"
 "video.c"
 "video.h"
+"error.c"
+"error.h"
 )
 
 # -----------------------------------------

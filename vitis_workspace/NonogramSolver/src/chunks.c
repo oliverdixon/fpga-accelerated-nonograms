@@ -4,20 +4,12 @@
 
 #include "chunks.h"
 
-void chunk_request(const struct MessageRequestChunk * data, struct udp_pcb * const pcb,
-	const ip_addr_t * const dst_ip, const uint16_t dst_port)
-{
-    if (!pcb)
-        return;
-	
-    const size_t payload_size = sizeof(struct MessageRequestChunk);
-    struct pbuf * const buffer = pbuf_alloc(PBUF_TRANSPORT, payload_size, PBUF_RAM);
-    if (!buffer) {
-        xil_printf("chunk_request: pbuf_alloc failed\r\n");
-        return;
-    }
+static uint8_t send_buf[16]; // TODO reduce size
 
-    uint8_t * buffer_head = buffer->payload;
+void chunk_request(const struct MessageRequestChunk * data,
+        const int sock, const struct sockaddr_in * const dst_addr)
+{
+    uint8_t * buffer_head = send_buf;
 
     // 1. Message ID (1 byte)
     *buffer_head++ = MSG_REQUEST_CHUNK;
@@ -28,54 +20,56 @@ void chunk_request(const struct MessageRequestChunk * data, struct udp_pcb * con
     // 3. Requested chunk ID (1 byte)
     *buffer_head++ = data->chunk_id;
 
-    const err_t status = udp_sendto(pcb, buffer, dst_ip, dst_port);
-    if (status != ERR_OK)
-        xil_printf("chunk_request: udp_sendto failed: %d\r\n", status);
-
-    pbuf_free(buffer);
+    sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
+        sizeof(struct sockaddr_in));
 }
 
-struct MessageChunkData chunk_parse(const uint8_t * payload)
+int chunk_parse(struct MessageChunkData * const dst, const uint8_t * payload)
 {
     assert(*payload == MSG_CHUNK_DATA);
     payload += sizeof(uint8_t);
 
-    struct MessageChunkData chunk_data;
-    payload = metadata_parse(&chunk_data.metadata, payload);
+    dst->max_clue_data_count = 0;
 
-    if (!chunk_data.metadata.valid) {
+    payload = metadata_parse(&dst->metadata, payload);
+
+    if (!dst->metadata.valid) {
         xil_printf("chunk_parse: quitting early due to bad metadata.\r\n");
-        return chunk_data;
+        return -1;
     }
 
-    chunk_data.chunk_id = *payload++;
-    chunk_data.num_chunks = *payload++;
+    dst->chunk_id = *payload++;
+    dst->num_chunks = *payload++;
 
-    chunk_data.offset = *payload++ << 8;
-    chunk_data.offset |= *payload++;
+    dst->offset = *payload++ << 8;
+    dst->offset |= *payload++;
 
-    chunk_data.data_length = *payload++ << 8;
-    chunk_data.data_length |= *payload++;
+    dst->data_length = *payload++ << 8;
+    dst->data_length |= *payload++;
 
-    chunk_data.clue_data = malloc(sizeof(struct ClueData) * chunk_data.data_length);
-    const uint8_t * const clue_end = payload + sizeof(uint8_t) * chunk_data.data_length;
+    dst->clue_data = malloc(sizeof(struct ClueData) * dst->data_length);
+    const uint8_t * const clue_end = payload + sizeof(uint8_t) * dst->data_length;
 
     size_t line_idx = 0;
 
     for (; payload < clue_end; ++line_idx) {
         // Get the number of elements for this line and read them into the clue data.
-        struct ClueData * clue_line = &chunk_data.clue_data[line_idx];
+        struct ClueData * clue_line = &dst->clue_data[line_idx];
         clue_line->count = *payload++;
+
+        if (clue_line->count > dst->max_clue_data_count)
+            dst->max_clue_data_count = clue_line->count;
+
         clue_line->blocks = malloc(sizeof(uint8_t) * clue_line->count);
         for (uint8_t element_idx = 0; element_idx < clue_line->count; ++element_idx)
             clue_line->blocks[element_idx] = *payload++;
     }
 
-    chunk_data.clue_count = line_idx;
-    return chunk_data;
+    dst->clue_count = line_idx;
+    return 0;
 }
 
-void chunk_free(struct MessageChunkData * chunk_data)
+void chunk_free(const struct MessageChunkData * chunk_data)
 {
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx)
         free(chunk_data->clue_data[line_idx].blocks);
