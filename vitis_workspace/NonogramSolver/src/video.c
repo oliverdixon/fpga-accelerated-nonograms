@@ -12,105 +12,12 @@
 #include "video.h"
 #include "puzzle.h"
 #include "chunks.h"
+#include "glyph_bitmaps.h"
+
 #include "zybo_z7_hdmi/display_ctrl.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
 #define FRAME_STRIDE (1440*4)
-
-static const unsigned int glyph_width = 15;
-static const unsigned int glyph_height = 21;
-
-static const uint32_t numeric_glyphs[][15] = {
-    // 0
-    {
-        0x07FFF8, 0x07FFF8, 0x07FFF8,
-        0x3800E7, 0x3800E7, 0x3800E7,
-        0x3838E7, 0x3838E7, 0x3838E7,
-        0x38E0E7, 0x38E0E7, 0x38E0E7,
-        0x07FFF8, 0x07FFF8, 0x07FFF8
-    },
-
-    // 1
-    {
-        0x000000, 0x000000, 0x000000,
-        0x3801C0, 0x3801C0, 0x3801C0,
-        0x3FFFFF, 0x3FFFFF, 0x3FFFFF,
-        0x380000, 0x380000, 0x380000,
-        0x000000, 0x000000, 0x000000
-    },
-
-    // 2
-    {
-        0x3801C0, 0x3801C0, 0x3801C0,
-        0x3F8007, 0x3F8007, 0x3F8007,
-        0x3870E7, 0x3870E7, 0x3870E7,
-        0x380E07, 0x380E07, 0x380E07,
-        0x3801F8, 0x3801F8, 0x3801F8
-    },
-
-    // 3
-    {
-        0x070007, 0x070007, 0x070007,
-        0x380007, 0x380007, 0x380007,
-        0x3800E7, 0x3800E7, 0x3800E7,
-        0x380F3F, 0x380F3F, 0x380F3F,
-        0x07F807, 0x07F807, 0x07F807
-    },
-
-    // 4
-    {
-        0x00FF00, 0x00FF00, 0x00FF00,
-        0x00E0E0, 0x00E0E0, 0x00E0E0,
-        0x00E01C, 0x00E01C, 0x00E01C,
-        0x3FFFFF, 0x3FFFFF, 0x3FFFFF,
-        0x00E000, 0x00E000, 0x00E000
-    },
-
-    // 5
-    {
-        0x0701FF, 0x0701FF, 0x0701FF,
-        0x3800E7, 0x3800E7, 0x3800E7,
-        0x3800E7, 0x3800E7, 0x3800E7,
-        0x3800E7, 0x3800E7, 0x3800E7,
-        0x07FF07, 0x07FF07, 0x07FF07
-    },
-
-    // 6
-    {
-        0x07FFF0, 0x07FFF0, 0x07FFF0,
-        0x380E38, 0x380E38, 0x380E38,
-        0x380E07, 0x380E07, 0x380E07,
-        0x380E07, 0x380E07, 0x380E07,
-        0x07F000, 0x07F000, 0x07F000
-    },
-
-    // 7
-    {
-        0x000007, 0x000007, 0x000007,
-        0x3FF807, 0x3FF807, 0x3FF807,
-        0x001C07, 0x001C07, 0x001C07,
-        0x0000E7, 0x0000E7, 0x0000E7,
-        0x00001F, 0x00001F, 0x00001F
-    },
-
-    // 8
-    {
-        0x07F9F8, 0x07F9F8, 0x07F9F8,
-        0x380E07, 0x380E07, 0x380E07,
-        0x380E07, 0x380E07, 0x380E07,
-        0x380E07, 0x380E07, 0x380E07,
-        0x07F9F8, 0x07F9F8, 0x07F9F8
-    },
-
-    // 9
-    {
-        0x0001F8, 0x0001F8, 0x0001F8,
-        0x380E07, 0x380E07, 0x380E07,
-        0x380E07, 0x380E07, 0x380E07,
-        0x0E0E07, 0x0E0E07, 0x0E0E07,
-        0x01FFF8, 0x01FFF8, 0x01FFF8
-    }
-};
 
 static const uint32_t foreground_colour = 0x00FFFFFF;
 
@@ -189,7 +96,7 @@ void video_draw_puzzle(const struct VideoState * video_state,
 	const unsigned int internal_padding = 10;
 	const unsigned int stride = box_extent + internal_padding;
 	const unsigned int external_padding = (glyph_width + internal_padding) * 2 *
-		chunk_data->max_clue_data_count;
+		puzzle_info->global_max_clue_data_count;
 
 	unsigned int x_pos = external_padding;
 	unsigned int y_pos = external_padding;
@@ -203,7 +110,8 @@ void video_draw_puzzle(const struct VideoState * video_state,
 				const struct ClueData * const clue = &chunk_data->clue_data[clue_idx++];
 				const unsigned int element_count = clue->count;
 				for (unsigned int element_idx = 0; element_idx < element_count; ++element_idx)
-					draw_character(video_state, clue->blocks[element_idx] + '0', internal_padding, y_pos);
+					draw_character(video_state, clue->blocks[element_idx] + '0',
+                        (element_idx + 1) * (internal_padding + glyph_width), y_pos);
 			}
 
 			draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);

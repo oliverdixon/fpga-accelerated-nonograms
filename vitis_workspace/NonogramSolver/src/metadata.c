@@ -12,8 +12,8 @@ uint8_t * metadata_hton(const struct PuzzleMetadata * const data, uint8_t * buff
     buffer_head += sizeof(uint32_t);
 
     // Append difficulty byte
-    memcpy(buffer_head, &data->difficulty, sizeof(uint8_t));
-
+    *buffer_head = data->difficulty.size_index | (data->difficulty.tier << 4);
+    
     return buffer_head + sizeof(uint8_t);
 }
 

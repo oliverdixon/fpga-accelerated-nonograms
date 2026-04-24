@@ -12,6 +12,7 @@ struct MessagePuzzleInfo
 	uint8_t height;
 	uint8_t num_chunks;
 	uint16_t clue_bytes;
+	unsigned int global_max_clue_data_count;
 };
 
 struct MessageRequestInfo

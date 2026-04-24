@@ -4,25 +4,24 @@
 
 #include "error.h"
 
-struct MessageError error_parse(const uint8_t * payload)
+int error_parse(struct MessageError * dst, const uint8_t * payload)
 {
     assert(*payload == MSG_ERROR);
     payload += sizeof(uint8_t);
 
-    struct MessageError message;
-    payload = metadata_parse(&message.metadata, payload);
+    payload = metadata_parse(&dst->metadata, payload);
 
-    if (!message.metadata.valid)
+    if (!dst->metadata.valid)
         xil_printf("error_parse: bad metadata.\r\n");
 
-    message.original_msg_id = *payload++;
-    message.text_length = *payload++;
+    dst->original_msg_id = *payload++;
+    dst->text_length = *payload++;
 
-    message.error_text = malloc(sizeof(uint8_t) * (message.text_length + 1));
-    memcpy(message.error_text, payload, sizeof(uint8_t) * message.text_length);
-    message.error_text[message.text_length] = '\0';
+    dst->error_text = malloc(sizeof(uint8_t) * (dst->text_length + 1));
+    memcpy(dst->error_text, payload, sizeof(uint8_t) * dst->text_length);
+    dst->error_text[dst->text_length] = '\0';
 
-    return message;
+    return 0;
 }
 
 void error_print(const struct MessageError * const message)

@@ -8,28 +8,39 @@ void lwip_init();
 
 #define THREAD_STACKSIZE 1024
 
-static void network_thread(void * data);
+//Function prototypes
+void print_ip(const char *msg, const ip_addr_t *ip);
+void network_thread(void *p);
 int network_startup_task();
 
 //Structures and globals
 static struct netif server_netif;
 struct netif *echo_netif;
-static unsigned char * const mac_addr = { 0x00, 0x11, 0x22, 0x33, 0x00, 0x19 };
+unsigned char* mac_addr;
 lwip_thread_fn application_task_fn;
 TaskHandle_t startuptask, nettask, apptask, rcv_task;
 
-void print_ip(const char *msg, const ip_addr_t *ip)
-{
-	xil_printf(msg);
-	xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip));
+//---------------
+
+//Initialise network task 
+//This is called by user code to provide the mac address we should use,
+//and the code that we should run once the network is ready.
+void network_init(unsigned char* mac_address, lwip_thread_fn app) {
+	mac_addr = mac_address;
+	application_task_fn = app;
+	xTaskCreate((lwip_thread_fn) network_startup_task, "startup_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, &startuptask);
 }
 
-void network_init(lwip_thread_fn app)
+//Created by network_init(). Initialises lwIP, runs DHCP, and once connected, starts the application_task_fn that the user provided
+//when they called network_init
+int network_startup_task()
 {
-	lwip_init();
+    lwip_init();
 
-    xTaskCreate(network_thread, "nw_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL);
+    //Create lwIP's network handling thread (as described by lwIP documentation)
+    xTaskCreate(network_thread, "nw_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, &nettask);
 
+    //This task just waits until we get an IP address via DHCP, then creates our application task
     while (1) {
     	vTaskDelay(DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS); //wait 500ms
 		if (server_netif.ip_addr.addr) { //Do we have an IP address?
@@ -38,18 +49,20 @@ void network_init(lwip_thread_fn app)
 			print_ip("Netmask : ", &server_netif.netmask);
 			print_ip("Gateway : ", &server_netif.gw);
 			xil_printf("\r\n");
-			xTaskCreate(app, "app_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, &apptask);
+			xTaskCreate(application_task_fn, "app_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, &apptask);
 			break;
 		}
 	}
 
-	xTaskCreate((lwip_thread_fn) network_startup_task, "startup_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL);
+    //DHCP is connected and we've created the main task so delete ourselves
+    vTaskDelete(NULL); //Passing NULL says to delete this task
+    return 0;
 }
 
-static void network_thread(void * const data)
+//lwIP's network handling thread (as described by lwIP documentation)
+//Started from the network_startup_task
+void network_thread(void *p)
 {
-	(void) data;
-
     struct netif *netif = &server_netif;
     ip_addr_t ipaddr, netmask, gw;
     int mscnt = 0;
@@ -63,7 +76,6 @@ static void network_thread(void * const data)
     	xil_printf("Error adding network interface\r\n");
     	return;
     }
-
     netif_set_default(netif);
     netif_set_up(netif);
 
@@ -84,4 +96,10 @@ static void network_thread(void * const data)
 	}
 
     return;
+}
+
+void print_ip(const char *msg, const ip_addr_t *ip)
+{
+	xil_printf(msg);
+	xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip));
 }

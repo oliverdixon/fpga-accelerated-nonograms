@@ -39,6 +39,8 @@ int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
     dst->clue_bytes = *payload++ << 8;
     dst->clue_bytes |= *payload;
 
+    dst->global_max_clue_data_count = 0;
+
     return 0;
 }
 

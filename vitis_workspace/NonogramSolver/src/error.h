@@ -13,7 +13,7 @@ struct MessageError
     char * error_text;
 };
 
-struct MessageError error_parse(const uint8_t * payload);
+int error_parse(struct MessageError * dst, const uint8_t * payload);
 void error_print(const struct MessageError * message);
 void error_free(const struct MessageError * message);
 

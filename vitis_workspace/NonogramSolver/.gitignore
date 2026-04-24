@@ -4,6 +4,7 @@
 .cache
 /_ide
 compile_commands.json
+src/app.yaml
 
 # Ignore object files and dependent files
 .o
