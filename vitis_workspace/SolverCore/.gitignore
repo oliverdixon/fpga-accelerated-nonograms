@@ -1,0 +1,61 @@
+# Ignore build output directory
+/build
+/export
+
+# Ignore object files and dependent files
+.o
+.d
+
+#Ignore logs folder and log files
+/logs
+.log
+
+#Ignore lock files
+.lock
+
+.bin
+.pdi
+.vitisWorkspace.json
+
+_ide/logs
+_ide/.wsdata
+
+# -----------------------------------------------------------------------------
+# AMD Vitis / Vitis HLS generated output
+# -----------------------------------------------------------------------------
+
+# Generated component/build directory.
+# This contains hls/, impl/, syn/, reports/, logs/, .autopilot/, packaged IP, etc.
+/SolverCore/
+
+# -----------------------------------------------------------------------------
+# Editor / language-server caches
+# -----------------------------------------------------------------------------
+
+.cache/
+.clangd/
+compile_commands.json
+
+# -----------------------------------------------------------------------------
+# Packaged/generated archives
+# -----------------------------------------------------------------------------
+
+*.zip
+
+# -----------------------------------------------------------------------------
+# Generic generated logs/journals
+# -----------------------------------------------------------------------------
+
+*.log
+*.jou
+*.str
+*.backup.log
+
+# -----------------------------------------------------------------------------
+# Temporary files
+# -----------------------------------------------------------------------------
+
+*.tmp
+*.bak
+*~
+
