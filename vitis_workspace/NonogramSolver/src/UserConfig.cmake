@@ -29,6 +29,14 @@ set(USER_INCLUDE_DIRECTORIES
 )
 set(USER_COMPILE_SOURCES
 "video.c"
+"zybo_z7_hdmi/display_ctrl.c"
+"zybo_z7_hdmi/dynclk.c"
+"chunks.c"
+"error.c"
+"main.c"
+"metadata.c"
+"network.c"
+"puzzle.c"
 )
 
 # -----------------------------------------

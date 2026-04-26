@@ -1,6 +1,7 @@
 # Ignore build output directory
 /build
 /export
+/.rigel_lopper
 
 # Ignore object files and dependent files
 .o

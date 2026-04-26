@@ -1,0 +1,3 @@
+[submodule "zybo-z7-hdmi"]
+	path = zybo-z7-hdmi
+	url = git@github.com:RTSYork/zybo-z7-hdmi

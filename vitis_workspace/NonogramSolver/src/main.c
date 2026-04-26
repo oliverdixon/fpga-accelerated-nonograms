@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <lwip/def.h>
 #include <lwip/inet.h>
+#include <projdefs.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -23,12 +24,17 @@
 #include "video.h"
 #include "error.h"
 
+#include <xil_cache.h>
+#include <xil_types.h>
+#include <xsolver_toplevel.h>
+
 #define THREAD_STACKSIZE 1024
 
 void network_init(unsigned char* mac_address, lwip_thread_fn app);
 
 static void request_protocol_task(void * const data);
-static void draw_puzzles_task(void * const data);
+static void draw_puzzles_task(void * data);
+static void solve_puzzles_task(void * data);
 
 struct VideoState video_state;
 
@@ -62,6 +68,32 @@ static void draw_puzzles_task(void * const data)
         xil_printf("draw_puzzles_task: drawing to framebuffer...\r\n");
         video_draw_puzzle(&video_state, &puzzle_info);
     }
+
+    vTaskDelete(NULL);
+}
+
+static void solve_puzzles_task(void * const data)
+{
+    (void) data;
+
+    struct MessagePuzzleInfo puzzle_info;
+    XSolver_toplevel solver;
+
+    static uint32_t solver_ram = 64;
+    XSolver_toplevel_Initialize(&solver, XPAR_XSOLVER_TOPLEVEL_0_BASEADDR);
+
+    if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+        XSolver_toplevel_Set_ram(&solver, (UINTPTR)&solver_ram);
+        Xil_DCacheFlushRange((UINTPTR)&solver_ram, sizeof(solver_ram));
+        XSolver_toplevel_Start(&solver);
+        while (!XSolver_toplevel_IsDone(&solver)) {
+            xil_printf("Waiting\r\n");
+            vTaskDelay(pdMS_TO_TICKS(500));
+        }
+        xil_printf("Received %d from LFSR.\r\n", XSolver_toplevel_Get_return(&solver));
+    }
+
+    vTaskDelete(NULL);
 }
 
 static int udp_receive_message(const int sock, struct sockaddr_in * const src,
@@ -160,7 +192,7 @@ static void request_protocol_task(void * const data)
 
     prepare_dst_addr(&dst_addr);
     xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
-    // TODO: create solver task
+    xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
 
     struct MessagePuzzleInfo puzzle_info;
     struct MessageChunkData * const chunk_data = &puzzle_info.chunk;
