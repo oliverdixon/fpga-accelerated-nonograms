@@ -1,8 +1,6 @@
 #ifndef ERROR_H
 #define ERROR_H
 
-#include <stdint.h>
-
 #include "metadata.h"
 
 #define ERROR_MAX_LENGTH (200)

@@ -28,6 +28,7 @@ set(USER_UNDEFINED_SYMBOLS
 set(USER_INCLUDE_DIRECTORIES
 )
 set(USER_COMPILE_SOURCES
+"serial.c"
 "video.c"
 "zybo_z7_hdmi/display_ctrl.c"
 "zybo_z7_hdmi/dynclk.c"

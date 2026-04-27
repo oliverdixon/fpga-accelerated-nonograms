@@ -1,8 +1,6 @@
 #ifndef MESSAGE_REQUEST_CHUNK_H
 #define MESSAGE_REQUEST_CHUNK_H
 
-#include <lwip/sockets.h>
-
 #include "metadata.h"
 
 /*
@@ -45,6 +43,8 @@ struct MessageChunkData
     unsigned int clue_count;
     unsigned int max_clue_data_count;
 };
+
+struct sockaddr_in;
 
 void chunk_request(const struct MessageRequestChunk * data,
     int sock, const struct sockaddr_in * dst_addr);

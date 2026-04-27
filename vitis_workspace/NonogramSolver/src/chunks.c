@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <xil_printf.h>
+#include <lwip/sockets.h>
 
 #include "chunks.h"
 
@@ -20,7 +21,7 @@ void chunk_request(const struct MessageRequestChunk * data,
     // 3. Requested chunk ID (1 byte)
     *buffer_head++ = data->chunk_id;
 
-    sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
         sizeof(struct sockaddr_in));
 }
 

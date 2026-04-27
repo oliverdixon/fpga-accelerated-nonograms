@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <xil_printf.h>
+#include <lwip/sockets.h>
 
 #include "puzzle.h"
 
@@ -16,7 +17,7 @@ void puzzle_request(const struct MessageRequestInfo * const data,
     // 2. Puzzle metadata
     buffer_head = metadata_hton(&data->metadata, buffer_head);
 
-    sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
         sizeof(struct sockaddr_in));
 }
 

@@ -1,8 +1,6 @@
 #ifndef MESSAGE_PUZZLE_INFO_H
 #define MESSAGE_PUZZLE_INFO_H
 
-#include <lwip/sockets.h>
-
 #include "metadata.h"
 #include "chunks.h"
 

@@ -1,28 +1,16 @@
 #include <assert.h>
-#include <lwip/def.h>
-#include <lwip/inet.h>
-#include <projdefs.h>
-#include <stdio.h>
-#include <string.h>
 
-#include <FreeRTOS.h>
-
-#include "lwipopts.h"
-#include <lwip/ip_addr.h>
-#include <lwip/udp.h>
-
-#include <queue.h>
+#include <lwip/sockets.h>
+#include <xil_printf.h>
+#include <xil_cache.h>
+#include <xsolver_toplevel.h>
 
 #include "chunks.h"
 #include "puzzle.h"
 #include "video.h"
 #include "error.h"
 #include "network.h"
-
-#include <xil_printf.h>
-#include <xil_cache.h>
-
-#include <xsolver_toplevel.h>
+#include "serial.h"
 
 #define THREAD_STACKSIZE 1024
 
@@ -31,93 +19,9 @@ static void request_protocol_task(void * data);
 static void draw_puzzles_task(void * data);
 static void solve_puzzles_task(void * data);
 
-static char buffer[16];
-
 QueueHandle_t requests_queue; // REQUEST_INFO messages for puzzle procurement.
 QueueHandle_t graphics_queue; // PUZZLE_INFO/CHUNK_DATA messages for drawing.
 QueueHandle_t challenge_queue; // PUZZLE_INFO/CHUNK_DATA messages for solving.
-
-static unsigned int readline(char * const dst, const unsigned int max_length)
-{
-    if (max_length == 0)
-        return 0;
-
-    unsigned int idx = 0;
-
-    while (1) {
-        const char ch = inbyte();
-
-        switch (ch) {
-        case '\r':
-        case '\n':
-            print("\r\n");
-            dst[idx] = '\0';
-            return idx;
-        case '\b':
-        case 0x7f:
-            if (idx > 0) {
-                --idx;
-                print("\b \b");
-            }
-            continue;
-        default: ;
-        }
-
-        if (ch < 0x20)
-            continue;
-
-        if (idx + 1 < max_length) {
-            dst[idx++] = ch;
-            outbyte(ch);
-        } else {
-            dst[idx] = '\0';
-            return idx;
-        }
-    }
-}
-
-static uint32_t pow_uint32(uint32_t base, unsigned int exp)
-{
-    uint32_t result = 1;
-
-    while (exp--)
-        result *= base;
-
-    return result;
-}
-
-static uint32_t parse_uint32(const uint32_t lower_bound, const uint32_t upper_bound,
-    const uint32_t default_value)
-{
-    const unsigned int bytes_read = readline(buffer, sizeof(buffer) / sizeof(*buffer));
-    uint32_t value = 0;
-    
-    if (bytes_read > 0 && buffer[bytes_read] == '\0') {
-        for (unsigned int pv_idx = 0; pv_idx < bytes_read; ++pv_idx)
-            value += (buffer[pv_idx] - '0') * pow_uint32(10, bytes_read - pv_idx - 1);
-        if (value < lower_bound || value > upper_bound)
-            value = default_value;
-    } else
-        value = default_value;
-
-    return value;
-}
-
-static enum DifficultyTier parse_difficulty_tier(const enum DifficultyTier default_tier)
-{
-    const unsigned int bytes_read = readline(buffer, sizeof(buffer) / sizeof(*buffer));
-    
-    if (bytes_read == 1)
-        switch (*buffer) {
-        case 'E': return DIFFICULTY_EASY;
-        case 'M': return DIFFICULTY_MEDIUM;
-        case 'H': return DIFFICULTY_HARD;
-        case 'C': return DIFFICULTY_CUSTOM;
-        default: return default_tier;
-        }
-
-    return default_tier;
-}
 
 int main()
 {
@@ -144,6 +48,8 @@ static void accept_input_task(void * const data)
         }
     };
 
+    xTaskCreate(&request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
+
     print("Enter a seed: ([0]-4294967295) ");
     request_info.metadata.seed = parse_uint32(0, 4294967295, 0);
 
@@ -156,7 +62,6 @@ static void accept_input_task(void * const data)
     puzzle_request_print(&request_info);
     xQueueSend(requests_queue, &request_info, portMAX_DELAY);
 
-    xTaskCreate(&request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO, NULL);
     vTaskSuspend(NULL);
 }
 
