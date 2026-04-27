@@ -44,5 +44,6 @@ void puzzle_request(const struct MessageRequestInfo * data,
 
 int puzzle_parse(struct MessagePuzzleInfo * dst, const uint8_t * payload);
 void puzzle_print(const struct MessagePuzzleInfo * puzzle_info);
+void puzzle_request_print(const struct MessageRequestInfo * request_info);
 
 #endif // MESSAGE_PUZZLE_INFO_H

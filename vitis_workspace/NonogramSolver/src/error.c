@@ -13,13 +13,13 @@ int error_parse(struct MessageError * dst, const uint8_t * payload)
 
     if (!dst->metadata.valid)
         // Protocol spec states that metadata is optional in errors.
-        xil_printf("error_parse: bad metadata.\r\n");
+        print("error_parse: bad metadata.\r\n");
 
     dst->original_msg_id = *payload++;
     dst->text_length = *payload++;
 
     if (dst->text_length > ERROR_MAX_LENGTH) {
-        xil_printf("error_parse: message too long.\r\n");
+        print("error_parse: message too long.\r\n");
         return -1;
     }
 
@@ -31,12 +31,12 @@ int error_parse(struct MessageError * dst, const uint8_t * payload)
 
 void error_print(const struct MessageError * const message)
 {
-    xil_printf("MessageError:\r\n\t");
+    print("\r\nMessageError:\r\n\t");
     if (message->metadata.valid)
         metadata_print(&message->metadata);
     else
-        xil_printf("Invalid metadata\r\n");
+        print("Invalid metadata\r\n");
 
-    xil_printf("\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n",
+    xil_printf("\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n\r\n",
         message->original_msg_id, message->text_length, message->error_text);
 }

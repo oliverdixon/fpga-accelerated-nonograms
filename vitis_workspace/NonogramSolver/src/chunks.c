@@ -34,7 +34,7 @@ int chunk_parse(struct MessageChunkData * const dst, const uint8_t * payload)
     payload = metadata_parse(&dst->metadata, payload);
 
     if (!dst->metadata.valid) {
-        xil_printf("chunk_parse: quitting early due to bad metadata.\r\n");
+        print("chunk_parse: quitting early due to bad metadata.\r\n");
         return -1;
     }
 
@@ -79,8 +79,10 @@ void chunk_free(const struct MessageChunkData * chunk_data)
 
 void chunk_print(const struct MessageChunkData * const chunk_data)
 {
+    print("\r\n");
+    
     if (chunk_data->metadata.valid) {
-        xil_printf("MessageChunkData:\r\n\t");
+        print("MessageChunkData:\r\n\t");
         metadata_print(&chunk_data->metadata);
         xil_printf("\tChunk ID: %d\r\n\tChunk Count: %d\r\n\tOffset: %d\r\n\tData Length: %d\r\n"
             "\tClue Count (derived): %d\r\n",
@@ -92,8 +94,10 @@ void chunk_print(const struct MessageChunkData * const chunk_data)
             xil_printf("\tClue %02d: ", line_idx);
             for (uint8_t element_idx = 0; element_idx < clue_line->count; ++element_idx)
                 xil_printf("%02x ", clue_line->blocks[element_idx]);
-            xil_printf("\r\n");
+            print("\r\n");
         }
     } else
-        xil_printf("MessageChunkData: INVALID\r\n");
+        print("MessageChunkData: INVALID\r\n");
+
+    print("\r\n");
 }

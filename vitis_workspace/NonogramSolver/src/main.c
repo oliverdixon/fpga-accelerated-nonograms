@@ -23,6 +23,7 @@
 #include "puzzle.h"
 #include "video.h"
 #include "error.h"
+#include "network.h"
 
 #include <xil_cache.h>
 #include <xil_types.h>
@@ -64,10 +65,11 @@ static void draw_puzzles_task(void * const data)
     
     struct MessagePuzzleInfo puzzle_info;
     
-    if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-        xil_printf("draw_puzzles_task: drawing to framebuffer...\r\n");
-        video_draw_puzzle(&video_state, &puzzle_info);
-    }
+    while (1)
+        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+            xil_printf("draw_puzzles_task: drawing to framebuffer...\r\n");
+            video_draw_puzzle(&video_state, &puzzle_info);
+        }
 
     vTaskDelete(NULL);
 }
@@ -82,16 +84,17 @@ static void solve_puzzles_task(void * const data)
     static uint32_t solver_ram = 64;
     XSolver_toplevel_Initialize(&solver, XPAR_XSOLVER_TOPLEVEL_0_BASEADDR);
 
-    if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-        XSolver_toplevel_Set_ram(&solver, (UINTPTR)&solver_ram);
-        Xil_DCacheFlushRange((UINTPTR)&solver_ram, sizeof(solver_ram));
-        XSolver_toplevel_Start(&solver);
-        while (!XSolver_toplevel_IsDone(&solver)) {
-            xil_printf("Waiting\r\n");
-            vTaskDelay(pdMS_TO_TICKS(500));
+    while (1)
+        if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+            XSolver_toplevel_Set_ram(&solver, (UINTPTR)&solver_ram);
+            Xil_DCacheFlushRange((UINTPTR)&solver_ram, sizeof(solver_ram));
+            XSolver_toplevel_Start(&solver);
+            while (!XSolver_toplevel_IsDone(&solver)) {
+                xil_printf("Waiting\r\n");
+                vTaskDelay(pdMS_TO_TICKS(500));
+            }
+            xil_printf("Received %d from LFSR.\r\n", XSolver_toplevel_Get_return(&solver));
         }
-        xil_printf("Received %d from LFSR.\r\n", XSolver_toplevel_Get_return(&solver));
-    }
 
     vTaskDelete(NULL);
 }
@@ -103,7 +106,7 @@ static int udp_receive_message(const int sock, struct sockaddr_in * const src,
     static struct MessageError error;
 
     socklen_t src_len = sizeof(*src);
-    const ssize_t data_len = recvfrom(sock, buffer, sizeof(buffer) / sizeof(*buffer),
+    const ssize_t data_len = lwip_recvfrom(sock, buffer, sizeof(buffer) / sizeof(*buffer),
         0, (struct sockaddr *) src, &src_len);
 
     if (data_len >= 0) {
@@ -131,50 +134,6 @@ static int udp_receive_message(const int sock, struct sockaddr_in * const src,
     return -1;
 }
 
-static int bind_socket(struct sockaddr_in * const local_addr)
-{
-    xil_printf("application_task started\r\n");
-
-    int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sock < 0) {
-        xil_printf("socket failed\r\n");
-        vTaskDelete(NULL);
-        return -1;
-    }
-
-    memset(local_addr, 0, sizeof(struct sockaddr_in));
-
-    local_addr->sin_family = AF_INET;
-    local_addr->sin_port = htons(51050);
-    local_addr->sin_addr.s_addr = PP_HTONL(INADDR_ANY);
-
-    if (bind(sock, (struct sockaddr *) local_addr, sizeof(struct sockaddr_in)) < 0) {
-        xil_printf("bind failed\r\n");
-        closesocket(sock);
-        vTaskDelete(NULL);
-        return -1;
-    }
-
-    const struct timeval timeout = {
-        .tv_sec = 1,
-        .tv_usec = 0
-    };
-
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-
-    xil_printf("UDP socket bound to local port %d\r\n", 51050);
-    return sock;
-}
-
-static void prepare_dst_addr(struct sockaddr_in * const dst_addr)
-{
-    memset(dst_addr, 0, sizeof(struct sockaddr_in));
-
-    dst_addr->sin_family = AF_INET;
-    dst_addr->sin_port = htons(51050);
-    dst_addr->sin_addr.s_addr = inet_addr("192.168.10.1");
-}
-
 static void request_protocol_task(void * const data)
 {
     (void) data;
@@ -183,14 +142,14 @@ static void request_protocol_task(void * const data)
     struct sockaddr_in dst_addr;
     struct sockaddr_in src_addr;
 
-    const int sock = bind_socket(&local_addr);
+    const int sock = network_bind_socket(&local_addr);
 
     if (sock < 0) {
         vTaskDelete(NULL);
         return;
     }
 
-    prepare_dst_addr(&dst_addr);
+    network_prepare_dst_addr(&dst_addr);
     xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
     xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
 

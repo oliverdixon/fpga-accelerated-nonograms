@@ -1,9 +1,12 @@
-#include <stdio.h>
-#include "xparameters.h"
-#include "netif/xadapter.h"
-#include "xil_printf.h"
+#include <xparameters.h>
+#include <xil_printf.h>
 
-#include "lwip/dhcp.h"
+#include <lwip/dhcp.h>
+#include <lwip/sockets.h>
+#include <netif/xadapter.h>
+
+#include "network.h"
+
 void lwip_init();
 
 #define THREAD_STACKSIZE 1024
@@ -102,4 +105,48 @@ void print_ip(const char *msg, const ip_addr_t *ip)
 {
 	xil_printf(msg);
 	xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip));
+}
+
+int network_bind_socket(struct sockaddr_in * const local_addr)
+{
+    xil_printf("application_task started\r\n");
+
+    int sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    if (sock < 0) {
+        xil_printf("socket failed\r\n");
+        vTaskDelete(NULL);
+        return -1;
+    }
+
+    memset(local_addr, 0, sizeof(struct sockaddr_in));
+
+    local_addr->sin_family = AF_INET;
+    local_addr->sin_port = htons(51050);
+    local_addr->sin_addr.s_addr = PP_HTONL(INADDR_ANY);
+
+    if (bind(sock, (struct sockaddr *) local_addr, sizeof(struct sockaddr_in)) < 0) {
+        xil_printf("bind failed\r\n");
+        lwip_close(sock);
+        vTaskDelete(NULL);
+        return -1;
+    }
+
+    const struct timeval timeout = {
+        .tv_sec = 1,
+        .tv_usec = 0
+    };
+
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    xil_printf("UDP socket bound to local port %d\r\n", 51050);
+    return sock;
+}
+
+void network_prepare_dst_addr(struct sockaddr_in * const dst_addr)
+{
+    memset(dst_addr, 0, sizeof(struct sockaddr_in));
+
+    dst_addr->sin_family = AF_INET;
+    dst_addr->sin_port = htons(51050);
+    dst_addr->sin_addr.s_addr = inet_addr("192.168.10.1");
 }

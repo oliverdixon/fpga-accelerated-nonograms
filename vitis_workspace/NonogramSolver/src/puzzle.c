@@ -28,7 +28,7 @@ int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
     payload = metadata_parse(&dst->metadata, payload);
 
     if (!dst->metadata.valid) {
-        xil_printf("puzzle_parse: quitting early due to bad metadata.\r\n");
+        print("puzzle_parse: quitting early due to bad metadata.\r\n");
         return -1;
     }
 
@@ -46,12 +46,29 @@ int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
 
 void puzzle_print(const struct MessagePuzzleInfo * const puzzle_info)
 {
+    print("\r\n");
+    
     if (puzzle_info->metadata.valid) {
-        xil_printf("MessagePuzzleInfo:\r\n\t");
+        print("MessagePuzzleInfo:\r\n\t");
         metadata_print(&puzzle_info->metadata);
         xil_printf("\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
             puzzle_info->width, puzzle_info->height, puzzle_info->num_chunks,
             puzzle_info->clue_bytes);
     } else
-        xil_printf("MessagePuzzleInfo: INVALID\r\n");
+        print("MessagePuzzleInfo: INVALID\r\n");
+
+    print("\r\n");
+}
+
+void puzzle_request_print(const struct MessageRequestInfo * request_info)
+{
+    print("\r\n");
+    
+    if (request_info->metadata.valid) {
+        print("MessageRequestInfo:\r\n\t");
+        metadata_print(&request_info->metadata);
+    } else
+        print("MessageRequestInfo: INVALID");
+
+    print("\r\n");
 }
