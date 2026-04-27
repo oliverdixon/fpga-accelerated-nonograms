@@ -4,7 +4,7 @@
     "xci_name": "design_1_solver_toplevel_0_1",
     "cell_name": "solver_toplevel_0",
     "component_reference": "xilinx.com:hls:solver_toplevel:1.0",
-    "ip_revision": "2114583126",
+    "ip_revision": "2114584359",
     "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1",
     "parameters": {
       "component_parameters": {
@@ -57,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2114583126" } ],
+        "IPREVISION": [ { "value": "2114584359" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -594,5 +594,5 @@
       }
     }
   },
-  "checksum": "b516b8f0"
+  "checksum": "fbfdb844"
 }

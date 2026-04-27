@@ -3,6 +3,7 @@
 /NonogramHW.gen/
 /NonogramHW.sim/
 /NonogramHW.runs/
+**/ui
 
 # Logs / reports / temp
 *.jou
