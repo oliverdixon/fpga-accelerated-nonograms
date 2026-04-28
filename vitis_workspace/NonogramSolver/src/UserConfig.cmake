@@ -28,7 +28,6 @@ set(USER_UNDEFINED_SYMBOLS
 set(USER_INCLUDE_DIRECTORIES
 )
 set(USER_COMPILE_SOURCES
-"solution_driver.c"
 "serial.c"
 "video.c"
 "zybo_z7_hdmi/display_ctrl.c"
@@ -39,6 +38,7 @@ set(USER_COMPILE_SOURCES
 "metadata.c"
 "network.c"
 "puzzle.c"
+"solver.c"
 )
 
 # -----------------------------------------

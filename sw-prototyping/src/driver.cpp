@@ -12,54 +12,54 @@
 
 #include "solver.h"
 
-static unsigned min_required_tail(
-        const std::vector<extent_t> &clues,
+static unsigned int min_required_tail(
+        const std::vector<extent_t> &block,
         const unsigned int start_idx)
 {
-    if (start_idx >= clues.size())
+    if (start_idx >= block.size())
         return 0;
 
     unsigned int sum = 0;
-    for (unsigned i = start_idx; i < clues.size(); ++i)
-        sum += clues[i];
+    for (unsigned i = start_idx; i < block.size(); ++i)
+        sum += block[i];
 
-    sum += clues.size() - start_idx - 1;
+    sum += block.size() - start_idx - 1;
     return sum;
 }
 
 /**
  * @brief Recursively build all valid patterns for the given clues.
  * @param puzzle_size The extent of the square puzzle.
- * @param clues The clues for the row or column.
+ * @param block The clue block for the row or column.
  * @param clue_idx The current clue index in the given clues vector.
  * @param min_start_idx
  * @param partial_line The current line being built.
  * @param patterns_out The pattern being built recursively.
  */
-static void generate_permutations_induction(
+static void generate_pattern_induction(
         const extent_t puzzle_size,
-        const std::vector<extent_t> &clues,
+        const std::vector<extent_t> &block,
         const unsigned int clue_idx,
         const unsigned int min_start_idx,
         const line_t partial_line,
         std::vector<line_t> &patterns_out)
 {
-    if (clue_idx == clues.size()) {
+    if (clue_idx == block.size()) {
         // Base case: we've reached the end of the clues, so commit our current line.
         patterns_out.push_back(partial_line);
         return;
     }
 
-    const unsigned int block_len = clues[clue_idx]; // The length of the target continuous block.
-    const unsigned int latest_start_idx = puzzle_size - block_len - min_required_tail(clues, clue_idx + 1);
+    const unsigned int block_len = block[clue_idx]; // The length of the target continuous block.
+    const unsigned int latest_start_idx = puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
     for (unsigned int start_idx = min_start_idx; start_idx <= latest_start_idx; ++start_idx) {
         const line_t block_mask = ((1U << block_len) - 1) << start_idx;
-        const unsigned next_idx = clue_idx + 1 == clues.size() ? start_idx + block_len : start_idx + block_len + 1;
+        const unsigned int next_idx = clue_idx + 1 == block.size() ? start_idx + block_len : start_idx + block_len + 1;
 
-        generate_permutations_induction(
+        generate_pattern_induction(
             puzzle_size,
-            clues,
+            block,
             clue_idx + 1,
             next_idx,
             partial_line | block_mask,
@@ -71,22 +71,22 @@ static void generate_permutations_induction(
 /**
  * @brief Base case/entry point for generating pattern permutations based on clues.
  * @param puzzle_size The extent of the square puzzle.
- * @param clues The clues for the row or column.
+ * @param block The clue block for the row or column.
  * @return All valid patterns i.a.w. the given clues.
  */
-static std::vector<line_t> generate_permutations(
+static std::vector<line_t> generate_pattern(
         const extent_t puzzle_size,
-        const std::vector<extent_t> &clues)
+        const std::vector<extent_t> &block)
 {
-    std::vector<line_t> permutations;
+    std::vector<line_t> pattern;
 
-    if (clues.empty()) {
-        permutations.push_back(0);
-        return permutations;
+    if (block.empty()) {
+        pattern.push_back(0);
+        return pattern;
     }
 
-    generate_permutations_induction(puzzle_size, clues, 0, 0, 0, permutations);
-    return permutations;
+    generate_pattern_induction(puzzle_size, block, 0, 0, 0, pattern);
+    return pattern;
 }
 
 static void compute_valid_patterns(
@@ -98,7 +98,7 @@ static void compute_valid_patterns(
     for (const auto [idx, clue] : std::views::enumerate(clues)) {
         // Generate all valid patterns for a given clue, check invariants, and copy to the destination.
 
-        const std::vector<line_t> patterns = generate_permutations(puzzle_size, clue);
+        const std::vector<line_t> patterns = generate_pattern(puzzle_size, clue);
         assert(patterns.size() <= MAX_PATTERN_COUNT);
         counts[idx] = static_cast<extent_t>(patterns.size());
 
@@ -140,11 +140,11 @@ int main()
     constexpr extent_t puzzle_size = 5;
 
     const std::vector<std::vector<extent_t> > row_clues = {
-        {0},
+        {},
         {2, 2},
         {5},
         {2, 2},
-        {0}
+        {}
     };
 
     const std::vector<std::vector<extent_t> > col_clues = {
