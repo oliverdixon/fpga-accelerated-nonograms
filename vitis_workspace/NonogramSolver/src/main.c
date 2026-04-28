@@ -3,7 +3,6 @@
 #include <lwip/sockets.h>
 #include <xil_printf.h>
 #include <xil_cache.h>
-#include <xsolver_toplevel.h>
 
 #include "chunks.h"
 #include "puzzle.h"
@@ -11,6 +10,7 @@
 #include "error.h"
 #include "network.h"
 #include "serial.h"
+#include "solution_driver.h"
 
 #define THREAD_STACKSIZE 1024
 
@@ -90,18 +90,11 @@ static void solve_puzzles_task(void * const data)
     struct MessagePuzzleInfo puzzle_info;
     XSolver_toplevel solver;
 
-    static uint32_t solver_ram = 64;
     XSolver_toplevel_Initialize(&solver, XPAR_XSOLVER_TOPLEVEL_0_BASEADDR);
 
     while (1)
-        if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-            XSolver_toplevel_Set_ram(&solver, (UINTPTR)&solver_ram);
-            Xil_DCacheFlushRange((UINTPTR)&solver_ram, sizeof(solver_ram));
-            XSolver_toplevel_Start(&solver);
-            while (!XSolver_toplevel_IsDone(&solver));
-
-            xil_printf("Received %d from LFSR.\r\n", XSolver_toplevel_Get_return(&solver));
-        }
+        if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE)
+            solver_solve(&solver, &puzzle_info);
 
     vTaskDelete(NULL);
 }
