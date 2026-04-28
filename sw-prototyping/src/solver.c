@@ -71,7 +71,7 @@ static line_t produce_column_mask(const extent_t col_idx)
  *  <code>[1, 0, 1, 0]</code>.
  */
 static line_t get_column_mask(
-        const line_t row_masks[MAX_SIZE],
+        const line_t * const row_masks,
         const extent_t row_count,
         const extent_t col_idx)
 {
@@ -99,7 +99,7 @@ static line_t get_column_mask(
  * @return Were any valid forcing patterns found?
  */
 static bool refine_line(
-        const line_t patterns[MAX_PATTERN_COUNT],
+        const line_t * const patterns,
         const uint16_t pattern_count,
         const uint8_t column_extent,
         const line_t known_black,
@@ -141,8 +141,8 @@ static bool refine_line(
  * @return Do all cells in the grid of the given dimensions have a black or white assignment?
  */
 static bool are_all_cells_known(
-        const line_t black[MAX_SIZE],
-        const line_t white[MAX_SIZE],
+        const line_t * const black,
+        const line_t * const white,
         const extent_t puzzle_size)
 {
     const line_t col_mask = produce_column_mask(puzzle_size);
@@ -166,7 +166,7 @@ static bool are_all_cells_known(
  *  verify.
  */
 static bool is_line_valid(
-        const line_t patterns[MAX_PATTERN_COUNT],
+        const line_t * const patterns,
         const uint16_t pattern_count,
         const extent_t column_extent,
         const line_t known_black,
@@ -195,17 +195,18 @@ static bool is_line_valid(
  * @return Do the given cell assignments satisfy the clues encoded by the row and column patterns?
  */
 static bool is_board_valid(
-        const line_t row_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-        const extent_t row_counts[MAX_SIZE],
-        const line_t col_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-        const extent_t col_counts[MAX_SIZE],
+        const line_t * const row_patterns,
+        const extent_t * row_counts,
+        const line_t * const col_patterns,
+        const extent_t * const col_counts,
         const extent_t puzzle_size,
-        const line_t black[MAX_SIZE],
-        const line_t white[MAX_SIZE])
+        const line_t * const black,
+        const line_t * const white)
 {
     // Check the rows.
     for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx)
-        if (!is_line_valid(row_patterns[row_idx], row_counts[row_idx], puzzle_size, black[row_idx], white[row_idx]))
+        if (!is_line_valid(&row_patterns[row_idx * MAX_PATTERN_COUNT], row_counts[row_idx], puzzle_size, black[row_idx],
+                white[row_idx]))
             return false;
 
     // Check the columns (transposed into line masks).
@@ -213,7 +214,8 @@ static bool is_board_valid(
         const line_t known_black = get_column_mask(black, puzzle_size, col_idx);
         const line_t known_white = get_column_mask(white, puzzle_size, col_idx);
 
-        if (!is_line_valid(col_patterns[col_idx], col_counts[col_idx], puzzle_size, known_black, known_white))
+        if (!is_line_valid(&col_patterns[col_idx * MAX_PATTERN_COUNT], col_counts[col_idx], puzzle_size, known_black,
+                known_white))
             return false;
     }
 
@@ -230,7 +232,7 @@ static bool is_board_valid(
  * @return Has the refinement changed any assignments?
  */
 static bool refine_row(
-        const line_t row_patterns[MAX_PATTERN_COUNT],
+        const line_t * const row_patterns,
         const extent_t row_pattern_count,
         const extent_t puzzle_size,
         line_t * const out_black,
@@ -265,7 +267,7 @@ static bool refine_row(
  * @return Has the refinement changed any assignments?
  */
 static bool refine_column(
-        const line_t col_patterns[MAX_PATTERN_COUNT],
+        const line_t * const col_patterns,
         const extent_t col_pattern_count,
         const extent_t col_idx,
         const extent_t puzzle_size,
@@ -305,13 +307,13 @@ static bool refine_column(
 }
 
 enum SolverState solve(
-        const line_t row_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-        const extent_t row_counts[MAX_SIZE],
-        const line_t col_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-        const extent_t col_counts[MAX_SIZE],
+        const line_t * const row_patterns,
+        const extent_t * row_counts,
+        const line_t * col_patterns,
+        const extent_t * const col_counts,
         const extent_t puzzle_size,
-        line_t out_black[MAX_SIZE],
-        line_t out_white[MAX_SIZE])
+        line_t * const out_black,
+        line_t * const out_white)
 {
     line_t black[MAX_SIZE] = { 0 };
     line_t white[MAX_SIZE] = { 0 };
@@ -321,12 +323,14 @@ enum SolverState solve(
 
         // Refine the rows.
         for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx)
-            if (refine_row(row_patterns[row_idx], row_counts[row_idx], puzzle_size, &black[row_idx], &white[row_idx]))
+            if (refine_row(&row_patterns[row_idx * MAX_PATTERN_COUNT], row_counts[row_idx], puzzle_size,
+                    &black[row_idx], &white[row_idx]))
                 changed = true;
 
         // Refine the columns.
         for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx)
-            if (refine_column(col_patterns[col_idx], col_counts[col_idx], col_idx, puzzle_size, black, white))
+            if (refine_column(&col_patterns[col_idx * MAX_PATTERN_COUNT], col_counts[col_idx], col_idx, puzzle_size,
+                    black, white))
                 changed = true;
 
         if (!changed)

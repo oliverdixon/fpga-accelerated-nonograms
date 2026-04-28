@@ -37,13 +37,13 @@ extern "C" {
  *  an explicit contradiction was encountered.
  */
 enum SolverState solve(
-    const line_t row_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-    const extent_t row_counts[MAX_SIZE],
-    const line_t col_patterns[MAX_SIZE][MAX_PATTERN_COUNT],
-    const extent_t col_counts[MAX_SIZE],
+    const line_t * row_patterns,
+    const extent_t * row_counts,
+    const line_t * col_patterns,
+    const extent_t * col_counts,
     extent_t puzzle_size,
-    line_t out_black[MAX_SIZE],
-    line_t out_white[MAX_SIZE]
+    line_t * out_black,
+    line_t * out_white
 );
 
 #ifdef __cplusplus

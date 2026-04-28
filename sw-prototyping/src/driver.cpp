@@ -90,7 +90,7 @@ static std::vector<line_t> generate_permutations(
 }
 
 static void compute_valid_patterns(
-        line_t dst[MAX_SIZE][MAX_PATTERN_COUNT],
+        line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
         extent_t counts[MAX_SIZE],
         const std::vector<std::vector<extent_t> > &clues,
         const extent_t puzzle_size)
@@ -102,8 +102,8 @@ static void compute_valid_patterns(
         assert(patterns.size() <= MAX_PATTERN_COUNT);
         counts[idx] = static_cast<extent_t>(patterns.size());
 
-        for (auto [pattern_dst, pattern_src] : std::views::zip(dst[idx], patterns))
-            pattern_dst = pattern_src;
+        for (unsigned int pattern_idx = 0; pattern_idx < patterns.size(); ++pattern_idx)
+            dst[idx * MAX_PATTERN_COUNT + pattern_idx] = patterns[pattern_idx];
     }
 }
 
@@ -158,8 +158,8 @@ int main()
     assert(row_clues.size() == puzzle_size);
     assert(col_clues.size() == puzzle_size);
 
-    static line_t row_patterns[MAX_SIZE][MAX_PATTERN_COUNT];
-    static line_t col_patterns[MAX_SIZE][MAX_PATTERN_COUNT];
+    static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+    static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
     static extent_t row_counts[MAX_SIZE];
     static extent_t col_counts[MAX_SIZE];
 
