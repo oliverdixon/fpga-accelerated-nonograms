@@ -6,6 +6,7 @@
 
 #include "chunks.h"
 #include "puzzle.h"
+#include "result.h"
 #include "video.h"
 #include "error.h"
 #include "network.h"
@@ -19,15 +20,15 @@ static void request_protocol_task(void * data);
 static void draw_puzzles_task(void * data);
 static void solve_puzzles_task(void * data);
 
-QueueHandle_t requests_queue; // REQUEST_INFO messages for puzzle procurement.
-QueueHandle_t graphics_queue; // PUZZLE_INFO/CHUNK_DATA messages for drawing.
-QueueHandle_t challenge_queue; // PUZZLE_INFO/CHUNK_DATA messages for solving.
+QueueHandle_t requests_queue; // Metadata for puzzle procurement.
+QueueHandle_t graphics_queue; // PUZZLE_INFO messages for drawing.
+QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
 
 int main()
 {
     static unsigned char mac[] = { 0x00, 0x11, 0x22, 0x33, 0x00, 0x19 };
 
-    requests_queue = xQueueCreate(1, sizeof(struct MessageRequestInfo));
+    requests_queue = xQueueCreate(1, sizeof(struct PuzzleMetadata));
     graphics_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
     challenge_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
     
@@ -42,25 +43,24 @@ static void accept_input_task(void * const data)
 {
     (void) data;
 
-    struct MessageRequestInfo request_info = {
-        .metadata = {
-            .valid = true
-        }
+    struct PuzzleMetadata request_metadata = {
+        .valid = true
     };
+
+    // TODO while (1)
 
     xTaskCreate(&request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
 
     print("Enter a seed: ([0]-4294967295) ");
-    request_info.metadata.seed = parse_uint32(0, 4294967295, 0);
+    request_metadata.seed = parse_uint32(0, 4294967295, 0);
 
     print("Enter a size index: ([0]-15) ");
-    request_info.metadata.difficulty.size_index = parse_uint32(0, 15, 0);
+    request_metadata.difficulty.size_index = parse_uint32(0, 15, 0);
     
     print("Enter a difficulty tier: ([E],M,H,C) ");
-    request_info.metadata.difficulty.tier = parse_difficulty_tier(DIFFICULTY_EASY);
+    request_metadata.difficulty.tier = parse_difficulty_tier(DIFFICULTY_EASY);
 
-    puzzle_request_print(&request_info);
-    xQueueSend(requests_queue, &request_info, portMAX_DELAY);
+    xQueueSend(requests_queue, &request_metadata, portMAX_DELAY);
 
     vTaskSuspend(NULL);
 }
@@ -99,10 +99,14 @@ static void solve_puzzles_task(void * const data)
     vTaskDelete(NULL);
 }
 
-static int udp_receive_message(const int sock, struct sockaddr_in * const src,
-    void * const message, const enum MessageType message_type)
+static int udp_receive_message(
+        const int sock,
+        struct sockaddr_in * const src,
+        void * const dst,
+        const enum MessageType message_type,
+        const struct PuzzleMetadata * const match_metadata)
 {
-    static uint8_t buffer[256];
+    static uint8_t buffer[256]; // TODO big enough?
     static struct MessageError error;
 
     socklen_t src_len = sizeof(*src);
@@ -118,8 +122,9 @@ static int udp_receive_message(const int sock, struct sockaddr_in * const src,
             return -1;
         } else if (message_type == *buffer) {
             switch (*buffer) {
-            case MSG_PUZZLE_INFO: return puzzle_parse(message, buffer);
-            case MSG_CHUNK_DATA: return chunk_parse(message, buffer);
+            case MSG_PUZZLE_INFO: return puzzle_parse(dst, buffer);
+            case MSG_CHUNK_DATA: return chunk_parse(dst, match_metadata, buffer);
+            case MSG_RESULT: return result_parse(dst, match_metadata, buffer);
             default:
                 // Desirable message does not have a parser.
                 return -1;
@@ -137,35 +142,31 @@ static int udp_receive_message(const int sock, struct sockaddr_in * const src,
 static void build_puzzle_data(
     const int sock,
     const struct sockaddr_in * const dst_addr,
-    const struct MessageRequestInfo * const request_info
+    const struct PuzzleMetadata * const metadata
 )
 {
     static struct MessagePuzzleInfo puzzle_info;
-    static struct MessageRequestChunk request_chunk;
     static struct sockaddr_in src_addr;
     
     struct MessageChunkData * const chunk_data = &puzzle_info.chunk;
     
     // Request a puzzle according to the given request_info.
-    puzzle_request(request_info, sock, dst_addr);
-    if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO) != 0) {
+    puzzle_request(metadata, sock, dst_addr);
+    if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO, NULL) != 0) {
         print("request_task: did not receive expected MSG_PUZZLE_INFO.\r\n");
         return;
     }
     
     // For info, describe the puzzle on the serial output.
     puzzle_print(&puzzle_info);
-    request_chunk.metadata = puzzle_info.metadata;
 
     assert(puzzle_info.num_chunks == 1); // TODO remove constraint
 
     // Request, receive, and parse each chunk of clue data.
     for (uint8_t chunk_id = 0; chunk_id < puzzle_info.num_chunks; ++chunk_id) {
-        request_chunk.chunk_id = chunk_id;
-        chunk_request(&request_chunk, sock, dst_addr);
-        if (udp_receive_message(sock, &src_addr, chunk_data, MSG_CHUNK_DATA) == 0) {
+        chunk_request(chunk_id, sock, dst_addr, &puzzle_info.metadata);
+        if (udp_receive_message(sock, &src_addr, chunk_data, MSG_CHUNK_DATA, &puzzle_info.metadata) == 0) {
             assert(chunk_data->chunk_id == chunk_id);
-            assert(metadata_equal(&chunk_data->metadata, &request_chunk.metadata));
             chunk_print(chunk_data);
             
             if (chunk_data->max_clue_data_count > puzzle_info.global_max_clue_data_count)
@@ -195,16 +196,34 @@ static void request_protocol_task(void * const data)
     xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
     xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
 
-    struct MessageRequestInfo request_info;
+    struct PuzzleMetadata request_metadata;
 
     while (1)
-        if (xQueueReceive(requests_queue, &request_info, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(requests_queue, &request_metadata, portMAX_DELAY) == pdTRUE)
             /*
              * On receipt of a request, query the server to build a puzzle of the
              * specified parameters.
              */
-            build_puzzle_data(sock, &dst_addr, &request_info);
+            build_puzzle_data(sock, &dst_addr, &request_metadata);
     
     lwip_close(sock);
     vTaskDelete(NULL);
+}
+
+static void submit_protocol_task(void * const data)
+{
+    (void) data;
+
+    struct sockaddr_in local_addr;
+    struct sockaddr_in dst_addr;
+    const int sock = network_bind_socket(&local_addr);
+
+    if (sock < 0) {
+        vTaskDelete(NULL);
+        return;
+    }
+
+    network_prepare_dst_addr(&dst_addr);
+
+    // TODO
 }

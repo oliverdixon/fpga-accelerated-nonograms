@@ -32,16 +32,12 @@ struct MessagePuzzleInfo
 	struct MessageChunkData chunk; // TODO: support multiple chunks
 };
 
-struct MessageRequestInfo
-{
-	struct PuzzleMetadata metadata;
-};
-
-void puzzle_request(const struct MessageRequestInfo * data,
-	int sock, const struct sockaddr_in * dst_addr);
+void puzzle_request(
+	const struct PuzzleMetadata * metadata,
+	int sock,
+	const struct sockaddr_in * dst_addr);
 
 int puzzle_parse(struct MessagePuzzleInfo * dst, const uint8_t * payload);
 void puzzle_print(const struct MessagePuzzleInfo * puzzle_info);
-void puzzle_request_print(const struct MessageRequestInfo * request_info);
 
 #endif // MESSAGE_PUZZLE_INFO_H

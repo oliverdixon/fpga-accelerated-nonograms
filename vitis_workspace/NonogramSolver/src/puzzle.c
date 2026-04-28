@@ -6,8 +6,10 @@
 
 static uint8_t send_buf[MESSAGE_REQUEST_INFO_LENGTH];
 
-void puzzle_request(const struct MessageRequestInfo * const data,
-     const int sock, const struct sockaddr_in * const dst_addr)
+void puzzle_request(
+    const struct PuzzleMetadata * const metadata,
+	const int sock,
+	const struct sockaddr_in * const dst_addr)
 {
     uint8_t * buffer_head = send_buf;
 
@@ -15,7 +17,7 @@ void puzzle_request(const struct MessageRequestInfo * const data,
     *buffer_head++ = MSG_REQUEST_INFO;
 
     // 2. Puzzle metadata
-    buffer_head = metadata_hton(&data->metadata, buffer_head);
+    buffer_head = metadata_hton(metadata, buffer_head);
 
     lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
         sizeof(struct sockaddr_in));
@@ -57,19 +59,6 @@ void puzzle_print(const struct MessagePuzzleInfo * const puzzle_info)
             puzzle_info->clue_bytes);
     } else
         print("MessagePuzzleInfo: INVALID\r\n");
-
-    print("\r\n");
-}
-
-void puzzle_request_print(const struct MessageRequestInfo * request_info)
-{
-    print("\r\n");
-    
-    if (request_info->metadata.valid) {
-        print("MessageRequestInfo:\r\n\t");
-        metadata_print(&request_info->metadata);
-    } else
-        print("MessageRequestInfo: INVALID");
 
     print("\r\n");
 }

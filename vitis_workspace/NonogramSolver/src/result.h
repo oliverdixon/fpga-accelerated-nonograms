@@ -1,7 +1,9 @@
 #ifndef RESULT_H
 #define RESULT_H
 
-#include "metadata.h"
+#include <stdint.h>
+
+struct PuzzleMetadata;
 
 enum ResultCode
 {
@@ -12,12 +14,11 @@ enum ResultCode
 
 struct MessageResult
 {
-    struct PuzzleMetadata metadata;
     enum ResultCode status : 8;
     uint32_t solve_time;   
 };
 
-int result_parse(struct MessageResult * result, const uint8_t * payload);
-void result_print(struct MessageResult * result);
+int result_parse(struct MessageResult * result, const struct PuzzleMetadata * metadata, const uint8_t * payload);
+void result_print(const struct MessageResult * result);
 
 #endif // RESULT_H

@@ -1,16 +1,19 @@
 #include <assert.h>
 #include <xil_printf.h>
 
+#include "metadata.h"
 #include "result.h"
 
-int result_parse(struct MessageResult * const result, const uint8_t * payload)
+int result_parse(struct MessageResult * result, const struct PuzzleMetadata * const metadata, const uint8_t * payload)
 {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
 
-    payload = metadata_parse(&result->metadata, payload);
+    // Verify that the received metadata matches what we expect.
+    struct PuzzleMetadata received_metadata;
+    payload = metadata_parse(&received_metadata, payload);
 
-    if (!result->metadata.valid) {
+    if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {
         print("result_parse: quitting early due to bad metadata.\r\n");
         return -1;
     }
@@ -25,16 +28,19 @@ int result_parse(struct MessageResult * const result, const uint8_t * payload)
     return 0;
 }
 
-void result_print(struct MessageResult * result)
+void result_print(const struct MessageResult * const result)
 {
-    print("\r\n");
+    xil_printf("Result in %d seconds: ", result->solve_time);
     
-    if (result->metadata.valid) {
-        print("MessageResult:\r\n\t");
-        metadata_print(&result->metadata);
-        xil_printf("\tStatus: %d\r\n\tSolve Time: %d\r\n", result->status, result->solve_time);
-    } else
-        print("MessageResult: INVALID\r\n");
-
-    print("\r\n");
+    switch (result->status) {
+    case RESULT_INCORRECT:
+        print("Incorrect!\r\n");
+        break;
+    case RESULT_CORRECT:
+        print("Correct!\r\n");
+        break;
+    case RESULT_ERROR:
+        print("Error!\r\n");
+        break;
+    }
 }

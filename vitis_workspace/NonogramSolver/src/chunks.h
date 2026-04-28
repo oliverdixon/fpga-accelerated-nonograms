@@ -1,30 +1,9 @@
 #ifndef MESSAGE_REQUEST_CHUNK_H
 #define MESSAGE_REQUEST_CHUNK_H
 
-#include "metadata.h"
+#include <stdint.h>
 
-/*
- * Message ID (1 byte)
- * Metadata
- * Chunk ID (1 byte)
- * Number of chunks (1 byte)
- * Offset (2 bytes)
- * Data length (2 bytes)
- */
-#define MESSAGE_CHUNK_DATA_MIN_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1 + 1 + 2 + 2)
-
-/*
- * Message ID (1 byte)
- * Metadata
- * Chunk ID (1 byte)
- */
-#define MESSAGE_REQUEST_CHUNK_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1)
-
-struct MessageRequestChunk
-{
-    struct PuzzleMetadata metadata;
-    uint8_t chunk_id;
-};
+struct PuzzleMetadata;
 
 struct ClueData
 {
@@ -34,7 +13,6 @@ struct ClueData
 
 struct MessageChunkData
 {
-    struct PuzzleMetadata metadata;
     uint8_t chunk_id;
     uint8_t num_chunks;
     uint16_t offset;
@@ -46,10 +24,16 @@ struct MessageChunkData
 
 struct sockaddr_in;
 
-void chunk_request(const struct MessageRequestChunk * data,
-    int sock, const struct sockaddr_in * dst_addr);
+void chunk_request(
+    uint8_t chunk_id,
+    int sock,
+    const struct sockaddr_in * dst_addr,
+    const struct PuzzleMetadata * const metadata);
 
-int chunk_parse(struct MessageChunkData * dst, const uint8_t * payload);
+int chunk_parse(struct MessageChunkData * dst,
+    const struct PuzzleMetadata * match_metadata,
+    const uint8_t * payload);
+    
 void chunk_free(const struct MessageChunkData * chunk_data);
 void chunk_print(const struct MessageChunkData * chunk_data);
 
