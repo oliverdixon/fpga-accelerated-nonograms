@@ -10,7 +10,7 @@
 #include "error.h"
 #include "network.h"
 #include "serial.h"
-#include "solution_driver.h"
+#include "solver.h"
 
 #define THREAD_STACKSIZE 1024
 
