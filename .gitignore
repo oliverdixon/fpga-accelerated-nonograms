@@ -10,3 +10,6 @@ report/*.aux
 # Ignore generated platform from Vivado
 vitis_workspace/Nonogram
 
+sw-prototyping/docs
+sw-prototyping/cmake-build-*
+

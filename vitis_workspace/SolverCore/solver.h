@@ -1,8 +1,29 @@
-#ifndef LFSR_H
-#define LFSR_H
+#ifndef SOLVER_H
+#define SOLVER_H
 
 #include <stdint.h>
 
-uint32_t solver_toplevel(const uint32_t *ram, uint32_t *arg1, uint32_t *arg2, uint32_t *arg3, uint32_t *arg4);
+typedef uint32_t line_t;
+typedef uint8_t extent_t;
 
-#endif
+#define MAX_SIZE (20)
+#define MAX_PATTERN_COUNT (256)
+
+enum SolverState
+{
+    SOLVER_OK,
+    SOLVER_STUCK,
+    SOLVER_CONTRADICTION
+};
+
+uint32_t solver_toplevel(
+    const line_t * row_patterns,
+    const extent_t * row_counts,
+    const line_t * col_patterns,
+    const extent_t * col_counts,
+    extent_t puzzle_size,
+    line_t * out_black,
+    line_t * out_white
+);
+
+#endif // SOLVER_H

@@ -4,7 +4,7 @@
     "xci_name": "design_1_solver_toplevel_0_1",
     "cell_name": "solver_toplevel_0",
     "component_reference": "xilinx.com:hls:solver_toplevel:1.0",
-    "ip_revision": "2114584359",
+    "ip_revision": "2114584759",
     "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1",
     "parameters": {
       "component_parameters": {
@@ -24,8 +24,8 @@
         "clk_period": [ { "value": "10", "enabled": false, "usage": "all" } ],
         "machine": [ { "value": "64", "enabled": false, "usage": "all" } ],
         "combinational": [ { "value": "0", "enabled": false, "usage": "all" } ],
-        "latency": [ { "value": "9", "enabled": false, "usage": "all" } ],
-        "II": [ { "value": "10", "enabled": false, "usage": "all" } ]
+        "latency": [ { "value": "0", "enabled": false, "usage": "all" } ],
+        "II": [ { "value": "1", "enabled": false, "usage": "all" } ]
       },
       "model_parameters": {
         "C_S_AXI_AXILITES_ADDR_WIDTH": [ { "value": "7", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -57,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2114584359" } ],
+        "IPREVISION": [ { "value": "2114584759" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -491,98 +491,216 @@
                     }
                   }
                 },
-                "ram_1": {
+                "row_patterns_1": {
                   "address_offset": "24",
                   "size": 32,
-                  "display_name": "ram_1",
-                  "description": "Data signal of ram",
+                  "display_name": "row_patterns_1",
+                  "description": "Data signal of row_patterns",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "ram": {
+                    "row_patterns": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 31 to 0 of ram",
+                      "description": "Bit 31 to 0 of row_patterns",
                       "access": "write-only"
                     }
                   }
                 },
-                "ram_2": {
+                "row_patterns_2": {
                   "address_offset": "28",
                   "size": 32,
-                  "display_name": "ram_2",
-                  "description": "Data signal of ram",
+                  "display_name": "row_patterns_2",
+                  "description": "Data signal of row_patterns",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "ram": {
+                    "row_patterns": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 63 to 32 of ram",
+                      "description": "Bit 63 to 32 of row_patterns",
                       "access": "write-only"
                     }
                   }
                 },
-                "arg1": {
+                "row_counts_1": {
                   "address_offset": "36",
                   "size": 32,
-                  "display_name": "arg1",
-                  "description": "Data signal of arg1",
+                  "display_name": "row_counts_1",
+                  "description": "Data signal of row_counts",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "arg1": {
+                    "row_counts": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 31 to 0 of arg1",
+                      "description": "Bit 31 to 0 of row_counts",
                       "access": "write-only"
                     }
                   }
                 },
-                "arg2": {
-                  "address_offset": "44",
+                "row_counts_2": {
+                  "address_offset": "40",
                   "size": 32,
-                  "display_name": "arg2",
-                  "description": "Data signal of arg2",
+                  "display_name": "row_counts_2",
+                  "description": "Data signal of row_counts",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "arg2": {
+                    "row_counts": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 31 to 0 of arg2",
+                      "description": "Bit 63 to 32 of row_counts",
                       "access": "write-only"
                     }
                   }
                 },
-                "arg3": {
+                "col_patterns_1": {
+                  "address_offset": "48",
+                  "size": 32,
+                  "display_name": "col_patterns_1",
+                  "description": "Data signal of col_patterns",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "col_patterns": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 31 to 0 of col_patterns",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "col_patterns_2": {
                   "address_offset": "52",
                   "size": 32,
-                  "display_name": "arg3",
-                  "description": "Data signal of arg3",
+                  "display_name": "col_patterns_2",
+                  "description": "Data signal of col_patterns",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "arg3": {
+                    "col_patterns": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 31 to 0 of arg3",
+                      "description": "Bit 63 to 32 of col_patterns",
                       "access": "write-only"
                     }
                   }
                 },
-                "arg4": {
+                "col_counts_1": {
                   "address_offset": "60",
                   "size": 32,
-                  "display_name": "arg4",
-                  "description": "Data signal of arg4",
+                  "display_name": "col_counts_1",
+                  "description": "Data signal of col_counts",
                   "access": "write-only",
                   "reset_value": "0",
                   "fields": {
-                    "arg4": {
+                    "col_counts": {
                       "bit_offset": 0,
                       "bit_width": 32,
-                      "description": "Bit 31 to 0 of arg4",
+                      "description": "Bit 31 to 0 of col_counts",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "col_counts_2": {
+                  "address_offset": "64",
+                  "size": 32,
+                  "display_name": "col_counts_2",
+                  "description": "Data signal of col_counts",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "col_counts": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 63 to 32 of col_counts",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "puzzle_size": {
+                  "address_offset": "72",
+                  "size": 32,
+                  "display_name": "puzzle_size",
+                  "description": "Data signal of puzzle_size",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "puzzle_size": {
+                      "bit_offset": 0,
+                      "bit_width": 8,
+                      "description": "Bit 7 to 0 of puzzle_size",
+                      "access": "write-only"
+                    },
+                    "RESERVED": {
+                      "bit_offset": 8,
+                      "bit_width": 24,
+                      "description": "Reserved.  0s on read.",
+                      "access": "read-only"
+                    }
+                  }
+                },
+                "out_black_1": {
+                  "address_offset": "80",
+                  "size": 32,
+                  "display_name": "out_black_1",
+                  "description": "Data signal of out_black",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "out_black": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 31 to 0 of out_black",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "out_black_2": {
+                  "address_offset": "84",
+                  "size": 32,
+                  "display_name": "out_black_2",
+                  "description": "Data signal of out_black",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "out_black": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 63 to 32 of out_black",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "out_white_1": {
+                  "address_offset": "92",
+                  "size": 32,
+                  "display_name": "out_white_1",
+                  "description": "Data signal of out_white",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "out_white": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 31 to 0 of out_white",
+                      "access": "write-only"
+                    }
+                  }
+                },
+                "out_white_2": {
+                  "address_offset": "96",
+                  "size": 32,
+                  "display_name": "out_white_2",
+                  "description": "Data signal of out_white",
+                  "access": "write-only",
+                  "reset_value": "0",
+                  "fields": {
+                    "out_white": {
+                      "bit_offset": 0,
+                      "bit_width": 32,
+                      "description": "Bit 63 to 32 of out_white",
                       "access": "write-only"
                     }
                   }
@@ -594,5 +712,5 @@
       }
     }
   },
-  "checksum": "fbfdb844"
+  "checksum": "43ae494e"
 }
