@@ -211,7 +211,27 @@
         "M04_AXI_rdata": [ { "direction": "in", "size_left": "31", "size_right": "0", "driver_value": "0" } ],
         "M04_AXI_rresp": [ { "direction": "in", "size_left": "1", "size_right": "0", "driver_value": "0" } ],
         "M04_AXI_rvalid": [ { "direction": "in", "driver_value": "0" } ],
-        "M04_AXI_rready": [ { "direction": "out", "driver_value": "0" } ]
+        "M04_AXI_rready": [ { "direction": "out", "driver_value": "0" } ],
+        "S01_AXI_awid": [ { "direction": "in", "size_left": "0", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awaddr": [ { "direction": "in", "size_left": "63", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awlen": [ { "direction": "in", "size_left": "7", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awsize": [ { "direction": "in", "size_left": "2", "size_right": "0", "driver_value": "010" } ],
+        "S01_AXI_awburst": [ { "direction": "in", "size_left": "1", "size_right": "0", "driver_value": "1" } ],
+        "S01_AXI_awlock": [ { "direction": "in", "size_left": "0", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awcache": [ { "direction": "in", "size_left": "3", "size_right": "0", "driver_value": "3" } ],
+        "S01_AXI_awprot": [ { "direction": "in", "size_left": "2", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awqos": [ { "direction": "in", "size_left": "3", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_awvalid": [ { "direction": "in", "driver_value": "0" } ],
+        "S01_AXI_awready": [ { "direction": "out", "driver_value": "0" } ],
+        "S01_AXI_wdata": [ { "direction": "in", "size_left": "31", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_wstrb": [ { "direction": "in", "size_left": "3", "size_right": "0", "driver_value": "1" } ],
+        "S01_AXI_wlast": [ { "direction": "in", "driver_value": "0" } ],
+        "S01_AXI_wvalid": [ { "direction": "in", "driver_value": "0" } ],
+        "S01_AXI_wready": [ { "direction": "out", "driver_value": "0" } ],
+        "S01_AXI_bid": [ { "direction": "out", "size_left": "0", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_bresp": [ { "direction": "out", "size_left": "1", "size_right": "0", "driver_value": "0" } ],
+        "S01_AXI_bvalid": [ { "direction": "out", "driver_value": "0" } ],
+        "S01_AXI_bready": [ { "direction": "in", "driver_value": "0" } ]
       },
       "interfaces": {
         "CLK.aclk": {
@@ -338,7 +358,7 @@
             "WUSER_WIDTH": [ { "value": "0", "value_src": "auto_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
             "RUSER_WIDTH": [ { "value": "0", "value_src": "auto_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
             "BUSER_WIDTH": [ { "value": "0", "value_src": "auto_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
-            "READ_WRITE_MODE": [ { "value": "READ_ONLY", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "is_static_object": false } ],
+            "READ_WRITE_MODE": [ { "value": "READ_WRITE", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "is_static_object": false } ],
             "HAS_BURST": [ { "value": "0", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
             "HAS_LOCK": [ { "value": "1", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
             "HAS_PROT": [ { "value": "1", "value_src": "constant_prop", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_static_object": false } ],
@@ -377,7 +397,27 @@
             "RRESP": [ { "physical_name": "S01_AXI_rresp" } ],
             "RLAST": [ { "physical_name": "S01_AXI_rlast" } ],
             "RVALID": [ { "physical_name": "S01_AXI_rvalid" } ],
-            "RREADY": [ { "physical_name": "S01_AXI_rready" } ]
+            "RREADY": [ { "physical_name": "S01_AXI_rready" } ],
+            "AWID": [ { "physical_name": "S01_AXI_awid" } ],
+            "AWADDR": [ { "physical_name": "S01_AXI_awaddr" } ],
+            "AWLEN": [ { "physical_name": "S01_AXI_awlen" } ],
+            "AWSIZE": [ { "physical_name": "S01_AXI_awsize" } ],
+            "AWBURST": [ { "physical_name": "S01_AXI_awburst" } ],
+            "AWLOCK": [ { "physical_name": "S01_AXI_awlock" } ],
+            "AWCACHE": [ { "physical_name": "S01_AXI_awcache" } ],
+            "AWPROT": [ { "physical_name": "S01_AXI_awprot" } ],
+            "AWQOS": [ { "physical_name": "S01_AXI_awqos" } ],
+            "AWVALID": [ { "physical_name": "S01_AXI_awvalid" } ],
+            "AWREADY": [ { "physical_name": "S01_AXI_awready" } ],
+            "WDATA": [ { "physical_name": "S01_AXI_wdata" } ],
+            "WSTRB": [ { "physical_name": "S01_AXI_wstrb" } ],
+            "WLAST": [ { "physical_name": "S01_AXI_wlast" } ],
+            "WVALID": [ { "physical_name": "S01_AXI_wvalid" } ],
+            "WREADY": [ { "physical_name": "S01_AXI_wready" } ],
+            "BID": [ { "physical_name": "S01_AXI_bid" } ],
+            "BRESP": [ { "physical_name": "S01_AXI_bresp" } ],
+            "BVALID": [ { "physical_name": "S01_AXI_bvalid" } ],
+            "BREADY": [ { "physical_name": "S01_AXI_bready" } ]
           }
         },
         "M00_AXI": {
@@ -692,5 +732,5 @@
       }
     }
   },
-  "checksum": "6d9a47b9"
+  "checksum": "fba36df9"
 }

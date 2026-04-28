@@ -4,7 +4,7 @@
     "xci_name": "design_1_solver_toplevel_0_1",
     "cell_name": "solver_toplevel_0",
     "component_reference": "xilinx.com:hls:solver_toplevel:1.0",
-    "ip_revision": "2114584759",
+    "ip_revision": "2114584793",
     "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1",
     "parameters": {
       "component_parameters": {
@@ -24,8 +24,8 @@
         "clk_period": [ { "value": "10", "enabled": false, "usage": "all" } ],
         "machine": [ { "value": "64", "enabled": false, "usage": "all" } ],
         "combinational": [ { "value": "0", "enabled": false, "usage": "all" } ],
-        "latency": [ { "value": "0", "enabled": false, "usage": "all" } ],
-        "II": [ { "value": "1", "enabled": false, "usage": "all" } ]
+        "latency": [ { "value": "11", "enabled": false, "usage": "all" } ],
+        "II": [ { "value": "12 ~ 453659381", "enabled": false, "usage": "all" } ]
       },
       "model_parameters": {
         "C_S_AXI_AXILITES_ADDR_WIDTH": [ { "value": "7", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -57,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2114584759" } ],
+        "IPREVISION": [ { "value": "2114584793" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -242,7 +242,7 @@
             "MAX_WRITE_BURST_LENGTH": [ { "value": "16", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
             "MAX_BURST_LENGTH": [ { "value": "256", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
             "PROTOCOL": [ { "value": "AXI4", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
-            "READ_WRITE_MODE": [ { "value": "READ_ONLY", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
+            "READ_WRITE_MODE": [ { "value": "READ_WRITE", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
             "HAS_BURST": [ { "value": "0", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
             "SUPPORTS_NARROW_BURST": [ { "value": "0", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
             "ADDR_WIDTH": [ { "value": "64", "value_src": "constant", "value_permission": "bd_and_user", "usage": "all" } ],
@@ -712,5 +712,5 @@
       }
     }
   },
-  "checksum": "43ae494e"
+  "checksum": "2f3a2c4d"
 }
