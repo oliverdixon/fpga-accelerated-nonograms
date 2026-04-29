@@ -27,6 +27,8 @@ QueueHandle_t graphics_queue;  // PUZZLE_INFO messages for drawing.
 QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
 QueueHandle_t solution_queue;  // PUZZLE_INFO messages for verifying.
 
+TaskHandle_t accept_input_task_handle;
+
 struct NetworkState network_state;
 
 int main() {
@@ -50,23 +52,27 @@ static void accept_input_task(
 
     struct Metadata request_metadata = {.valid = true};
 
-    // TODO while (1)
-
     xTaskCreate(
         &request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL,
         DEFAULT_THREAD_PRIO - 1, NULL
     );
 
-    print("Enter a seed: ([0]-4294967295) ");
-    request_metadata.seed = parse_uint32(0, 4294967295, 0);
+    accept_input_task_handle = xTaskGetCurrentTaskHandle();
+    xTaskNotify(accept_input_task_handle, 0, eNoAction);
 
-    print("Enter a size index: ([0]-15) ");
-    request_metadata.difficulty.size_index = parse_uint32(0, 15, 0);
+    while (1)
+        if (xTaskNotifyWait(0, 0, NULL, portMAX_DELAY) == pdPASS) {
+            print("Enter a seed: ([0]-4294967295) ");
+            request_metadata.seed = parse_uint32(0, 4294967295, 0);
 
-    print("Enter a difficulty tier: ([E],M,H,C) ");
-    request_metadata.difficulty.tier = parse_difficulty_tier(DIFFICULTY_EASY);
+            print("Enter a size index: ([0]-15) ");
+            request_metadata.difficulty.size_index = parse_uint32(0, 15, 0);
 
-    xQueueSend(requests_queue, &request_metadata, portMAX_DELAY);
+            print("Enter a difficulty tier: ([E],M,H,C) ");
+            request_metadata.difficulty.tier = parse_difficulty_tier(DIFFICULTY_EASY);
+
+            xQueueSend(requests_queue, &request_metadata, portMAX_DELAY);
+        }
 
     vTaskSuspend(NULL);
 }
@@ -247,7 +253,7 @@ static void submit_protocol_task(
 
     static struct sockaddr_in src_addr;
     struct Puzzle puzzle_info;
-    struct MessageResult result = {.status = RESULT_ERROR};
+    struct Result result = {.status = RESULT_ERROR};
 
     while (1)
         if (xQueueReceive(solution_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
@@ -260,6 +266,9 @@ static void submit_protocol_task(
             xSemaphoreGive(network_state.mutex);
             result_print(&result);
             result.status = RESULT_ERROR;
+
+            // This puzzle is done (and the serial line is clear), so query for the next.
+            xTaskNotify(accept_input_task_handle, 0, eNoAction);
         }
 
     vTaskDelete(NULL);

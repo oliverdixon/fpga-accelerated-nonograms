@@ -26,7 +26,7 @@ static uint8_t pack_left_aligned_byte(
 }
 
 int result_parse(
-    struct MessageResult * const result,
+    struct Result * const result,
     const struct Metadata * const metadata,
     const uint8_t * payload
 ) {
@@ -95,7 +95,7 @@ int result_send(
 }
 
 void result_print(
-    const struct MessageResult * const result
+    const struct Result * const result
 ) {
     xil_printf("Result in %d milliseconds: ", result->solve_time);
 

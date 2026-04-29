@@ -107,14 +107,18 @@ static void startup_task(
     vTaskDelete(NULL);
 }
 
-void network_initialise(
+TaskHandle_t network_initialise(
     struct NetworkState * const network,
     lwip_thread_fn app
 ) {
     application_task_fn = app;
+
+    TaskHandle_t handle;
     xTaskCreate(
-        &startup_task, "startup_task", THREAD_STACKSIZE, network, DEFAULT_THREAD_PRIO, NULL
+        &startup_task, "startup_task", THREAD_STACKSIZE, network, DEFAULT_THREAD_PRIO, &handle
     );
+
+    return handle;
 }
 
 int network_bind_socket(

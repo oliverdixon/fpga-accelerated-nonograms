@@ -16,14 +16,14 @@ enum ResultCode
     RESULT_ERROR = 0x02
 };
 
-struct MessageResult
+struct Result
 {
     enum ResultCode status : 8;
     uint32_t solve_time;
 };
 
 int result_parse(
-    struct MessageResult * result,
+    struct Result * result,
     const struct Metadata * metadata,
     const uint8_t * payload
 );
@@ -34,6 +34,6 @@ int result_send(
     const struct sockaddr_in * dst_addr
 );
 
-void result_print(const struct MessageResult * result);
+void result_print(const struct Result * result);
 
 #endif // RESULT_H

@@ -17,7 +17,7 @@ struct NetworkState
     SemaphoreHandle_t mutex;
 };
 
-void network_initialise(
+TaskHandle_t network_initialise(
     struct NetworkState * network,
     lwip_thread_fn app
 );
