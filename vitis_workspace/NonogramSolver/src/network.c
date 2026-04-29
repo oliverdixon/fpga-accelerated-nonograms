@@ -107,10 +107,8 @@ void print_ip(const char *msg, const ip_addr_t *ip)
 	xil_printf("%d.%d.%d.%d\n\r", ip4_addr1(ip), ip4_addr2(ip), ip4_addr3(ip), ip4_addr4(ip));
 }
 
-int network_bind_socket(struct sockaddr_in * const local_addr)
+int network_bind_socket(struct sockaddr_in * const local_addr, const in_port_t local_port)
 {
-    xil_printf("application_task started\r\n");
-
     int sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         xil_printf("socket failed\r\n");
@@ -121,7 +119,7 @@ int network_bind_socket(struct sockaddr_in * const local_addr)
     memset(local_addr, 0, sizeof(struct sockaddr_in));
 
     local_addr->sin_family = AF_INET;
-    local_addr->sin_port = htons(51050);
+    local_addr->sin_port = htons(local_port);
     local_addr->sin_addr.s_addr = PP_HTONL(INADDR_ANY);
 
     if (bind(sock, (struct sockaddr *) local_addr, sizeof(struct sockaddr_in)) < 0) {
@@ -138,7 +136,7 @@ int network_bind_socket(struct sockaddr_in * const local_addr)
 
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
 
-    xil_printf("UDP socket bound to local port %d\r\n", 51050);
+    xil_printf("UDP socket bound to local port %d\r\n", local_port);
     return sock;
 }
 

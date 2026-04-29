@@ -50,6 +50,20 @@ void metadata_print(const struct Metadata * const metadata)
 bool metadata_equal(const struct Metadata * const lhs,
         const struct Metadata * const rhs)
 {
+    if (lhs == NULL) {
+        if (rhs == NULL)
+            return true;
+        else
+            return false;
+    }
+
+    if (rhs == NULL) {
+        if (lhs == NULL)
+            return true;
+        else
+            return false;
+    }
+
     return lhs->valid == rhs->valid && lhs->seed == rhs->seed &&
         lhs->difficulty.size_index == rhs->difficulty.size_index &&
         lhs->difficulty.tier == rhs->difficulty.tier;

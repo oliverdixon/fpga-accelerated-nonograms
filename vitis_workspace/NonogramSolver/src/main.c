@@ -15,14 +15,41 @@
 
 #define THREAD_STACKSIZE 1024
 
-static void accept_input_task(void * data);
-static void request_protocol_task(void * data);
-static void draw_puzzles_task(void * data);
-static void solve_puzzles_task(void * data);
+static void accept_input_task(void *);
+static void request_protocol_task(void *);
+static void draw_puzzles_task(void *);
+static void solve_puzzles_task(void *);
+static void submit_protocol_task(void *);
 
 QueueHandle_t requests_queue; // Metadata for puzzle procurement.
 QueueHandle_t graphics_queue; // PUZZLE_INFO messages for drawing.
 QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
+QueueHandle_t solution_queue; // PUZZLE_INFO messages for verifying.
+
+struct NetworkState
+{
+    int sock;
+    struct sockaddr_in local_addr;
+    struct sockaddr_in dst_addr;
+    SemaphoreHandle_t mutex;
+};
+
+
+// TODO move to network.c and have a proper interface.
+void network_initialise(struct NetworkState * const network)
+{
+    network->sock = network_bind_socket(&network->local_addr, 51050);
+
+    if (network->sock < 0) {
+        vTaskDelete(NULL);
+        return;
+    }
+
+    network_prepare_dst_addr(&network->dst_addr);
+    network->mutex = xSemaphoreCreateMutex();
+}
+
+struct NetworkState network_state;
 
 int main()
 {
@@ -31,6 +58,7 @@ int main()
     requests_queue = xQueueCreate(1, sizeof(struct Metadata));
     graphics_queue = xQueueCreate(1, sizeof(struct Puzzle));
     challenge_queue = xQueueCreate(1, sizeof(struct Puzzle));
+    solution_queue = xQueueCreate(1, sizeof(struct Puzzle));
     
     network_init(mac, accept_input_task);
 
@@ -49,6 +77,7 @@ static void accept_input_task(void * const data)
 
     // TODO while (1)
 
+    network_initialise(&network_state); // TODO
     xTaskCreate(&request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
 
     print("Enter a seed: ([0]-4294967295) ");
@@ -61,7 +90,7 @@ static void accept_input_task(void * const data)
     request_metadata.difficulty.tier = parse_difficulty_tier(DIFFICULTY_EASY);
 
     xQueueSend(requests_queue, &request_metadata, portMAX_DELAY);
-
+    
     vTaskSuspend(NULL);
 }
 
@@ -95,8 +124,10 @@ static void solve_puzzles_task(void * const data)
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             solver_solve(&solver, &puzzle_info);
-            if (puzzle_info.is_solved)
+            if (puzzle_info.is_solved) {
                 xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
+                xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
+            }
         }
 
     vTaskDelete(NULL);
@@ -156,7 +187,7 @@ static void build_puzzle_data(
     // Request a puzzle according to the given request_info.
     puzzle_request(metadata, sock, dst_addr);
     if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO, NULL) != 0) {
-        print("request_task: did not receive expected MSG_PUZZLE_INFO.\r\n");
+        print("build_puzzle_data: did not receive expected MSG_PUZZLE_INFO.\r\n");
         return;
     }
     
@@ -185,31 +216,24 @@ static void build_puzzle_data(
 static void request_protocol_task(void * const data)
 {
     (void) data;
-
-    struct sockaddr_in local_addr;
-    struct sockaddr_in dst_addr;
-    const int sock = network_bind_socket(&local_addr);
-
-    if (sock < 0) {
-        vTaskDelete(NULL);
-        return;
-    }
-
-    network_prepare_dst_addr(&dst_addr);
-    xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
-    xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
+    
+    xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
+    xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
+    xTaskCreate(&submit_protocol_task, "submit_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
 
     struct Metadata request_metadata;
 
     while (1)
-        if (xQueueReceive(requests_queue, &request_metadata, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(requests_queue, &request_metadata, portMAX_DELAY) == pdTRUE) {
             /*
              * On receipt of a request, query the server to build a puzzle of the
              * specified parameters.
              */
-            build_puzzle_data(sock, &dst_addr, &request_metadata);
+            xSemaphoreTake(network_state.mutex, portMAX_DELAY);
+            build_puzzle_data(network_state.sock, &network_state.dst_addr, &request_metadata);
+            xSemaphoreGive(network_state.mutex);
+        }
     
-    lwip_close(sock);
     vTaskDelete(NULL);
 }
 
@@ -217,16 +241,20 @@ static void submit_protocol_task(void * const data)
 {
     (void) data;
 
-    struct sockaddr_in local_addr;
-    struct sockaddr_in dst_addr;
-    const int sock = network_bind_socket(&local_addr);
+    static struct sockaddr_in src_addr;
+    struct Puzzle puzzle_info;
+    struct MessageResult result;
 
-    if (sock < 0) {
-        vTaskDelete(NULL);
-        return;
-    }
+    while (1)
+        if (xQueueReceive(solution_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+            xSemaphoreTake(network_state.mutex, portMAX_DELAY);
+            if (result_send(&puzzle_info, network_state.sock, &network_state.dst_addr) == 0)
+                if (udp_receive_message(network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info.metadata) != 0)
+                    print("submit_protocol_task: did not receive expected MSG_RESULT.\r\n");
+            
+            xSemaphoreGive(network_state.mutex);
+            result_print(&result);
+        }
 
-    network_prepare_dst_addr(&dst_addr);
-
-    // TODO
+    vTaskDelete(NULL);
 }

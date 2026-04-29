@@ -4,6 +4,8 @@
 #include <stdint.h>
 
 struct Metadata;
+struct Puzzle;
+struct sockaddr_in;
 
 enum ResultCode
 {
@@ -18,7 +20,18 @@ struct MessageResult
     uint32_t solve_time;   
 };
 
-int result_parse(struct MessageResult * result, const struct Metadata * metadata, const uint8_t * payload);
+int result_parse(
+    struct MessageResult * result,
+    const struct Metadata * metadata,
+    const uint8_t * payload
+);
+
+int result_send(
+    const struct Puzzle * puzzle,
+    int sock,
+    const struct sockaddr_in * dst_addr
+);
+
 void result_print(const struct MessageResult * result);
 
 #endif // RESULT_H
