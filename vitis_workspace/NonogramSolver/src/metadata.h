@@ -41,7 +41,7 @@ enum SizeIndex
     SIZE_INDEX_MAX = 4 // TODO
 };
 
-struct PuzzleMetadata
+struct Metadata
 {
     bool valid;
 	uint32_t seed;
@@ -52,9 +52,9 @@ struct PuzzleMetadata
 	} difficulty;
 };
 
-uint8_t * metadata_hton(const struct PuzzleMetadata * data, uint8_t * buffer_head);
-const uint8_t * metadata_parse(struct PuzzleMetadata * metadata, const uint8_t * payload);
-void metadata_print(const struct PuzzleMetadata * metadata);
-bool metadata_equal(const struct PuzzleMetadata * lhs, const struct PuzzleMetadata * rhs);
+uint8_t * metadata_hton(const struct Metadata * data, uint8_t * buffer_head);
+const uint8_t * metadata_parse(struct Metadata * metadata, const uint8_t * payload);
+void metadata_print(const struct Metadata * metadata);
+bool metadata_equal(const struct Metadata * lhs, const struct Metadata * rhs);
 
 #endif // PUZZLE_METADATA_H

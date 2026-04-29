@@ -2,12 +2,22 @@
 #include <xil_printf.h>
 #include <lwip/sockets.h>
 
+#include "solver.h"
 #include "puzzle.h"
 
+/*
+ * Message ID (1 byte)
+ * Metadata
+ */
+#define MESSAGE_REQUEST_INFO_LENGTH (1 + MESSAGE_METADATA_LENGTH)
+
 static uint8_t send_buf[MESSAGE_REQUEST_INFO_LENGTH];
+static line_t bitmap_buffer[MAX_SIZE];
+static SemaphoreHandle_t bitmap_mutex = NULL;
+static StaticSemaphore_t bitmap_mutex_state;
 
 void puzzle_request(
-    const struct PuzzleMetadata * const metadata,
+    const struct Metadata * const metadata,
 	const int sock,
 	const struct sockaddr_in * const dst_addr)
 {
@@ -23,7 +33,7 @@ void puzzle_request(
         sizeof(struct sockaddr_in));
 }
 
-int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
+int puzzle_parse(struct Puzzle * const dst, const uint8_t * payload)
 {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
@@ -43,22 +53,30 @@ int puzzle_parse(struct MessagePuzzleInfo * const dst, const uint8_t * payload)
     dst->clue_bytes |= *payload;
 
     dst->global_max_clue_data_count = 0;
+    dst->solution_bitmap = bitmap_buffer;
+    
+    if (bitmap_mutex == NULL)
+        bitmap_mutex = xSemaphoreCreateMutexStatic(&bitmap_mutex_state);
+
+    dst->solution_semaphore = bitmap_mutex;
+    dst->solution_bitmap = bitmap_buffer;
+    dst->is_solved = false;
 
     return 0;
 }
 
-void puzzle_print(const struct MessagePuzzleInfo * const puzzle_info)
+void puzzle_print(const struct Puzzle * const puzzle_info)
 {
     print("\r\n");
     
     if (puzzle_info->metadata.valid) {
-        print("MessagePuzzleInfo:\r\n\t");
+        print("Puzzle:\r\n\t");
         metadata_print(&puzzle_info->metadata);
         xil_printf("\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
             puzzle_info->width, puzzle_info->height, puzzle_info->num_chunks,
             puzzle_info->clue_bytes);
     } else
-        print("MessagePuzzleInfo: INVALID\r\n");
+        print("Puzzle: INVALID\r\n");
 
     print("\r\n");
 }

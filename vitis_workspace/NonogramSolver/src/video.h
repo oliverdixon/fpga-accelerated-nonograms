@@ -12,12 +12,12 @@ struct VideoState
     void * frame_refs[DISPLAY_NUM_FRAMES];
 };
 
-struct MessageChunkData;
-struct MessagePuzzleInfo;
+struct Chunk;
+struct Puzzle;
 
 void video_initialise(struct VideoState * video_state);
 
 void video_draw_puzzle(const struct VideoState * video_state,
-    const struct MessagePuzzleInfo * puzzle_info);
+    const struct Puzzle * puzzle_info);
 
 #endif // VIDEO_H

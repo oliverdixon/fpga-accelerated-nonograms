@@ -4,7 +4,7 @@
 
 #include "metadata.h"
 
-uint8_t * metadata_hton(const struct PuzzleMetadata * const data, uint8_t * buffer_head)
+uint8_t * metadata_hton(const struct Metadata * const data, uint8_t * buffer_head)
 {
     // Reorder seed to network order
     const uint32_t net_seed = htonl(data->seed);
@@ -17,7 +17,7 @@ uint8_t * metadata_hton(const struct PuzzleMetadata * const data, uint8_t * buff
     return buffer_head + sizeof(uint8_t);
 }
 
-const uint8_t * metadata_parse(struct PuzzleMetadata * const metadata, const uint8_t * const payload)
+const uint8_t * metadata_parse(struct Metadata * const metadata, const uint8_t * const payload)
 {
     const uint8_t difficulty = *(payload + sizeof(uint32_t));
     bool valid = true;
@@ -40,15 +40,15 @@ const uint8_t * metadata_parse(struct PuzzleMetadata * const metadata, const uin
     return payload + sizeof(uint32_t) + sizeof(uint8_t);
 }
 
-void metadata_print(const struct PuzzleMetadata * const metadata)
+void metadata_print(const struct Metadata * const metadata)
 {
     assert(metadata->valid);
     xil_printf("Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n",
         metadata->seed, metadata->difficulty.size_index, metadata->difficulty.tier);
 }
 
-bool metadata_equal(const struct PuzzleMetadata * const lhs,
-        const struct PuzzleMetadata * const rhs)
+bool metadata_equal(const struct Metadata * const lhs,
+        const struct Metadata * const rhs)
 {
     return lhs->valid == rhs->valid && lhs->seed == rhs->seed &&
         lhs->difficulty.size_index == rhs->difficulty.size_index &&

@@ -4,13 +4,13 @@
 #include "metadata.h"
 #include "result.h"
 
-int result_parse(struct MessageResult * result, const struct PuzzleMetadata * const metadata, const uint8_t * payload)
+int result_parse(struct MessageResult * result, const struct Metadata * const metadata, const uint8_t * payload)
 {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
 
     // Verify that the received metadata matches what we expect.
-    struct PuzzleMetadata received_metadata;
+    struct Metadata received_metadata;
     payload = metadata_parse(&received_metadata, payload);
 
     if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {

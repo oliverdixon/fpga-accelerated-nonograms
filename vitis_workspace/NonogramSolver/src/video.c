@@ -1,20 +1,13 @@
-/**
- * Example of using the Digilent display drivers for Zybo Z7 HDMI output
- * Russell Joyce, 11/03/2019
- */
-
-#include <stdio.h>
 #include <assert.h>
-#include "xil_types.h"
-#include "xil_cache.h"
-#include "xparameters.h"
+#include <string.h>
+#include <xparameters.h>
+#include <xil_cache.h>
 
 #include "video.h"
 #include "puzzle.h"
 #include "chunks.h"
-#include "glyph_bitmaps.h"
 
-#include "zybo_z7_hdmi/display_ctrl.h"
+#include "glyph_bitmaps.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
 #define FRAME_STRIDE (1440*4)
@@ -40,6 +33,31 @@ static void draw_character(const struct VideoState * const state,
 }
 
 static void draw_rectangle(const struct VideoState * const state,
+		const uint32_t left_x, uint32_t top_y,
+		const uint32_t width, const uint32_t height)
+{
+	uint32_t * const frame = state->display_ctrl.framePtr[state->
+		display_ctrl.curFrame];
+
+	const uint32_t stride = state->display_ctrl.stride / 4;
+	const uint32_t right_x = left_x + width;
+	const uint32_t bottom_y = (top_y + height) * stride;
+	top_y *= stride;
+
+	// Draw the top and bottom lines.
+	for (unsigned int x = left_x; x < right_x; ++x) {
+		frame[top_y + x] = foreground_colour;
+		frame[bottom_y + x] = foreground_colour;
+	}
+
+	// Draw the left and right lines.
+	for (unsigned int y = top_y; y < bottom_y; y += stride) {
+		frame[y + left_x] = foreground_colour;
+		frame[y + right_x] = foreground_colour;
+	}
+}
+
+static void draw_filled_rectangle(const struct VideoState * const state,
 		const uint32_t left_x, const uint32_t top_y,
 		const uint32_t width, const uint32_t height)
 {
@@ -48,19 +66,12 @@ static void draw_rectangle(const struct VideoState * const state,
 
 	const uint32_t stride = state->display_ctrl.stride / 4;
 	const uint32_t right_x = left_x + width;
-	const uint32_t bottom_y = top_y + height;
+	const uint32_t bottom_y = (top_y + height) * stride;
 
-	// Draw the top and bottom lines.
-	for (unsigned int x = left_x; x < right_x; ++x) {
-		frame[top_y * stride + x] = foreground_colour;
-		frame[bottom_y * stride + x] = foreground_colour;
-	}
-
-	// Draw the left and right lines.
-	for (unsigned int y = top_y; y < bottom_y; ++y) {
-		frame[y * stride + left_x] = foreground_colour;
-		frame[y * stride + right_x] = foreground_colour;
-	}
+	// Draw the filled rectangle.
+	for (unsigned int x = left_x; x < right_x; ++x)
+		for (unsigned int y = top_y * stride; y < bottom_y; y += stride)
+			frame[y + x] = foreground_colour;
 }
 
 static void draw_clue_element(const struct VideoState * const state, uint8_t clue,
@@ -90,8 +101,9 @@ void video_initialise(struct VideoState * video_state)
 	DisplayStart(&video_state->display_ctrl);
 }
 
-void video_draw_puzzle(const struct VideoState * video_state,
-	    const struct MessagePuzzleInfo * puzzle_info)
+void video_draw_puzzle(
+		const struct VideoState * const video_state,
+	    const struct Puzzle * const puzzle_info)
 {
 	// Blank the entire frame to black.
 	memset(video_state->display_ctrl.framePtr[video_state->
@@ -122,7 +134,14 @@ void video_draw_puzzle(const struct VideoState * video_state,
 	// TODO: will need to be updated to support multiple chunks.
 	const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
-	for (unsigned int x_idx = 0; x_idx < puzzle_info->width; ++x_idx) {
+	/*
+	 * If the puzzle is solved, we want access to the solution bitmap so it can be
+	 * visualised as well.
+	 */
+	if (puzzle_info->is_solved)
+		xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
+
+	for (unsigned int col_idx = 0; col_idx < puzzle_info->width; ++col_idx) {
         /*
          * Topmost box on this column, so we might have some column clues.
          * By convention, column clues immediately succeed row clues. There are precisely
@@ -134,9 +153,11 @@ void video_draw_puzzle(const struct VideoState * video_state,
             draw_clue_element(video_state, col_clue->blocks[element_idx], start_x,
                 (element_idx + 1) * (internal_padding + glyph_height),
                 glyph_width + glyph_spacing);
+
+		const line_t col_mask = 1U << col_idx; 
         
-		for (unsigned int y_idx = 0; y_idx < puzzle_info->height; ++y_idx) {
-			if (x_idx == 0) {
+		for (unsigned int row_idx = 0; row_idx < puzzle_info->height; ++row_idx) {
+			if (col_idx == 0) {
 				/*
                  * Leftmost box on this row, so we might have some row clues.
                  * By convention, row clues come first, so we don't have to offset the index.
@@ -149,13 +170,19 @@ void video_draw_puzzle(const struct VideoState * video_state,
                         glyph_width + glyph_spacing);
 			}
 
-			draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
+			if (puzzle_info->is_solved && (puzzle_info->solution_bitmap[row_idx] & col_mask) == col_mask)
+				draw_filled_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
+			else
+				draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
 			y_pos += stride;
 		}
 
 		x_pos += stride;
 		y_pos = external_padding;
 	}
+
+	if (puzzle_info->is_solved)
+		xSemaphoreGive(puzzle_info->solution_semaphore);
 
 	Xil_DCacheFlush();
 }

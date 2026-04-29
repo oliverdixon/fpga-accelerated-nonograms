@@ -28,9 +28,9 @@ int main()
 {
     static unsigned char mac[] = { 0x00, 0x11, 0x22, 0x33, 0x00, 0x19 };
 
-    requests_queue = xQueueCreate(1, sizeof(struct PuzzleMetadata));
-    graphics_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
-    challenge_queue = xQueueCreate(1, sizeof(struct MessagePuzzleInfo));
+    requests_queue = xQueueCreate(1, sizeof(struct Metadata));
+    graphics_queue = xQueueCreate(1, sizeof(struct Puzzle));
+    challenge_queue = xQueueCreate(1, sizeof(struct Puzzle));
     
     network_init(mac, accept_input_task);
 
@@ -43,7 +43,7 @@ static void accept_input_task(void * const data)
 {
     (void) data;
 
-    struct PuzzleMetadata request_metadata = {
+    struct Metadata request_metadata = {
         .valid = true
     };
 
@@ -72,7 +72,7 @@ static void draw_puzzles_task(void * const data)
     static struct VideoState video_state;
     video_initialise(&video_state);
 
-    struct MessagePuzzleInfo puzzle_info;
+    struct Puzzle puzzle_info;
     
     while (1)
         if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
@@ -87,14 +87,17 @@ static void solve_puzzles_task(void * const data)
 {
     (void) data;
 
-    struct MessagePuzzleInfo puzzle_info;
+    struct Puzzle puzzle_info;
     XSolver_toplevel solver;
 
     XSolver_toplevel_Initialize(&solver, XPAR_XSOLVER_TOPLEVEL_0_BASEADDR);
 
     while (1)
-        if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             solver_solve(&solver, &puzzle_info);
+            if (puzzle_info.is_solved)
+                xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
+        }
 
     vTaskDelete(NULL);
 }
@@ -104,10 +107,10 @@ static int udp_receive_message(
         struct sockaddr_in * const src,
         void * const dst,
         const enum MessageType message_type,
-        const struct PuzzleMetadata * const match_metadata)
+        const struct Metadata * const match_metadata)
 {
     static uint8_t buffer[256]; // TODO big enough?
-    static struct MessageError error;
+    static struct ServerError error;
 
     socklen_t src_len = sizeof(*src);
     const ssize_t data_len = lwip_recvfrom(sock, buffer, sizeof(buffer) / sizeof(*buffer),
@@ -142,13 +145,13 @@ static int udp_receive_message(
 static void build_puzzle_data(
     const int sock,
     const struct sockaddr_in * const dst_addr,
-    const struct PuzzleMetadata * const metadata
+    const struct Metadata * const metadata
 )
 {
-    static struct MessagePuzzleInfo puzzle_info;
+    static struct Puzzle puzzle_info;
     static struct sockaddr_in src_addr;
     
-    struct MessageChunkData * const chunk_data = &puzzle_info.chunk;
+    struct Chunk * const chunk_data = &puzzle_info.chunk;
     
     // Request a puzzle according to the given request_info.
     puzzle_request(metadata, sock, dst_addr);
@@ -196,7 +199,7 @@ static void request_protocol_task(void * const data)
     xTaskCreate(&draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
     xTaskCreate(&solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, 1, NULL);
 
-    struct PuzzleMetadata request_metadata;
+    struct Metadata request_metadata;
 
     while (1)
         if (xQueueReceive(requests_queue, &request_metadata, portMAX_DELAY) == pdTRUE)

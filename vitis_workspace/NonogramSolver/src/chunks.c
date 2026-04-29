@@ -19,7 +19,7 @@ void chunk_request(
         const uint8_t chunk_id,
         const int sock,
         const struct sockaddr_in * const dst_addr,
-        const struct PuzzleMetadata * const metadata)
+        const struct Metadata * const metadata)
 {
     uint8_t * buffer_head = send_buf;
 
@@ -37,8 +37,8 @@ void chunk_request(
 }
 
 int chunk_parse(
-        struct MessageChunkData * const dst,
-        const struct PuzzleMetadata * const match_metadata,
+        struct Chunk * const dst,
+        const struct Metadata * const match_metadata,
         const uint8_t * payload)
 {
     assert(*payload == MSG_CHUNK_DATA);
@@ -46,7 +46,7 @@ int chunk_parse(
 
     dst->max_clue_data_count = 0;
 
-    struct PuzzleMetadata received_metadata;
+    struct Metadata received_metadata;
     payload = metadata_parse(&received_metadata, payload);
 
     // Verify that the received metadata matches what we expect.
@@ -86,7 +86,7 @@ int chunk_parse(
     return 0;
 }
 
-void chunk_free(const struct MessageChunkData * chunk_data)
+void chunk_free(const struct Chunk * chunk_data)
 {
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx)
         free(chunk_data->clue_data[line_idx].blocks);
@@ -94,7 +94,7 @@ void chunk_free(const struct MessageChunkData * chunk_data)
     free(chunk_data->clue_data);
 }
 
-void chunk_print(const struct MessageChunkData * const chunk_data)
+void chunk_print(const struct Chunk * const chunk_data)
 {
     print("\r\n");
 

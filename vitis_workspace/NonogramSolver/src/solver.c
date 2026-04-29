@@ -7,10 +7,6 @@
 #include "solver.h"
 #include "puzzle.h"
 
-typedef uint32_t line_t;
-typedef uint8_t extent_t;
-
-#define MAX_SIZE (20)
 #define MAX_PATTERN_COUNT (256)
 
 static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
@@ -21,7 +17,7 @@ static extent_t col_counts[MAX_SIZE];
 static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
-static uint32_t run_hls_core(XSolver_toplevel * const solver, const struct MessagePuzzleInfo * const puzzle_info)
+static uint32_t run_hls_core(XSolver_toplevel * const solver, const struct Puzzle * const puzzle_info)
 {
     XSolver_toplevel_Set_row_patterns(solver, (UINTPTR)&row_patterns);
     XSolver_toplevel_Set_row_counts(solver, (UINTPTR)&row_counts);
@@ -142,7 +138,7 @@ static void print_board(
     }
 }
 
-void solver_solve(XSolver_toplevel * const solver, const struct MessagePuzzleInfo * const puzzle_info)
+void solver_solve(XSolver_toplevel * const solver, struct Puzzle * const puzzle_info)
 {
     assert(puzzle_info->width == puzzle_info->height);
     assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
@@ -162,7 +158,25 @@ void solver_solve(XSolver_toplevel * const solver, const struct MessagePuzzleInf
     compute_valid_patterns(puzzle_info->width, col_patterns, col_counts,
         &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height);
 
+    // Invoke the solver HLS IP core to refine along lines and columns.
+
     const uint32_t hls_ret = run_hls_core(solver, puzzle_info);
     xil_printf("HLS core says: %d\r\n", hls_ret);
+    if (hls_ret != 0) {
+        puzzle_info->is_solved = false;
+        return;
+    }
+
     print_board(out_black, out_white, puzzle_info->width);
+
+    // Populate the solution bitmap.
+
+    xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
+    
+    const line_t col_mask = (1U << puzzle_info->width) - 1U;
+    for (extent_t row_idx = 0; row_idx < puzzle_info->height; ++row_idx)
+        puzzle_info->solution_bitmap[row_idx] = out_black[row_idx] & col_mask;
+
+    xSemaphoreGive(puzzle_info->solution_semaphore);
+    puzzle_info->is_solved = true;
 }

@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-struct PuzzleMetadata;
+struct Metadata;
 
 enum ResultCode
 {
@@ -18,7 +18,7 @@ struct MessageResult
     uint32_t solve_time;   
 };
 
-int result_parse(struct MessageResult * result, const struct PuzzleMetadata * metadata, const uint8_t * payload);
+int result_parse(struct MessageResult * result, const struct Metadata * metadata, const uint8_t * payload);
 void result_print(const struct MessageResult * result);
 
 #endif // RESULT_H

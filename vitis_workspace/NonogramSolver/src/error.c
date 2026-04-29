@@ -4,7 +4,7 @@
 
 #include "error.h"
 
-int error_parse(struct MessageError * dst, const uint8_t * payload)
+int error_parse(struct ServerError * dst, const uint8_t * payload)
 {
     assert(*payload == MSG_ERROR);
     payload += sizeof(uint8_t);
@@ -29,9 +29,9 @@ int error_parse(struct MessageError * dst, const uint8_t * payload)
     return 0;
 }
 
-void error_print(const struct MessageError * const message)
+void error_print(const struct ServerError * const message)
 {
-    print("\r\nMessageError:\r\n\t");
+    print("\r\nServerError:\r\n\t");
     if (message->metadata.valid)
         metadata_print(&message->metadata);
     else
