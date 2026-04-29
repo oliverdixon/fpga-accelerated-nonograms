@@ -6,6 +6,7 @@
 
 #include "chunks.h"
 #include "error.h"
+#include "logging.h"
 #include "network.h"
 #include "puzzle.h"
 #include "result.h"
@@ -59,6 +60,8 @@ int main() {
     challenge_queue = xQueueCreate(1, sizeof(struct Puzzle));
     solution_queue = xQueueCreate(1, sizeof(struct Puzzle));
 
+    logging_initialise();
+
     network_init(mac, accept_input_task);
 
     vTaskStartScheduler();
@@ -101,15 +104,17 @@ static void draw_puzzles_task(
     (void)data;
 
     static struct VideoState video_state;
-    video_initialise(&video_state);
+    if (video_initialise(&video_state) != 0) {
+        logging_puts("Video could not be initialised.\r\n");
+        vTaskDelete(NULL);
+        return;
+    }
 
     struct Puzzle puzzle_info;
 
     while (1)
-        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-            print("draw_puzzles_task: drawing to framebuffer...\r\n");
+        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE)
             video_draw_puzzle(&video_state, &puzzle_info);
-        }
 
     vTaskDelete(NULL);
 }
@@ -167,16 +172,16 @@ static int udp_receive_message(
             case MSG_RESULT:
                 return result_parse(dst, match_metadata, buffer);
             default:
-                // Desirable message does not have a parser.
+                logging_printf("Received message of type %d does not have a parser.\r\n", *buffer);
                 return -1;
             }
         }
 
-        // Received a non-error message, but wasn't of the desired type.
+        logging_printf("Received message of type %d, but expected %d.\r\n", *buffer, message_type);
         return -1;
     }
 
-    // Transmission error.
+    logging_puts("Transmission error when receiving UDP packet.\r\n");
     return -1;
 }
 
@@ -192,10 +197,8 @@ static void build_puzzle_data(
 
     // Request a puzzle according to the given request_info.
     puzzle_request(metadata, sock, dst_addr);
-    if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO, NULL) != 0) {
-        print("build_puzzle_data: did not receive expected MSG_PUZZLE_INFO.\r\n");
+    if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO, NULL) != 0)
         return;
-    }
 
     // For info, describe the puzzle on the serial output.
     puzzle_print(&puzzle_info);
@@ -208,12 +211,19 @@ static void build_puzzle_data(
         if (udp_receive_message(
                 sock, &src_addr, chunk_data, MSG_CHUNK_DATA, &puzzle_info.metadata
             ) == 0) {
-            assert(chunk_data->chunk_id == chunk_id);
-            chunk_print(chunk_data);
-
-            if (chunk_data->max_clue_data_count > puzzle_info.global_max_clue_data_count)
-                puzzle_info.global_max_clue_data_count = chunk_data->max_clue_data_count;
-        }
+            if (chunk_data->chunk_id == chunk_id) {
+                chunk_print(chunk_data);
+                if (chunk_data->max_clue_data_count > puzzle_info.global_max_clue_data_count)
+                    puzzle_info.global_max_clue_data_count = chunk_data->max_clue_data_count;
+            } else {
+                logging_printf(
+                    "Unexpected chunk: requested %d, but received %d.\r\n", chunk_id,
+                    chunk_data->chunk_id
+                );
+                return;
+            }
+        } else
+            return;
     }
 
     // Broadcast out the (small) puzzle specification to the graphics handler and solver.
@@ -230,10 +240,12 @@ static void request_protocol_task(
         &draw_puzzles_task, "draw_puzzles_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
         NULL
     );
+
     xTaskCreate(
         &solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
         NULL
     );
+
     xTaskCreate(
         &submit_protocol_task, "submit_protocol_task", THREAD_STACKSIZE, NULL,
         DEFAULT_THREAD_PRIO - 1, NULL
@@ -262,19 +274,19 @@ static void submit_protocol_task(
 
     static struct sockaddr_in src_addr;
     struct Puzzle puzzle_info;
-    struct MessageResult result;
+    struct MessageResult result = {.status = RESULT_ERROR};
 
     while (1)
         if (xQueueReceive(solution_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             xSemaphoreTake(network_state.mutex, portMAX_DELAY);
             if (result_send(&puzzle_info, network_state.sock, &network_state.dst_addr) == 0)
-                if (udp_receive_message(
-                        network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info.metadata
-                    ) != 0)
-                    print("submit_protocol_task: did not receive expected MSG_RESULT.\r\n");
+                udp_receive_message(
+                    network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info.metadata
+                );
 
             xSemaphoreGive(network_state.mutex);
             result_print(&result);
+            result.status = RESULT_ERROR;
         }
 
     vTaskDelete(NULL);

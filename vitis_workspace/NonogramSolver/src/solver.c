@@ -171,7 +171,6 @@ void solver_solve(
     // Invoke the solver HLS IP core to refine along lines and columns.
 
     const uint32_t hls_ret = run_hls_core(solver, puzzle_info);
-    xil_printf("HLS core says: %d\r\n", hls_ret);
     if (hls_ret != 0) {
         puzzle_info->is_solved = false;
         return;

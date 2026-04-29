@@ -2,6 +2,7 @@
 #include <lwip/sockets.h>
 #include <xil_printf.h>
 
+#include "logging.h"
 #include "metadata.h"
 #include "puzzle.h"
 #include "result.h"
@@ -37,7 +38,7 @@ int result_parse(
     payload = metadata_parse(&received_metadata, payload);
 
     if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {
-        print("result_parse: quitting early due to bad metadata.\r\n");
+        logging_puts("result_parse: quitting early due to bad metadata.\r\n");
         return -1;
     }
 

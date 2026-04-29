@@ -97,20 +97,31 @@ static void draw_clue_element(
     }
 }
 
-void video_initialise(
+int video_initialise(
     struct VideoState * video_state
 ) {
     for (unsigned int fb_idx = 0; fb_idx < DISPLAY_NUM_FRAMES; ++fb_idx)
         video_state->frame_refs[fb_idx] = video_state->frame_buffers[fb_idx];
 
-    DisplayInitialize(
+    int status = DisplayInitialize(
         &video_state->display_ctrl, XPAR_HDMI_AXI_VDMA_0_BASEADDR, XPAR_XVTC_0_BASEADDR,
         XPAR_HDMI_AXI_DYNCLK_0_BASEADDR, video_state->frame_refs, FRAME_STRIDE
     );
 
-    DisplayChangeFrame(&video_state->display_ctrl, 0);
-    DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900);
-    DisplayStart(&video_state->display_ctrl);
+    if (status)
+        return status;
+
+    status = DisplayChangeFrame(&video_state->display_ctrl, 0);
+
+    if (status)
+        return status;
+
+    status = DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900);
+
+    if (status)
+        return status;
+
+    return DisplayStart(&video_state->display_ctrl);
 }
 
 void video_draw_puzzle(

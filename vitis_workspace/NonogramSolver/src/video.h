@@ -17,7 +17,7 @@ struct VideoState
 struct Chunk;
 struct Puzzle;
 
-void video_initialise(struct VideoState * video_state);
+int video_initialise(struct VideoState * video_state);
 
 void video_draw_puzzle(
     const struct VideoState * video_state,

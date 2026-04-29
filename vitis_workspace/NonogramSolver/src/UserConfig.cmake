@@ -40,6 +40,7 @@ set(USER_COMPILE_SOURCES
 "puzzle.c"
 "solver.c"
 "result.c"
+"logging.c"
 )
 
 # -----------------------------------------
