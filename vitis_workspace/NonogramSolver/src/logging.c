@@ -11,7 +11,6 @@
 
 struct LogMessage
 {
-    TickType_t tick;
     const char * task_name;
     char text[LOG_LINE_LENGTH];
 };
@@ -28,8 +27,7 @@ static void write_log_task(
     while (1)
         if (xQueueReceive(logging_queue, &msg, portMAX_DELAY) == pdPASS)
             xil_printf(
-                "[%lu] [%s] %s\r\n", (unsigned long)msg.tick,
-                msg.task_name == NULL ? "<Unknown Task>" : msg.task_name, msg.text
+                "[%s] %s\r\n", msg.task_name == NULL ? "<Unknown Task>" : msg.task_name, msg.text
             );
 
     vTaskDelete(NULL);
@@ -37,7 +35,7 @@ static void write_log_task(
 
 void logging_initialise() {
     logging_queue = xQueueCreate(LOG_QUEUE_SIZE, sizeof(struct LogMessage));
-    xTaskCreate(&write_log_task, "write_log_task", 1024, NULL, tskIDLE_PRIORITY + 1, NULL);
+    xTaskCreate(&write_log_task, "write_log_task", 1024, NULL, 3, NULL);
 }
 
 void logging_printf(
@@ -47,10 +45,7 @@ void logging_printf(
     if (logging_queue == NULL)
         return;
 
-    struct LogMessage msg;
-
-    msg.tick = xTaskGetTickCount();
-    msg.task_name = pcTaskGetTaskName(NULL);
+    struct LogMessage msg = {.task_name = pcTaskGetTaskName(NULL)};
 
     va_list args;
     va_start(args, fmt);
@@ -67,10 +62,8 @@ void logging_puts(
     if (logging_queue == NULL)
         return;
 
-    struct LogMessage msg;
+    struct LogMessage msg = {.task_name = pcTaskGetTaskName(NULL)};
 
-    msg.tick = xTaskGetTickCount();
-    msg.task_name = pcTaskGetTaskName(NULL);
     strncpy(msg.text, str, LOG_LINE_LENGTH);
     msg.text[LOG_LINE_LENGTH - 1] = '\0';
 

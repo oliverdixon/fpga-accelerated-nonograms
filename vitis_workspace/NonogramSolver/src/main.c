@@ -27,42 +27,16 @@ QueueHandle_t graphics_queue;  // PUZZLE_INFO messages for drawing.
 QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
 QueueHandle_t solution_queue;  // PUZZLE_INFO messages for verifying.
 
-struct NetworkState
-{
-    int sock;
-    struct sockaddr_in local_addr;
-    struct sockaddr_in dst_addr;
-    SemaphoreHandle_t mutex;
-};
-
-// TODO move to network.c and have a proper interface.
-void network_initialise(
-    struct NetworkState * const network
-) {
-    network->sock = network_bind_socket(&network->local_addr, 51050);
-
-    if (network->sock < 0) {
-        vTaskDelete(NULL);
-        return;
-    }
-
-    network_prepare_dst_addr(&network->dst_addr);
-    network->mutex = xSemaphoreCreateMutex();
-}
-
 struct NetworkState network_state;
 
 int main() {
-    static unsigned char mac[] = {0x00, 0x11, 0x22, 0x33, 0x00, 0x19};
-
     requests_queue = xQueueCreate(1, sizeof(struct Metadata));
     graphics_queue = xQueueCreate(1, sizeof(struct Puzzle));
     challenge_queue = xQueueCreate(1, sizeof(struct Puzzle));
     solution_queue = xQueueCreate(1, sizeof(struct Puzzle));
 
     logging_initialise();
-
-    network_init(mac, accept_input_task);
+    network_initialise(&network_state, accept_input_task);
 
     vTaskStartScheduler();
 
@@ -78,7 +52,6 @@ static void accept_input_task(
 
     // TODO while (1)
 
-    network_initialise(&network_state); // TODO
     xTaskCreate(
         &request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL,
         DEFAULT_THREAD_PRIO - 1, NULL
@@ -105,7 +78,7 @@ static void draw_puzzles_task(
 
     static struct VideoState video_state;
     if (video_initialise(&video_state) != 0) {
-        logging_puts("Video could not be initialised.\r\n");
+        logging_puts("Video could not be initialised.");
         vTaskDelete(NULL);
         return;
     }
@@ -172,16 +145,16 @@ static int udp_receive_message(
             case MSG_RESULT:
                 return result_parse(dst, match_metadata, buffer);
             default:
-                logging_printf("Received message of type %d does not have a parser.\r\n", *buffer);
+                logging_printf("Received message of type %d does not have a parser.", *buffer);
                 return -1;
             }
         }
 
-        logging_printf("Received message of type %d, but expected %d.\r\n", *buffer, message_type);
+        logging_printf("Received message of type %d, but expected %d.", *buffer, message_type);
         return -1;
     }
 
-    logging_puts("Transmission error when receiving UDP packet.\r\n");
+    logging_puts("Transmission error when receiving UDP packet.");
     return -1;
 }
 
@@ -217,7 +190,7 @@ static void build_puzzle_data(
                     puzzle_info.global_max_clue_data_count = chunk_data->max_clue_data_count;
             } else {
                 logging_printf(
-                    "Unexpected chunk: requested %d, but received %d.\r\n", chunk_id,
+                    "Unexpected chunk: requested %d, but received %d.", chunk_id,
                     chunk_data->chunk_id
                 );
                 return;

@@ -54,7 +54,7 @@ int chunk_parse(
 
     // Verify that the received metadata matches what we expect.
     if (!received_metadata.valid || !metadata_equal(&received_metadata, match_metadata)) {
-        logging_puts("chunk_parse: quitting early due to bad metadata.\r\n");
+        logging_puts("chunk_parse: quitting early due to bad metadata.");
         return -1;
     }
 

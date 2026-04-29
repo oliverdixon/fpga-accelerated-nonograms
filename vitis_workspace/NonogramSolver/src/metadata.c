@@ -32,16 +32,12 @@ const uint8_t * metadata_parse(
     metadata->difficulty.tier = (difficulty >> 4) & 0x03;
 
     if (metadata->difficulty.tier > DIFFICULTY_HARD) {
-        logging_printf(
-            "metadata_parse: Invalid difficulty tier %02x.\r\n", metadata->difficulty.tier
-        );
+        logging_printf("metadata_parse: Invalid difficulty tier %02x.", metadata->difficulty.tier);
         valid = false;
     }
 
     if (metadata->difficulty.size_index >= SIZE_INDEX_MAX) {
-        logging_printf(
-            "metadata_parse: Invalid size index %02x.\r\n", metadata->difficulty.size_index
-        );
+        logging_printf("metadata_parse: Invalid size index %02x.", metadata->difficulty.size_index);
         valid = false;
     }
 

@@ -16,13 +16,13 @@ int error_parse(
 
     if (!dst->metadata.valid)
         // Protocol spec states that metadata is optional in errors.
-        logging_puts("error_parse: bad metadata.\r\n");
+        logging_puts("error_parse: bad metadata.");
 
     dst->original_msg_id = *payload++;
     dst->text_length = *payload++;
 
     if (dst->text_length > ERROR_MAX_LENGTH) {
-        logging_puts("error_parse: message too long.\r\n");
+        logging_puts("error_parse: message too long.");
         return -1;
     }
 

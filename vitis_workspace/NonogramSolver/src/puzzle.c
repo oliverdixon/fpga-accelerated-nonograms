@@ -46,7 +46,7 @@ int puzzle_parse(
     payload = metadata_parse(&dst->metadata, payload);
 
     if (!dst->metadata.valid) {
-        logging_puts("puzzle_parse: quitting early due to bad metadata.\r\n");
+        logging_puts("puzzle_parse: quitting early due to bad metadata.");
         return -1;
     }
 

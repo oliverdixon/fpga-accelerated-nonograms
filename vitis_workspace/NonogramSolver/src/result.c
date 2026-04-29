@@ -38,7 +38,7 @@ int result_parse(
     payload = metadata_parse(&received_metadata, payload);
 
     if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {
-        logging_puts("result_parse: quitting early due to bad metadata.\r\n");
+        logging_puts("result_parse: quitting early due to bad metadata.");
         return -1;
     }
 
