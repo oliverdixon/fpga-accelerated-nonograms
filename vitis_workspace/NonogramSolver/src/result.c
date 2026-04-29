@@ -16,15 +16,6 @@
 
 static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH];
 
-static uint8_t pack_left_aligned_byte(
-    const line_t row,
-    const uint8_t bit_offset,
-    const uint8_t bit_count
-) {
-    const line_t mask = (1U << bit_count) - 1U;
-    return ((row >> bit_offset) & mask) << (8U - bit_count);
-}
-
 int result_parse(
     struct Result * const result,
     const struct Metadata * const metadata,
@@ -75,12 +66,16 @@ int result_send(
     for (uint8_t row_idx = 0; row_idx < puzzle->height; ++row_idx) {
         const line_t row = puzzle->solution_bitmap[row_idx];
 
-        // Pack the bitmap as bytes of left-aligned bits.
-        for (uint8_t bit_offset = 0; bit_offset < puzzle->width; bit_offset += 8) {
-            uint8_t bit_count = puzzle->width - bit_offset;
-            if (bit_count > 8)
-                bit_count = 8;
-            *buffer_head++ = pack_left_aligned_byte(row, bit_offset, bit_count);
+        // Pack the row into a bitmap of bytes of left-aligned bits.
+        for (uint8_t col_idx = 0; col_idx < puzzle->width; col_idx += 8) {
+            uint8_t packed = 0;
+
+            for (uint8_t bit = 0; bit < 8 && col_idx + bit < puzzle->width; ++bit) {
+                if (row & (1U << (col_idx + bit)))
+                    packed |= (uint8_t)(1U << (7U - bit));
+            }
+
+            *buffer_head++ = packed;
         }
     }
 
