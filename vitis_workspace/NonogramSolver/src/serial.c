@@ -4,8 +4,10 @@
 
 static char buffer[16];
 
-static unsigned int readline(char * const dst, const unsigned int max_length)
-{
+static unsigned int readline(
+    char * const dst,
+    const unsigned int max_length
+) {
     if (max_length == 0)
         return 0;
 
@@ -27,7 +29,7 @@ static unsigned int readline(char * const dst, const unsigned int max_length)
                 print("\b \b");
             }
             continue;
-        default: ;
+        default:;
         }
 
         if (ch < 0x20)
@@ -43,8 +45,10 @@ static unsigned int readline(char * const dst, const unsigned int max_length)
     }
 }
 
-static uint32_t pow_uint32(uint32_t base, unsigned int exp)
-{
+static uint32_t pow_uint32(
+    uint32_t base,
+    unsigned int exp
+) {
     uint32_t result = 1;
 
     while (exp--)
@@ -53,12 +57,14 @@ static uint32_t pow_uint32(uint32_t base, unsigned int exp)
     return result;
 }
 
-uint32_t parse_uint32(const uint32_t lower_bound, const uint32_t upper_bound,
-    const uint32_t default_value)
-{
+uint32_t parse_uint32(
+    const uint32_t lower_bound,
+    const uint32_t upper_bound,
+    const uint32_t default_value
+) {
     const unsigned int bytes_read = readline(buffer, sizeof(buffer) / sizeof(*buffer));
     uint32_t value = 0;
-    
+
     if (bytes_read > 0 && buffer[bytes_read] == '\0') {
         for (unsigned int pv_idx = 0; pv_idx < bytes_read; ++pv_idx)
             value += (buffer[pv_idx] - '0') * pow_uint32(10, bytes_read - pv_idx - 1);
@@ -70,17 +76,24 @@ uint32_t parse_uint32(const uint32_t lower_bound, const uint32_t upper_bound,
     return value;
 }
 
-enum DifficultyTier parse_difficulty_tier(const enum DifficultyTier default_tier)
+enum DifficultyTier parse_difficulty_tier(
+    const enum DifficultyTier default_tier
+)
 {
     const unsigned int bytes_read = readline(buffer, sizeof(buffer) / sizeof(*buffer));
-    
+
     if (bytes_read == 1)
         switch (*buffer) {
-        case 'E': return DIFFICULTY_EASY;
-        case 'M': return DIFFICULTY_MEDIUM;
-        case 'H': return DIFFICULTY_HARD;
-        case 'C': return DIFFICULTY_CUSTOM;
-        default: return default_tier;
+        case 'E':
+            return DIFFICULTY_EASY;
+        case 'M':
+            return DIFFICULTY_MEDIUM;
+        case 'H':
+            return DIFFICULTY_HARD;
+        case 'C':
+            return DIFFICULTY_CUSTOM;
+        default:
+            return default_tier;
         }
 
     return default_tier;

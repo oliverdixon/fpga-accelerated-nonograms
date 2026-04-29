@@ -1,9 +1,11 @@
+// clang-format Language: C
+
 #ifndef VIDEO_H
 #define VIDEO_H
 
 #include "zybo_z7_hdmi/display_ctrl.h"
 
-#define MAX_FRAME (1440*900)
+#define MAX_FRAME (1440 * 900)
 
 struct VideoState
 {
@@ -17,7 +19,9 @@ struct Puzzle;
 
 void video_initialise(struct VideoState * video_state);
 
-void video_draw_puzzle(const struct VideoState * video_state,
-    const struct Puzzle * puzzle_info);
+void video_draw_puzzle(
+    const struct VideoState * video_state,
+    const struct Puzzle * puzzle_info
+);
 
 #endif // VIDEO_H

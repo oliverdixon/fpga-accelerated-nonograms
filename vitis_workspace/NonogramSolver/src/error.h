@@ -1,3 +1,5 @@
+// clang-format Language: C
+
 #ifndef ERROR_H
 #define ERROR_H
 
@@ -13,7 +15,10 @@ struct ServerError
     char error_text[ERROR_MAX_LENGTH + 1];
 };
 
-int error_parse(struct ServerError * dst, const uint8_t * payload);
+int error_parse(
+    struct ServerError * dst,
+    const uint8_t * payload
+);
 void error_print(const struct ServerError * message);
 
 #endif // ERROR_H

@@ -4,8 +4,8 @@
 #include <xsolver_toplevel.h>
 
 #include "chunks.h"
-#include "solver.h"
 #include "puzzle.h"
+#include "solver.h"
 
 #define MAX_PATTERN_COUNT (256)
 
@@ -17,8 +17,10 @@ static extent_t col_counts[MAX_SIZE];
 static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
-static uint32_t run_hls_core(XSolver_toplevel * const solver, const struct Puzzle * const puzzle_info)
-{
+static uint32_t run_hls_core(
+    XSolver_toplevel * const solver,
+    const struct Puzzle * const puzzle_info
+) {
     XSolver_toplevel_Set_row_patterns(solver, (UINTPTR)&row_patterns);
     XSolver_toplevel_Set_row_counts(solver, (UINTPTR)&row_counts);
     XSolver_toplevel_Set_col_patterns(solver, (UINTPTR)&col_patterns);
@@ -34,9 +36,10 @@ static uint32_t run_hls_core(XSolver_toplevel * const solver, const struct Puzzl
     Xil_DCacheFlushRange((UINTPTR)&puzzle_info->width, sizeof(puzzle_info->width));
     Xil_DCacheFlushRange((UINTPTR)&out_black, sizeof(out_black));
     Xil_DCacheFlushRange((UINTPTR)&out_white, sizeof(out_white));
-    
+
     XSolver_toplevel_Start(solver);
-    while (!XSolver_toplevel_IsDone(solver));
+    while (!XSolver_toplevel_IsDone(solver))
+        ;
 
     Xil_DCacheInvalidateRange((UINTPTR)&out_white, sizeof(out_white));
     Xil_DCacheInvalidateRange((UINTPTR)&out_black, sizeof(out_black));
@@ -44,8 +47,10 @@ static uint32_t run_hls_core(XSolver_toplevel * const solver, const struct Puzzl
     return XSolver_toplevel_Get_return(solver);
 }
 
-static unsigned int min_required_tail(const struct ClueData * const block, const unsigned int start_idx)
-{
+static unsigned int min_required_tail(
+    const struct ClueData * const block,
+    const unsigned int start_idx
+) {
     if (start_idx >= block->count)
         return 0;
 
@@ -58,34 +63,32 @@ static unsigned int min_required_tail(const struct ClueData * const block, const
 }
 
 static extent_t generate_pattern_induction(
-        const extent_t puzzle_size,
-        const struct ClueData * const block,
-        const unsigned int clue_idx,
-        const unsigned int min_start_idx,
-        const line_t partial_line,
-        line_t * const pattern_out,
-        extent_t next_pattern_idx)
-{
+    const extent_t puzzle_size,
+    const struct ClueData * const block,
+    const unsigned int clue_idx,
+    const unsigned int min_start_idx,
+    const line_t partial_line,
+    line_t * const pattern_out,
+    extent_t next_pattern_idx
+) {
     if (clue_idx == block->count) {
         // Base case: we've reached the end of the clues, so commit our current line.
         pattern_out[next_pattern_idx++] = partial_line;
         return next_pattern_idx;
     }
 
-    const unsigned int block_len = block->blocks[clue_idx]; // The length of the target continuous block.
-    const unsigned int latest_start_idx = puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
+    const unsigned int block_len =
+        block->blocks[clue_idx]; // The length of the target continuous block.
+    const unsigned int latest_start_idx =
+        puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
     for (unsigned int start_idx = min_start_idx; start_idx <= latest_start_idx; ++start_idx) {
         const line_t block_mask = ((1U << block_len) - 1) << start_idx;
-        const unsigned next_idx = clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
+        const unsigned next_idx =
+            clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
 
         next_pattern_idx = generate_pattern_induction(
-            puzzle_size,
-            block,
-            clue_idx + 1,
-            next_idx,
-            partial_line | block_mask,
-            pattern_out,
+            puzzle_size, block, clue_idx + 1, next_idx, partial_line | block_mask, pattern_out,
             next_pattern_idx
         );
     }
@@ -94,10 +97,10 @@ static extent_t generate_pattern_induction(
 }
 
 static extent_t generate_pattern(
-        line_t dst[MAX_SIZE],
-        const extent_t puzzle_size,
-        struct ClueData * const block)
-{
+    line_t dst[MAX_SIZE],
+    const extent_t puzzle_size,
+    struct ClueData * const block
+) {
     if (block->count == 0) {
         dst[0] = 0;
         return 1;
@@ -107,21 +110,22 @@ static extent_t generate_pattern(
 }
 
 static void compute_valid_patterns(
-        const extent_t puzzle_size,
-        line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
-        extent_t counts[MAX_SIZE],
-        struct ClueData * const clues,
-        const unsigned int clue_count)
-{
+    const extent_t puzzle_size,
+    line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
+    extent_t counts[MAX_SIZE],
+    struct ClueData * const clues,
+    const unsigned int clue_count
+) {
     for (unsigned int clue_idx = 0; clue_idx < clue_count; ++clue_idx)
-        counts[clue_idx] = generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
+        counts[clue_idx] =
+            generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
 }
 
 static void print_board(
-        const line_t black[MAX_SIZE],
-        const line_t white[MAX_SIZE],
-        const extent_t puzzle_size)
-{
+    const line_t black[MAX_SIZE],
+    const line_t white[MAX_SIZE],
+    const extent_t puzzle_size
+) {
     for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
         for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx) {
             const line_t mask = 1U << col_idx;
@@ -138,8 +142,10 @@ static void print_board(
     }
 }
 
-void solver_solve(XSolver_toplevel * const solver, struct Puzzle * const puzzle_info)
-{
+void solver_solve(
+    XSolver_toplevel * const solver,
+    struct Puzzle * const puzzle_info
+) {
     assert(puzzle_info->width == puzzle_info->height);
     assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
 
@@ -152,11 +158,15 @@ void solver_solve(XSolver_toplevel * const solver, struct Puzzle * const puzzle_
 
     // I.a.w. the clues, precompute all valid row and column patterns.
 
-    compute_valid_patterns(puzzle_info->width, row_patterns, row_counts, puzzle_info->chunk.clue_data,
-        puzzle_info->width);
+    compute_valid_patterns(
+        puzzle_info->width, row_patterns, row_counts, puzzle_info->chunk.clue_data,
+        puzzle_info->width
+    );
 
-    compute_valid_patterns(puzzle_info->width, col_patterns, col_counts,
-        &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height);
+    compute_valid_patterns(
+        puzzle_info->width, col_patterns, col_counts,
+        &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height
+    );
 
     // Invoke the solver HLS IP core to refine along lines and columns.
 
@@ -172,7 +182,7 @@ void solver_solve(XSolver_toplevel * const solver, struct Puzzle * const puzzle_
     // Populate the solution bitmap.
 
     xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
-    
+
     const line_t col_mask = (1U << puzzle_info->width) - 1U;
     for (extent_t row_idx = 0; row_idx < puzzle_info->height; ++row_idx)
         puzzle_info->solution_bitmap[row_idx] = out_black[row_idx] & col_mask;

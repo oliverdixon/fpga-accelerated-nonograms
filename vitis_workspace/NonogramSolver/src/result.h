@@ -1,3 +1,5 @@
+// clang-format Language: C
+
 #ifndef RESULT_H
 #define RESULT_H
 
@@ -17,7 +19,7 @@ enum ResultCode
 struct MessageResult
 {
     enum ResultCode status : 8;
-    uint32_t solve_time;   
+    uint32_t solve_time;
 };
 
 int result_parse(

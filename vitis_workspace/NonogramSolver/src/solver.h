@@ -1,3 +1,5 @@
+// clang-format Language: C
+
 #ifndef SOLUTION_DRIVER_H
 #define SOLUTION_DRIVER_H
 
@@ -10,6 +12,9 @@ typedef uint8_t extent_t;
 
 struct Puzzle;
 
-void solver_solve(XSolver_toplevel * solver, struct Puzzle * puzzle_info);
+void solver_solve(
+    XSolver_toplevel * solver,
+    struct Puzzle * puzzle_info
+);
 
 #endif // SOLUTION_DRIVER_H

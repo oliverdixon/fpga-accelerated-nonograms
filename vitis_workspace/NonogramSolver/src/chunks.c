@@ -1,7 +1,7 @@
 #include <assert.h>
+#include <lwip/sockets.h>
 #include <stdlib.h>
 #include <xil_printf.h>
-#include <lwip/sockets.h>
 
 #include "chunks.h"
 #include "metadata.h"
@@ -16,11 +16,11 @@
 static uint8_t send_buf[MESSAGE_REQUEST_CHUNK_LENGTH];
 
 void chunk_request(
-        const uint8_t chunk_id,
-        const int sock,
-        const struct sockaddr_in * const dst_addr,
-        const struct Metadata * const metadata)
-{
+    const uint8_t chunk_id,
+    const int sock,
+    const struct sockaddr_in * const dst_addr,
+    const struct Metadata * const metadata
+) {
     uint8_t * buffer_head = send_buf;
 
     // 1. Message ID (1 byte)
@@ -32,15 +32,17 @@ void chunk_request(
     // 3. Requested chunk ID (1 byte)
     *buffer_head++ = chunk_id;
 
-    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
-        sizeof(struct sockaddr_in));
+    lwip_sendto(
+        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
+        sizeof(struct sockaddr_in)
+    );
 }
 
 int chunk_parse(
-        struct Chunk * const dst,
-        const struct Metadata * const match_metadata,
-        const uint8_t * payload)
-{
+    struct Chunk * const dst,
+    const struct Metadata * const match_metadata,
+    const uint8_t * payload
+) {
     assert(*payload == MSG_CHUNK_DATA);
     payload += sizeof(uint8_t);
 
@@ -86,22 +88,26 @@ int chunk_parse(
     return 0;
 }
 
-void chunk_free(const struct Chunk * chunk_data)
-{
+void chunk_free(
+    const struct Chunk * chunk_data
+) {
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx)
         free(chunk_data->clue_data[line_idx].blocks);
 
     free(chunk_data->clue_data);
 }
 
-void chunk_print(const struct Chunk * const chunk_data)
-{
+void chunk_print(
+    const struct Chunk * const chunk_data
+) {
     print("\r\n");
 
-    xil_printf("Chunk data:\r\n\tChunk ID: %d\r\n\tChunk Count: %d\r\n\tOffset: %d"
+    xil_printf(
+        "Chunk data:\r\n\tChunk ID: %d\r\n\tChunk Count: %d\r\n\tOffset: %d"
         "\r\n\tData Length: %d\r\n\tClue Count (derived): %d\r\n",
-        chunk_data->chunk_id, chunk_data->num_chunks, chunk_data->offset,
-        chunk_data->data_length, chunk_data->clue_count);
+        chunk_data->chunk_id, chunk_data->num_chunks, chunk_data->offset, chunk_data->data_length,
+        chunk_data->clue_count
+    );
 
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx) {
         struct ClueData * clue_line = &chunk_data->clue_data[line_idx];

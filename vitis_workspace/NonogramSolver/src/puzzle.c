@@ -1,9 +1,9 @@
 #include <assert.h>
-#include <xil_printf.h>
 #include <lwip/sockets.h>
+#include <xil_printf.h>
 
-#include "solver.h"
 #include "puzzle.h"
+#include "solver.h"
 
 /*
  * Message ID (1 byte)
@@ -18,9 +18,9 @@ static StaticSemaphore_t bitmap_mutex_state;
 
 void puzzle_request(
     const struct Metadata * const metadata,
-	const int sock,
-	const struct sockaddr_in * const dst_addr)
-{
+    const int sock,
+    const struct sockaddr_in * const dst_addr
+) {
     uint8_t * buffer_head = send_buf;
 
     // 1. Message ID (1 byte)
@@ -29,12 +29,16 @@ void puzzle_request(
     // 2. Puzzle metadata
     buffer_head = metadata_hton(metadata, buffer_head);
 
-    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
-        sizeof(struct sockaddr_in));
+    lwip_sendto(
+        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
+        sizeof(struct sockaddr_in)
+    );
 }
 
-int puzzle_parse(struct Puzzle * const dst, const uint8_t * payload)
-{
+int puzzle_parse(
+    struct Puzzle * const dst,
+    const uint8_t * payload
+) {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
 
@@ -54,7 +58,7 @@ int puzzle_parse(struct Puzzle * const dst, const uint8_t * payload)
 
     dst->global_max_clue_data_count = 0;
     dst->solution_bitmap = bitmap_buffer;
-    
+
     if (bitmap_mutex == NULL)
         bitmap_mutex = xSemaphoreCreateMutexStatic(&bitmap_mutex_state);
 
@@ -65,16 +69,19 @@ int puzzle_parse(struct Puzzle * const dst, const uint8_t * payload)
     return 0;
 }
 
-void puzzle_print(const struct Puzzle * const puzzle_info)
-{
+void puzzle_print(
+    const struct Puzzle * const puzzle_info
+) {
     print("\r\n");
-    
+
     if (puzzle_info->metadata.valid) {
         print("Puzzle:\r\n\t");
         metadata_print(&puzzle_info->metadata);
-        xil_printf("\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
+        xil_printf(
+            "\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
             puzzle_info->width, puzzle_info->height, puzzle_info->num_chunks,
-            puzzle_info->clue_bytes);
+            puzzle_info->clue_bytes
+        );
     } else
         print("Puzzle: INVALID\r\n");
 

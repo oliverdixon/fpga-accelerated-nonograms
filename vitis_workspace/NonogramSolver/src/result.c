@@ -1,33 +1,34 @@
 #include <assert.h>
-#include <xil_printf.h>
 #include <lwip/sockets.h>
+#include <xil_printf.h>
 
 #include "metadata.h"
-#include "result.h"
 #include "puzzle.h"
+#include "result.h"
 
 /*
  * Message ID (1 byte)
  * Metadata
  */
-#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
+#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH                                                         \
+    (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
 
 static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH];
 
 static uint8_t pack_left_aligned_byte(
-        const line_t row,
-        const uint8_t bit_offset,
-        const uint8_t bit_count)
-{
+    const line_t row,
+    const uint8_t bit_offset,
+    const uint8_t bit_count
+) {
     const line_t mask = (1U << bit_count) - 1U;
     return ((row >> bit_offset) & mask) << (8U - bit_count);
 }
 
 int result_parse(
-        struct MessageResult * const result,
-        const struct Metadata * const metadata,
-        const uint8_t * payload)
-{
+    struct MessageResult * const result,
+    const struct Metadata * const metadata,
+    const uint8_t * payload
+) {
     assert(*payload == MSG_RESULT);
     payload += sizeof(uint8_t);
 
@@ -41,7 +42,7 @@ int result_parse(
     }
 
     result->status = *payload++;
-    
+
     result->solve_time = *payload++ << 8;
     result->solve_time |= *payload++ << 8;
     result->solve_time |= *payload++ << 8;
@@ -51,14 +52,14 @@ int result_parse(
 }
 
 int result_send(
-        const struct Puzzle * const puzzle,
-        const int sock,
-        const struct sockaddr_in * const dst_addr)
-{
+    const struct Puzzle * const puzzle,
+    const int sock,
+    const struct sockaddr_in * const dst_addr
+) {
     if (!puzzle->is_solved)
         // What's the point in submitting a solution if we don't have one?
         return -1;
-    
+
     uint8_t * buffer_head = send_buf;
 
     // 1. Message ID (1 byte)
@@ -84,16 +85,19 @@ int result_send(
 
     xSemaphoreGive(puzzle->solution_semaphore);
 
-    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *) dst_addr,
-        sizeof(struct sockaddr_in));
+    lwip_sendto(
+        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
+        sizeof(struct sockaddr_in)
+    );
 
     return 0;
 }
 
-void result_print(const struct MessageResult * const result)
-{
+void result_print(
+    const struct MessageResult * const result
+) {
     xil_printf("Result in %d milliseconds: ", result->solve_time);
-    
+
     switch (result->status) {
     case RESULT_INCORRECT:
         print("Incorrect!\r\n");
