@@ -10,6 +10,9 @@
 
 #include "solver.h"
 
+/**
+ * @brief The maximum number of row-columm refinements on a single solve cycle before bailing out.
+ */
 #define MAX_ITERATIONS (MAX_SIZE * MAX_SIZE)
 
 /**
