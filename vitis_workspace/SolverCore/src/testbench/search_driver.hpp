@@ -6,7 +6,7 @@
 #ifndef SW_PROTOTYPING_SEARCH_DRIVER_HPP
 #define SW_PROTOTYPING_SEARCH_DRIVER_HPP
 
-#include "solver.h"
+#include "../solver.h"
 
 enum SearchResult
 {

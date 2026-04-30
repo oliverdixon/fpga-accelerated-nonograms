@@ -13,3 +13,8 @@ vitis_workspace/Nonogram
 sw-prototyping/docs
 sw-prototyping/cmake-build-*
 
+# Ignore startup artefacts from Vivado
+vivado.jou
+vivado.log
+vivado_pid*.str
+

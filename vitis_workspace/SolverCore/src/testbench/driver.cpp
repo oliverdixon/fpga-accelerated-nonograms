@@ -10,12 +10,34 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
-#include <ranges>
 #include <vector>
 
-#include "solver.h"
+/**
+ * @brief Serialise a puzzle.
+ * @param black Black cell assignments.
+ * @param white White cell assignments.
+ * @param puzzle_size The extent of the square puzzle.
+ */
+static void print_board(
+    const line_t black[MAX_SIZE],
+    const line_t white[MAX_SIZE],
+    const extent_t puzzle_size
+) {
+    for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
+        for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx) {
+            const line_t mask = 1U << col_idx;
 
-#define USE_SEARCH
+            if (black[row_idx] & mask)
+                std::cout << '#';
+            else if (white[row_idx] & mask)
+                std::cout << '.';
+            else
+                std::cout << '?';
+        }
+
+        std::cout << '\n';
+    }
+}
 
 static unsigned int min_required_tail(
     const std::vector<extent_t> & block,
@@ -97,7 +119,9 @@ static void compute_valid_patterns(
     const std::vector<std::vector<extent_t>> & clues,
     const extent_t puzzle_size
 ) {
-    for (const auto [idx, clue] : std::views::enumerate(clues)) {
+    unsigned int idx = 0;
+
+    for (const auto& clue : clues) {
         // Generate all valid patterns for a given clue, check invariants, and copy to the
         // destination.
 
@@ -107,30 +131,8 @@ static void compute_valid_patterns(
 
         for (unsigned int pattern_idx = 0; pattern_idx < patterns.size(); ++pattern_idx)
             dst[idx * MAX_PATTERN_COUNT + pattern_idx] = patterns[pattern_idx];
-    }
-}
 
-/**
- * @brief Serialise a puzzle.
- * @param black Black cell assignments.
- * @param white White cell assignments.
- * @param puzzle_size The extent of the square puzzle.
- */
-static void print_board(
-    const line_t black[MAX_SIZE],
-    const line_t white[MAX_SIZE],
-    const extent_t puzzle_size
-) {
-    for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
-        for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx)
-            if (const line_t mask = 1U << col_idx; black[row_idx] & mask)
-                std::cout << '#';
-            else if (white[row_idx] & mask)
-                std::cout << '.';
-            else
-                std::cout << '?';
-
-        std::cout << '\n';
+        ++idx;
     }
 }
 
@@ -141,50 +143,50 @@ static void print_board(
 int main() {
     constexpr extent_t puzzle_size = 20;
 
-    const std::vector<std::vector<extent_t>> row_clues = {
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5},
-        {5}
+    const std::vector<std::vector<extent_t> > row_clues = {
+        { 01, 01, 01, 01, 01, 01} ,
+        { 01, 01, 01, 02, 01, 01, 01} ,
+        { 04, 01, 02, 01, 04} ,
+        { 06} ,
+        { 01, 01, 01, 01, } ,
+        { 01, 01, 02, 01, 01} ,
+        { 01, 01, 02, 04, 02, 01, 01} ,
+        { 01, 01, 02, 01, 01} ,
+        { 01, 01, 02, 02, 01, 01} ,
+        { 01, 02, 02, 01, } ,
+        { 01, 02, 02, 01, } ,
+        { 01, 01, 02, 02, 01, 01} ,
+        { 01, 01, 02, 01, 01} ,
+        { 01, 01, 02, 04, 02, 01, 01} ,
+        { 01, 01, 02, 01, 01} ,
+        { 01, 01, 01, 01, } ,
+        { 06} ,
+        { 04, 01, 02, 01, 04} ,
+        { 01, 01, 01, 02, 01, 01, 01} ,
+        { 01, 01, 01, 01, 01, 01}
     };
 
-    const std::vector<std::vector<extent_t>> col_clues = {
-        {},
-        {},
-        {},
-        {},
-        {},
-        {1},
-        {1, 3, 1},
-        {1, 5, 1},
-        {12},
-        {12},
-        {6, 6},
-        {1, 2, 3, 2},
-        {1, 2, 1, 3},
-        {3},
-        {3},
-        {7},
-        {7},
-        {6},
-        {5},
-        {5}
+    const std::vector<std::vector<extent_t> > col_clues = {
+        { 00} ,
+        { 03, 01, 01, 01, 01, 03} ,
+        { 01, 01, 01, 01, } ,
+        { 03, 02, 02, 02, 03} ,
+        { 01, 01} ,
+        { 03, 03} ,
+        { 01, 01, 01, 01, 01, 01, 01, 01} ,
+        { 01, 01, 01, 04, 01, 01, 01} ,
+        { 02, 01, 04, 01, 02} ,
+        { 03, 03, 03, 03, } ,
+        { 03, 03, 03, 03, } ,
+        { 02, 01, 04, 01, 02} ,
+        { 01, 01, 01, 04, 01, 01, 01} ,
+        { 01, 01, 01, 01, 01, 01, 01, 01} ,
+        { 03, 03} ,
+        { 01, 01} ,
+        { 03, 02, 02, 02, 03} ,
+        { 01, 01, 01, 01 } ,
+        { 03, 01, 01, 01, 01, 03} ,
+        { 00}
     };
 
     assert(row_clues.size() == puzzle_size);
@@ -210,17 +212,9 @@ int main() {
     compute_valid_patterns(col_patterns, col_counts, col_clues, puzzle_size);
 
     // ... then solve.
-
-#ifndef USE_SEARCH
-    const SolverState status = solve(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, out_black, out_white,
-        out_black, out_white
-    );
-#else
     const SearchResult status = search(
         row_patterns, row_counts, col_patterns, col_counts, puzzle_size, out_black, out_white, 0
     );
-#endif
 
     std::cout << "status = " << status << "\n\n";
     print_board(out_black, out_white, puzzle_size);

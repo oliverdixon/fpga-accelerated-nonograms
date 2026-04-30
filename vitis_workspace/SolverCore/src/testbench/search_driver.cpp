@@ -9,7 +9,7 @@
 
 #include "search_driver.hpp"
 
-#define MAX_SEARCH_DEPTH (512)
+#define MAX_SEARCH_DEPTH (1024)
 
 namespace {
 
@@ -102,6 +102,33 @@ SearchResult search_branch(
     return result;
 }
 
+/**
+ * @brief Serialise a puzzle.
+ * @param black Black cell assignments.
+ * @param white White cell assignments.
+ * @param puzzle_size The extent of the square puzzle.
+ */
+void print_board(
+    const line_t black[MAX_SIZE],
+    const line_t white[MAX_SIZE],
+    const extent_t puzzle_size
+) {
+    for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
+        for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx) {
+            const line_t mask = 1U << col_idx;
+
+            if (black[row_idx] & mask)
+                std::cout << '#';
+            else if (white[row_idx] & mask)
+                std::cout << '.';
+            else
+                std::cout << '?';
+        }
+
+        std::cout << '\n';
+    }
+}
+
 } // namespace
 
 SearchResult search(
@@ -117,12 +144,15 @@ SearchResult search(
     if (depth > MAX_SEARCH_DEPTH)
         return SEARCH_UNKNOWN;
 
+    std::cout << "Called with depth " << depth << std::endl;
+    print_board(black, white, puzzle_size);
+
     line_t propagated_black[MAX_SIZE];
     line_t propagated_white[MAX_SIZE];
 
     // Do an initial solve attempt with the input grid assignments to see if we have a trivial case.
 
-    const SolverState status = solve(
+    const SolverState status = (enum SolverState) solver_toplevel(
         row_patterns, row_counts, col_patterns, col_counts, puzzle_size, black, white,
         propagated_black, propagated_white
     );

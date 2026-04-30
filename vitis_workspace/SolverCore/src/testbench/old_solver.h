@@ -9,7 +9,7 @@
 #include <stdint.h>
 
 typedef uint32_t line_t;
-typedef uint16_t extent_t;
+typedef uint8_t extent_t;
 
 #define MAX_SIZE (20)
 #define MAX_PATTERN_COUNT (6000)

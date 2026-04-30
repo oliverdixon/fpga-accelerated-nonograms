@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "solver.h"
+#include "old_solver.h"
 
 #define MAX_ITERATIONS (64)
 
