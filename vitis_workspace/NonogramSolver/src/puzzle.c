@@ -65,7 +65,7 @@ int puzzle_parse(
 
     dst->solution_semaphore = bitmap_mutex;
     dst->solution_bitmap = bitmap_buffer;
-    dst->is_solved = false;
+    dst->solved_state = SEARCH_NOT_RUN;
 
     return 0;
 }

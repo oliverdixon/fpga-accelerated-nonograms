@@ -111,10 +111,8 @@ static void solve_puzzles_task(
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             solver_solve(&solver, &puzzle_info);
-            if (puzzle_info.is_solved) {
-                xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
-                xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
-            }
+            xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
+            xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
         }
 
     vTaskDelete(NULL);

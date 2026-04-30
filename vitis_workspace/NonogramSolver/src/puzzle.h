@@ -10,6 +10,14 @@
 #include "metadata.h"
 #include "solver.h"
 
+enum SearchResult
+{
+    SEARCH_SOLVED,
+    SEARCH_FAILED,
+    SEARCH_UNKNOWN,
+    SEARCH_NOT_RUN
+};
+
 struct Puzzle
 {
     struct Metadata metadata;
@@ -21,7 +29,7 @@ struct Puzzle
     unsigned int global_max_clue_data_count;
     struct Chunk chunk; // TODO: support multiple chunks
 
-    bool is_solved;
+    enum SearchResult solved_state;
     SemaphoreHandle_t solution_semaphore;
     line_t * solution_bitmap;
 };

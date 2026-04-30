@@ -36,7 +36,7 @@ const uint8_t * metadata_parse(
         valid = false;
     }
 
-    if (metadata->difficulty.size_index >= SIZE_INDEX_MAX) {
+    if (metadata->difficulty.size_index >= SIZE_INDEX_32) {
         logging_printf("metadata_parse: Invalid size index %02x.", metadata->difficulty.size_index);
         valid = false;
     }

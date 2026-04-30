@@ -35,12 +35,22 @@ enum DifficultyTier
 
 enum SizeIndex
 {
-    SIZE_INDEX_5X5 = 0,
-    SIZE_INDEX_6X6 = 1,
-    SIZE_INDEX_7X7 = 2,
-    SIZE_INDEX_8X8 = 3,
-
-    SIZE_INDEX_MAX = 4 // TODO
+    SIZE_INDEX_5 = 0,
+    SIZE_INDEX_6 = 1,
+    SIZE_INDEX_7 = 2,
+    SIZE_INDEX_8 = 3,
+    SIZE_INDEX_10 = 4,
+    SIZE_INDEX_12 = 5,
+    SIZE_INDEX_14 = 6,
+    SIZE_INDEX_16 = 7,
+    SIZE_INDEX_18 = 8,
+    SIZE_INDEX_20 = 9,
+    SIZE_INDEX_22 = 10,
+    SIZE_INDEX_24 = 11,
+    SIZE_INDEX_26 = 12,
+    SIZE_INDEX_28 = 13,
+    SIZE_INDEX_30 = 14,
+    SIZE_INDEX_32 = 15,
 };
 
 struct Metadata
