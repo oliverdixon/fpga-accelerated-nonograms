@@ -4,6 +4,7 @@
 #include <xparameters.h>
 
 #include "chunks.h"
+#include "logging.h"
 #include "puzzle.h"
 #include "video.h"
 
@@ -87,6 +88,8 @@ static void draw_clue_element(
     const uint32_t y_pos,
     const uint32_t glyph_advance_extent
 ) {
+    return; // TODO
+    
     if (clue > 9)
         x_pos -= glyph_advance_extent / 2;
 
@@ -141,8 +144,8 @@ void video_draw_puzzle(
      * size is 15x15).
      */
     static const unsigned int max_digits = 2;
-    static const unsigned int box_extent = 50;       // Pixel extent of boxes in both directions
-    static const unsigned int internal_padding = 15; // Padding between boxes and clues
+    static const unsigned int box_extent = 20;       // Pixel extent of boxes in both directions
+    static const unsigned int internal_padding = 5; // Padding between boxes and clues
     static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
     static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
 
@@ -159,6 +162,7 @@ void video_draw_puzzle(
     const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
     const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
+    logging_puts("Will write filled cells.");
 
     /*
      * If the puzzle is solved, we want access to the solution bitmap so it can be

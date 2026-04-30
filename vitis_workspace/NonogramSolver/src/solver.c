@@ -9,7 +9,7 @@
 #include "solver.h"
 #include "logging.h"
 
-#define MAX_PATTERN_COUNT (256)
+#define MAX_PATTERN_COUNT (5005)
 #define MAX_SEARCH_DEPTH (512)
 
 struct CellRef
@@ -68,6 +68,8 @@ static enum SolverState run_hls_core(
     line_t * const local_out_white
 ) {
     const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
+
+    XSolver_toplevel_InterruptEnable(hls_core, 0x01);
 
     XSolver_toplevel_Set_row_patterns(hls_core, (UINTPTR)row_patterns);
     XSolver_toplevel_Set_row_counts(hls_core, (UINTPTR)row_counts);
@@ -159,9 +161,6 @@ static enum SearchResult search(
     line_t * const white,
     const unsigned int depth
 ) {
-    logging_printf("Called with depth %d", depth);
-    print_board(black, white, puzzle_info->width);
-
     if (depth > MAX_SEARCH_DEPTH)
         return SEARCH_UNKNOWN;
 

@@ -5,10 +5,10 @@
 
 #include <xsolver_toplevel.h>
 
-#define MAX_SIZE (20)
+#define MAX_SIZE (32)
 
 typedef uint32_t line_t;
-typedef uint8_t extent_t;
+typedef uint16_t extent_t;
 
 struct Puzzle;
 

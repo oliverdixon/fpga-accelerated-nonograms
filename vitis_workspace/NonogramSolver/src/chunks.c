@@ -90,7 +90,7 @@ int chunk_parse(
 }
 
 void chunk_free(
-    const struct Chunk * chunk_data
+    const struct Chunk * const chunk_data
 ) {
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx)
         free(chunk_data->clue_data[line_idx].blocks);
