@@ -8,4 +8,6 @@ add_executable(sw_prototyping
         src/solver.c
         src/solver.h
         src/driver.cpp
+        src/search_driver.cpp
+        src/search_driver.hpp
 )
