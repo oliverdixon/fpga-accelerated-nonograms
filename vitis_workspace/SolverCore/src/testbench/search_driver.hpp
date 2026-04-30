@@ -1,6 +1,8 @@
 /**
  * @file
  * @brief Backtracking and search interface, intended to be executed by the ARM Cortex.
+ * @author Oliver Dixon <od641@york.ac.uk>
+ * @date 2026-04-30
  */
 
 #ifndef SW_PROTOTYPING_SEARCH_DRIVER_HPP
@@ -8,11 +10,15 @@
 
 #include "../solver.h"
 
+/**
+ * @enum SearchResult
+ * @brief The result of an exhaustive search.
+ */
 enum SearchResult
 {
-    SEARCH_SOLVED,
-    SEARCH_FAILED,
-    SEARCH_UNKNOWN
+    SEARCH_SOLVED, /**< @brief The search solved the puzzle with satisfactory assignments. */
+    SEARCH_FAILED, /**< @brief The search failed due an inconsistent puzzle. */
+    SEARCH_UNKNOWN /**< @brief The search couldn't determine a result, typically due to timeout. */
 };
 
 /**

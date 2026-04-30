@@ -1,6 +1,8 @@
 /**
  * @file
  * @brief Backtracking and search implementation, intended to be executed by the ARM Cortex.
+ * @author Oliver Dixon <od641@york.ac.uk>
+ * @date 2026-04-30
  */
 
 #include <cassert>
@@ -152,10 +154,10 @@ SearchResult search(
 
     // Do an initial solve attempt with the input grid assignments to see if we have a trivial case.
 
-    const SolverState status = (enum SolverState) solver_toplevel(
+    const auto status = static_cast<enum SolverState>(solver_toplevel(
         row_patterns, row_counts, col_patterns, col_counts, puzzle_size, black, white,
         propagated_black, propagated_white
-    );
+    ));
 
     if (status == SOLVER_CONTRADICTION)
         return SEARCH_FAILED;
