@@ -7,13 +7,20 @@
 \usepackage[a4paper]{geometry}
 \usepackage[en-GB]{datetime2}
 \usepackage{fancyhdr}
+\usepackage{titlesec}
 \usepackage{lastpage}
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{booktabs}
 \usepackage{hyperref}
 
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
+
+\newcommand\sectionbreak{\ifnum\value{section}>0\clearpage\fi}
+\newcommand\subsectionbreak{\clearpage}
+\setcounter{secnumdepth}{1}
+\numberwithin{equation}{section}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -41,9 +48,10 @@
 
 \begin{document}
 \maketitle
+\tableofcontents
 
 \section{Embedded Systems Design}
-\subsection*{Question 1}
+\subsection{Question 1}
 \begin{enumerate}
     \item For the described medical device, the following non-functional
     requirements should be considered. In addition to the stated requirements,
@@ -95,10 +103,9 @@
         Ignoring the marginal reduction of total battery capacity over time, it
         is proposed that a maximum average current draw of 10mA is achieved;
         with the 500mAh battery, capable of providing 500mA over one hour, a
-        device drawing an average of 10mA would last 50 hours.
-
-        Battery life guarantees are an important invariant for any mobile
-        product as they provide assurance to the user and the provider.
+        device drawing an average of 10mA would last 50 hours. Battery life
+        guarantees are an important invariant for any mobile product as they
+        provide assurance to the users.
 
         \item \emph{Maximum downtime for system reset.}
         
@@ -137,7 +144,10 @@
         Thus, the total MCU current draw is $ I_\text{MCU} = 10\mla (2\mls /
         100\mls + 50\mls/5\second) + 0.2\mla(1 - 2\mls/100\mls -
         50\mls/5\second) = 0.494\mla $. Therefore, the total power consumption
-        is $$ I = 15.05\mla + 0.1\mla + 0.2\mla + 0.494\mla = 15.844\mla. $$
+        is
+        \begin{equation}
+            I = 15.05\mla + 0.1\mla + 0.2\mla + 0.494\mla = 15.844\mla.
+        \end{equation}
         With the $500\mah$ battery, this could last approximately 31.56 hours.
 
         \item With an estimated lifetime of 31.56 hours, the device does not
@@ -147,7 +157,57 @@
         I^\prime = 10.334\mla $, hence the total lifetime $ 500\mah/I^\prime =
         48.33\hour $.
     \end{enumerate}
-    \item TODO RTOS tasks
+    \item The following RTOS tasks could be defined in an implementation of the
+        system. Tasks, identified as (T$i$) are specified in descending order of
+        relative priority. Inter-task communication buffers are identified as
+        (B$j$). It is assumed that the following task architecture covers the
+        main runtime of the application, with one-time initialisation steps,
+        such as creation of the network socket and configuration of sensors,
+        completed before the main scheduler is executed.
+        \begingroup
+        \renewcommand\theenumii{T\arabic{enumii}}
+        \begin{enumerate}
+            \item \emph{Data acquisition.} The highest-priority task interacts
+                with the sensor hardware through some on-board interface (e.g.
+                GPIO) to load the reported values into memory and enqueues the
+                raw quantities onto (B1).
+            \item \emph{Post-processing.} The post-processing task retrieves
+                items from (B1), performs any necessary post-processing (e.g.
+                the sensory fusion algorithm) and enqueues duplicates of the
+                results onto buffers (B2) and (B3). This task has a period of
+                $100\mls$, since it executes following the periodic release of
+                (T1).
+            \item \emph{Button reading.} The button task receives events from
+                the local buttons, attached through some simple on-board
+                interface, and enqueues relevant updates onto (B4) for the
+                attention of the GUI task. It also debounces button-presses to
+                prevent duplicated entries, so has a relatively high period of
+                $100\mls$.
+            \item \emph{MQTT transmission.} The MQTT transmission task
+                simultaneously retrieves processed results from (B3), prepares
+                them as a UDP/IP packet in the format expected by the database
+                server, and sends them over a previously established socket.
+                This task is released periodically every $5\second$.
+            \item \emph{GUI management.} The GUI task acts as a state machine to
+                manage local interaction with the device. It performs regular
+                non-blocking reads from (B4) to respond to any button presses,
+                and communicates regularly with the LCD to display any requested
+                information.
+            \item \emph{Local storage.} The local storage task consumes
+                processed results from (B2) and records them in some persistent
+                storage (possibly present on the non-volatile flash or volatile
+                RAM) using a known data structure.
+        \end{enumerate}
+        \endgroup
+
+        For the allocation and execution of these tasks, a deadline-monotonic
+        scheme could be used, whereby tasks with shorter relative deadlines are
+        assigned a higher priority. Choice of this scheduling scheme preserves
+        the safety-critical ordering of the tasks, such as prioritising data
+        acquisition to avoid missing patient data, and reduces the chances of
+        buffer overflow. All inter-task communication data structures are FIFO
+        thread-safe queues. Mutexes may be required to protected shared
+        resources such as the local storage or network stack.
     \item \begin{enumerate}
         \item \begin{tabular}{llll}
             $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
@@ -157,15 +217,54 @@
             3 & 4.1 & 3.1 & 3.3 \\
             4 & 4.1 & 5.3 & 4.51
         \end{tabular}
+
+        \item To determine the convergence characteristics of the system, we
+        consider the system update matrix. The $k$th term of the system, for $k
+        > 0$, is computed according to the update matrix $U$:
+        \begin{equation}
+            \vec{v}_k = \underbrace{\begin{pmatrix}
+                0 & 1 & 0 \\
+                0 & 0 & 1 \\
+                1.1 & 0 & 0 \end{pmatrix}}_U \vec{v}_{k+1} +
+            \begin{pmatrix} 1 \\ 2 \\ 0 \end{pmatrix}\quad \text{where}\quad
+            \vec{v}_i = \begin{pmatrix}
+                x_i \\ y_i \\ z_i
+            \end{pmatrix}.
+        \end{equation}
+
+        The characteristic polynomial of $U$ is
+        \begin{align}
+            p_U\lambda &= \det{(\lambda I - U)} \\
+            &= \det{\begin{pmatrix}
+                    \lambda & -1 & 0 \\
+                    0 & \lambda & -1 \\
+                    -1.1 & 0 & \lambda
+                \end{pmatrix}} \\
+            &= \lambda^3 - 1.1.
+        \end{align}
+
+        Defining $\lambda_{1,2,3}$ such that $p_U\lambda_{1,3,3} := 0$, we can
+        derive the solutions of the characteristic polynomial, and hence the
+        eigenvalues of $U$:
+        \begin{equation}
+            \lambda_1 = \sqrt[3]{1.1} \qquad
+            \lambda_{2,3} = \sqrt[3]{1.1}\left( -\frac{1}{2} \pm
+                \frac{\sqrt{3}}{2}i \right).
+        \end{equation}
+        Given that there is at least one eigenvalue with a positive real part
+        ($\Re{\lambda_1} = \sqrt[3]{1.1} > 0$), the system is unstable. It will
+        not converge to a steady state. Where systems have complex-valued
+        eigenvalues, such as $\lambda_{2,3}$, stability requires that all
+        eigenvalues have negative real parts.
     \end{enumerate}
 \end{enumerate}
 
-\subsection*{Question 2}
-\subsection*{Question 3}
+\subsection{Question 2}
+\subsection{Question 3}
 
 \section{Real-Time Systems Theory and Analysis}
-\subsection*{Question 4}
-\subsection*{Question 5}
+\subsection{Question 4}
+\subsection{Question 5}
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
