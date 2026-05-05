@@ -13,6 +13,7 @@
 \usepackage{amsfonts}
 \usepackage{booktabs}
 \usepackage{hyperref}
+\usepackage{cleveref}
 
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
@@ -21,6 +22,7 @@
 \newcommand\subsectionbreak{\clearpage}
 \setcounter{secnumdepth}{1}
 \numberwithin{equation}{section}
+\numberwithin{table}{section}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -209,14 +211,23 @@
         thread-safe queues. Mutexes may be required to protected shared
         resources such as the local storage or network stack.
     \item \begin{enumerate}
-        \item \begin{tabular}{llll}
-            $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
-            \toprule
-            1 & 1 & 2 & 1.1 \\
-            2 & 3 & 3.1 & 1.1 \\
-            3 & 4.1 & 3.1 & 3.3 \\
-            4 & 4.1 & 5.3 & 4.51
-        \end{tabular}
+        \item \Cref{table:evals} shows the system state described by $x(k)$,
+        $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
+        4$.
+        \begin{table}[h!]
+            \centering%
+            \begin{tabular}{llll}
+                $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
+                \toprule
+                1 & 1 & 2 & 1.1 \\
+                2 & 3 & 3.1 & 1.1 \\
+                3 & 4.1 & 3.1 & 3.3 \\
+                4 & 4.1 & 5.3 & 4.51
+            \end{tabular}
+            \caption{Evaluation of the fusion algorithm state for
+                $1 \leq k \leq 4$.}%
+            \label{table:evals}
+        \end{table}
 
         \item To determine the convergence characteristics of the system, we
         consider the system update matrix. The $k$th term of the system, for $k
@@ -260,6 +271,35 @@
 \end{enumerate}
 
 \subsection{Question 2}
+\begin{enumerate}
+    \item \begin{enumerate}
+        \item \Cref{table:sdf} is a topology table for the given SDF graph. Row
+            edges represent edges of the graph, and columns represent vertices.
+
+            \begin{table}[h!]
+                \centering%
+                \begin{tabular}{l|llllll}
+                      & A & B & C & D & E & F \\ \toprule
+                    $c_1$ & \\
+                    $c_2$ & \\
+                    $c_3$ & \\
+                    $c_4$ & \\
+                    $c_5$ & \\
+                    $c_6$ &
+                \end{tabular}
+                \caption{Topology of the SDF}%
+                \label{table:sdf}
+            \end{table}
+
+            From \Cref{table:sdf}, we can build the topology matrix $\Gamma$:
+            \begin{equation}
+                \Gamma = \begin{pmatrix}
+                    
+                \end{pmatrix}
+            \end{equation}
+    \end{enumerate}
+\end{enumerate}
+
 \subsection{Question 3}
 
 \section{Real-Time Systems Theory and Analysis}
