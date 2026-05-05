@@ -6,16 +6,14 @@
 
 \usepackage[a4paper]{geometry}
 \usepackage[en-GB]{datetime2}
-\usepackage{titlesec}
 \usepackage{fancyhdr}
 \usepackage{lastpage}
+\usepackage{amsmath}
+\usepackage{booktabs}
 \usepackage{hyperref}
 
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
-
-\newcommand\sectionbreak{\ifnum\value{section}>0\clearpage\fi}
-\newcommand\subsectionbreak{\clearpage}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -35,23 +33,139 @@
 
 \pagestyle{fancy}
 
+\DeclareMathOperator\mah{mAh}
+\DeclareMathOperator\mla{mA}
+\DeclareMathOperator\hour{h}
+\DeclareMathOperator\mls{ms}
+\DeclareMathOperator\second{s}
+
 \begin{document}
 \maketitle
-\tableofcontents
 
 \section{Embedded Systems Design}
-\subsection{Question 1}
-\subsection{Question 2}
+\subsection*{Question 1}
 \begin{enumerate}
+    \item For the described medical device, the following non-functional
+    requirements should be considered. In addition to the stated requirements,
+    examples of reasonable quantitative targets are specified.
+    \begin{itemize}
+        \item \emph{Maximum data propagation time between a sensor reading and
+        the corresponding report being despatched over the UDP/IP interface.}
+        
+        An upper bound on the processing time of sensor data is important due to
+        the safety-critical nature of the device application. In particular,
+        excessive (potentially unbounded) delays could cause internal buffers to
+        be overrun, thus data dropped, or, depending on the exact application,
+        allow deterioration in patient status to go unreported for an
+        unexpectedly large amount of time.
+        
+        Given that UDP/IP does not natively support guaranteed delivery, it is
+        not practical to place an upper bound on the total round-trip time of
+        data (i.e. from sensing to arrival at the database server). For this
+        application, a maximum processing time of one second is proposed given
+        the sizeable amount of on-board memory yet lower battery capacity, which
+        suggests that the processing unit should run at a lower frequency to
+        conserve power.
+
+        \item \emph{Maximum amount of RAM and flash usage during normal
+        operation.}
+
+        Likewise, an upper bound on the maximum amount of RAM (volatile) and
+        flash (non-volatile) memory usage during normal operation is necessary
+        to guarantee system stability and ability to adapt to worst-case
+        scenarios. During regular operation, it should be considered for the
+        device to require no more than 3MB of RAM and 12MB of flash storage.
+
+        In the case of RAM, limiting the allocation the three-quarters of the
+        available capacity provides a large on-board buffer to store patient
+        data in the event of the database server being temporarily unable to
+        accept new reports. This would allow a user or operator of the device,
+        such as a healthcare professional, to locally review recent (potentially
+        abridged) reports invariant of the state of the remote server. In the
+        case of flash, similarly limiting the maximum typical usage of
+        non-volatile memory provides space for persisting patient data over an
+        unexpected power loss and for future upgrades to the firmware and
+        software.
+
+        \item \emph{Minimum operation time on a single full charge.}
+        
+        As the device has a 500mAh battery, there should be an upper bound on
+        average current draw (averaged over an entire battery cycle) to
+        guarantee a minimum operating time following a single full charge.
+        Ignoring the marginal reduction of total battery capacity over time, it
+        is proposed that a maximum average current draw of 10mA is achieved;
+        with the 500mAh battery, capable of providing 500mA over one hour, a
+        device drawing an average of 10mA would last 50 hours.
+
+        Battery life guarantees are an important invariant for any mobile
+        product as they provide assurance to the user and the provider.
+
+        \item \emph{Maximum downtime for system reset.}
+        
+        Following a device reset (either operator-initiated, required by an
+        unrecoverable fault, or software update), an upper time bound should be
+        imposed between system shutdown (last data collection and report cycle)
+        to restoration of data collection and processing. This is important for
+        a medical device to minimise the probability of a failure to report
+        clinically significant sensor findings.
+
+        An upper bound of one minute is proposed; since UDP is connectionless, a
+        potentially slow handshake with the database server does not have to be
+        established, and given the earlier requirements of sufficiently large
+        local buffers, a long reboot cycle is not necessary. In the case of a
+        software update, any relevant files could be downloaded and verified
+        prior to device shutdown to encourage minimal downtime.
+    \end{itemize}
     \item \begin{enumerate}
-        \item ABC
+        \item The current draws specified by the given power profile sum to a
+        total.
+        
+        The LCD backlight draws a continuous $15\mla$; each $100\mls$, an
+        additional $5\mla$ is used for $1\mls$ for the LCD to communicate with
+        the CPU. The duty cycle of the LCD-CPU communication is therefore
+        $1\mls/100\mls=0.01$, so the average current is $I_\text{LCD} = 15\mla +
+        5\mla \cdot 0.01 = 15.05\mla$.
+
+        The sensors draw $5\mla$ for $2\mls$ during a $100\mls$ cycle, hence the
+        current is $ I_\text{sensors} = 5\mla \cdot 2\mls / 100\mls = 0.1\mla $.
+        MQTT transmissions similarly draw $20\mla$ for $50\mls$ during a
+        $5\second$ cycle, hence $ I_\text{transmission} = 20\mla \cdot
+        50\mls/5\second = 0.2\mla $. The MCU is active and drawing $10\mla$
+        during the combined duty cycles of the sensors and transmissions; it is
+        otherwise idle and drawing $0.2\mla$.
+        
+        Thus, the total MCU current draw is $ I_\text{MCU} = 10\mla (2\mls /
+        100\mls + 50\mls/5\second) + 0.2\mla(1 - 2\mls/100\mls -
+        50\mls/5\second) = 0.494\mla $. Therefore, the total power consumption
+        is $$ I = 15.05\mla + 0.1\mla + 0.2\mla + 0.494\mla = 15.844\mla. $$
+        With the $500\mah$ battery, this could last approximately 31.56 hours.
+
+        \item With an estimated lifetime of 31.56 hours, the device does not
+        meet its target of 48 hours. If the continuous LCD backlight current
+        draw could be reduced to $9.5\mla$, $ I_\text{LCD}^\prime = 9.55\mla $,
+        so the total current draw on the revised power profile would be $
+        I^\prime = 10.334\mla $, hence the total lifetime $ 500\mah/I^\prime =
+        48.33\hour $.
+    \end{enumerate}
+    \item TODO RTOS tasks
+    \item \begin{enumerate}
+        \item \begin{tabular}{llll}
+            $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
+            \toprule
+            1 & 1 & 2 & 1.1 \\
+            2 & 3 & 3.1 & 1.1 \\
+            3 & 4.1 & 3.1 & 3.3 \\
+            4 & 4.1 & 5.3 & 4.51
+        \end{tabular}
     \end{enumerate}
 \end{enumerate}
-\subsection{Question 3}
+
+\subsection*{Question 2}
+\subsection*{Question 3}
 
 \section{Real-Time Systems Theory and Analysis}
-\subsection{Question 4}
-\subsection{Question 5}
+\subsection*{Question 4}
+\subsection*{Question 5}
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
