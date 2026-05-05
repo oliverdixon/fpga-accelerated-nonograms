@@ -1,0 +1,37 @@
+Language: Cpp
+BasedOnStyle: LLVM
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterFunction: false
+  AfterStruct: true
+  AfterEnum: true
+  AfterUnion: true
+  AfterControlStatement: false
+  BeforeElse: false
+  BeforeWhile: false
+  SplitEmptyRecord: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortBlocksOnASingleLine: Never
+PointerAlignment: Middle
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+BinPackArguments: true
+IndentCaseLabels: false
+SortIncludes: CaseSensitive
+IncludeBlocks: Preserve
+DerivePointerAlignment: false
+InsertBraces: false
+AllowShortEnumsOnASingleLine: false
+
+ContinuationIndentWidth: 4
+BinPackParameters: AlwaysOnePerLine
+AllowAllParametersOfDeclarationOnNextLine: false
+BreakFunctionDefinitionParameters: true
+AlignAfterOpenBracket: BlockIndent

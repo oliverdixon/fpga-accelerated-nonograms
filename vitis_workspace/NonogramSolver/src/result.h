@@ -1,7 +1,13 @@
+// clang-format Language: C
+
 #ifndef RESULT_H
 #define RESULT_H
 
-#include "metadata.h"
+#include <stdint.h>
+
+struct Metadata;
+struct Puzzle;
+struct sockaddr_in;
 
 enum ResultCode
 {
@@ -10,14 +16,24 @@ enum ResultCode
     RESULT_ERROR = 0x02
 };
 
-struct MessageResult
+struct Result
 {
-    struct PuzzleMetadata metadata;
     enum ResultCode status : 8;
-    uint32_t solve_time;   
+    uint32_t solve_time;
 };
 
-int result_parse(struct MessageResult * result, const uint8_t * payload);
-void result_print(struct MessageResult * result);
+int result_parse(
+    struct Result * result,
+    const struct Metadata * metadata,
+    const uint8_t * payload
+);
+
+int result_send(
+    const struct Puzzle * puzzle,
+    int sock,
+    const struct sockaddr_in * dst_addr
+);
+
+void result_print(const struct Result * result);
 
 #endif // RESULT_H

@@ -1,74 +1,98 @@
-/**
- * Example of using the Digilent display drivers for Zybo Z7 HDMI output
- * Russell Joyce, 11/03/2019
- */
-
-#include <stdio.h>
 #include <assert.h>
-#include "xil_types.h"
-#include "xil_cache.h"
-#include "xparameters.h"
+#include <string.h>
+#include <xil_cache.h>
+#include <xparameters.h>
 
-#include "video.h"
-#include "puzzle.h"
 #include "chunks.h"
-#include "glyph_bitmaps.h"
+#include "logging.h"
+#include "puzzle.h"
+#include "video.h"
 
-#include "zybo_z7_hdmi/display_ctrl.h"
+#include "glyph_bitmaps.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
-#define FRAME_STRIDE (1440*4)
+#define FRAME_STRIDE (1440 * 4)
 
 static const uint32_t foreground_colour = 0x00FFFFFF;
 
-static void draw_character(const struct VideoState * const state,
-		const char item, const uint32_t x, const uint32_t y)
-{
-	assert(item >= '0' && item <= '9');
+static void draw_character(
+    const struct VideoState * const state,
+    const char item,
+    const uint32_t x,
+    const uint32_t y
+) {
+    assert(item >= '0' && item <= '9');
 
-	const uint32_t stride = state->display_ctrl.stride / 4;
-	const uint32_t * const glyph = numeric_glyphs[item - '0'];
-	uint32_t * const frame = state->display_ctrl.framePtr[state->
-		display_ctrl.curFrame];
+    const uint32_t stride = state->display_ctrl.stride / 4;
+    const uint32_t * const glyph = numeric_glyphs[item - '0'];
+    uint32_t * const frame = state->display_ctrl.framePtr[state->display_ctrl.curFrame];
 
-	for (unsigned int col_idx = 0; col_idx < glyph_width; ++col_idx) {
-		const uint32_t bits = glyph[col_idx];
-		for (unsigned int row_idx = 0; row_idx < glyph_height; ++row_idx)
-			if (bits & (1U << row_idx))
-				frame[(y + row_idx) * stride + (x + col_idx)] = foreground_colour;
-	}
+    for (unsigned int col_idx = 0; col_idx < glyph_width; ++col_idx) {
+        const uint32_t bits = glyph[col_idx];
+        for (unsigned int row_idx = 0; row_idx < glyph_height; ++row_idx)
+            if (bits & (1U << row_idx))
+                frame[(y + row_idx) * stride + (x + col_idx)] = foreground_colour;
+    }
 }
 
-static void draw_rectangle(const struct VideoState * const state,
-		const uint32_t left_x, const uint32_t top_y,
-		const uint32_t width, const uint32_t height)
-{
-	uint32_t * const frame = state->display_ctrl.framePtr[state->
-		display_ctrl.curFrame];
+static void draw_rectangle(
+    const struct VideoState * const state,
+    const uint32_t left_x,
+    uint32_t top_y,
+    const uint32_t width,
+    const uint32_t height
+) {
+    uint32_t * const frame = state->display_ctrl.framePtr[state->display_ctrl.curFrame];
 
-	const uint32_t stride = state->display_ctrl.stride / 4;
-	const uint32_t right_x = left_x + width;
-	const uint32_t bottom_y = top_y + height;
+    const uint32_t stride = state->display_ctrl.stride / 4;
+    const uint32_t right_x = left_x + width;
+    const uint32_t bottom_y = (top_y + height) * stride;
+    top_y *= stride;
 
-	// Draw the top and bottom lines.
-	for (unsigned int x = left_x; x < right_x; ++x) {
-		frame[top_y * stride + x] = foreground_colour;
-		frame[bottom_y * stride + x] = foreground_colour;
-	}
+    // Draw the top and bottom lines.
+    for (unsigned int x = left_x; x < right_x; ++x) {
+        frame[top_y + x] = foreground_colour;
+        frame[bottom_y + x] = foreground_colour;
+    }
 
-	// Draw the left and right lines.
-	for (unsigned int y = top_y; y < bottom_y; ++y) {
-		frame[y * stride + left_x] = foreground_colour;
-		frame[y * stride + right_x] = foreground_colour;
-	}
+    // Draw the left and right lines.
+    for (unsigned int y = top_y; y < bottom_y; y += stride) {
+        frame[y + left_x] = foreground_colour;
+        frame[y + right_x] = foreground_colour;
+    }
 }
 
-static void draw_clue_element(const struct VideoState * const state, uint8_t clue,
-    uint32_t x_pos, const uint32_t y_pos, const uint32_t glyph_advance_extent)
-{
-	if (clue > 9)
-		x_pos -= glyph_advance_extent / 2;
-	
+static void draw_filled_rectangle(
+    const struct VideoState * const state,
+    const uint32_t left_x,
+    const uint32_t top_y,
+    const uint32_t width,
+    const uint32_t height
+) {
+    uint32_t * const frame = state->display_ctrl.framePtr[state->display_ctrl.curFrame];
+
+    const uint32_t stride = state->display_ctrl.stride / 4;
+    const uint32_t right_x = left_x + width;
+    const uint32_t bottom_y = (top_y + height) * stride;
+
+    // Draw the filled rectangle.
+    for (unsigned int x = left_x; x < right_x; ++x)
+        for (unsigned int y = top_y * stride; y < bottom_y; y += stride)
+            frame[y + x] = foreground_colour;
+}
+
+static void draw_clue_element(
+    const struct VideoState * const state,
+    uint8_t clue,
+    uint32_t x_pos,
+    const uint32_t y_pos,
+    const uint32_t glyph_advance_extent
+) {
+    return; // TODO
+    
+    if (clue > 9)
+        x_pos -= glyph_advance_extent / 2;
+
     while (clue != 0) {
         draw_character(state, (clue % 10) + '0', x_pos, y_pos);
         clue /= 10;
@@ -76,53 +100,78 @@ static void draw_clue_element(const struct VideoState * const state, uint8_t clu
     }
 }
 
-void video_initialise(struct VideoState * video_state)
-{
-	for (unsigned int fb_idx = 0; fb_idx < DISPLAY_NUM_FRAMES; ++fb_idx)
-		video_state->frame_refs[fb_idx] = video_state->frame_buffers[fb_idx];
+int video_initialise(
+    struct VideoState * video_state
+) {
+    for (unsigned int fb_idx = 0; fb_idx < DISPLAY_NUM_FRAMES; ++fb_idx)
+        video_state->frame_refs[fb_idx] = video_state->frame_buffers[fb_idx];
 
-	DisplayInitialize(&video_state->display_ctrl, XPAR_HDMI_AXI_VDMA_0_BASEADDR,
-		XPAR_XVTC_0_BASEADDR, XPAR_HDMI_AXI_DYNCLK_0_BASEADDR, video_state->frame_refs,
-		FRAME_STRIDE);
+    int status = DisplayInitialize(
+        &video_state->display_ctrl, XPAR_HDMI_AXI_VDMA_0_BASEADDR, XPAR_XVTC_0_BASEADDR,
+        XPAR_HDMI_AXI_DYNCLK_0_BASEADDR, video_state->frame_refs, FRAME_STRIDE
+    );
 
-	DisplayChangeFrame(&video_state->display_ctrl, 0);
-	DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900);
-	DisplayStart(&video_state->display_ctrl);
+    if (status)
+        return status;
+
+    status = DisplayChangeFrame(&video_state->display_ctrl, 0);
+
+    if (status)
+        return status;
+
+    status = DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900);
+
+    if (status)
+        return status;
+
+    return DisplayStart(&video_state->display_ctrl);
 }
 
-void video_draw_puzzle(const struct VideoState * video_state,
-	    const struct MessagePuzzleInfo * puzzle_info)
-{
-	// Blank the entire frame to black.
-	memset(video_state->display_ctrl.framePtr[video_state->
-		display_ctrl.curFrame], 0x00, MAX_FRAME * 4);
+void video_draw_puzzle(
+    const struct VideoState * const video_state,
+    const struct Puzzle * const puzzle_info
+) {
+    // Blank the entire frame to black.
+    memset(
+        video_state->display_ctrl.framePtr[video_state->display_ctrl.curFrame], 0x00, MAX_FRAME * 4
+    );
 
-	// Draw 50x50 rectangles for each square with a bit of padding.
+    // Draw 50x50 rectangles for each square with a bit of padding.
 
-	/*
-	 * The padding is determined by the maximum number of clues we need to print.
-	 * Clues take a maximum of two digits' worth of space (since the maximum grid
-	 * size is 15x15).
-	 */
+    /*
+     * The padding is determined by the maximum number of clues we need to print.
+     * Clues take a maximum of two digits' worth of space (since the maximum grid
+     * size is 15x15).
+     */
     static const unsigned int max_digits = 2;
-	static const unsigned int box_extent = 50; // Pixel extent of boxes in both directions
-	static const unsigned int internal_padding = 15; // Padding between boxes and clues
-	static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
+    static const unsigned int box_extent = 20;       // Pixel extent of boxes in both directions
+    static const unsigned int internal_padding = 5; // Padding between boxes and clues
+    static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
     static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
-    
-	const unsigned int external_padding = (glyph_width + internal_padding + glyph_spacing)
-        * max_digits * puzzle_info->global_max_clue_data_count;
 
-	unsigned int x_pos = external_padding;
-	unsigned int y_pos = external_padding;
+    const unsigned int external_padding = (glyph_width + internal_padding + glyph_spacing) *
+                                          max_digits * puzzle_info->global_max_clue_data_count;
+
+    unsigned int x_pos = external_padding;
+    unsigned int y_pos = external_padding;
 
     unsigned int col_clue_idx = puzzle_info->height;
-	unsigned int row_clue_idx = 0;
+    unsigned int row_clue_idx = 0;
 
-	// TODO: will need to be updated to support multiple chunks.
-	const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
+    // TODO: will need to be updated to support multiple chunks.
+    const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
-	for (unsigned int x_idx = 0; x_idx < puzzle_info->width; ++x_idx) {
+    const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
+    logging_puts("Will write filled cells.");
+
+    /*
+     * If the puzzle is solved, we want access to the solution bitmap so it can be
+     * visualised as well.
+     */
+    if (read_solution_bitmap)
+        xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
+
+    for (unsigned int col_idx = 0; col_idx < puzzle_info->width; ++col_idx) {
         /*
          * Topmost box on this column, so we might have some column clues.
          * By convention, column clues immediately succeed row clues. There are precisely
@@ -131,31 +180,43 @@ void video_draw_puzzle(const struct VideoState * video_state,
         const struct ClueData * const col_clue = &clue_data[col_clue_idx++];
         const uint32_t start_x = x_pos + (box_extent / 2) - (glyph_width / 2);
         for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
-            draw_clue_element(video_state, col_clue->blocks[element_idx], start_x,
-                (element_idx + 1) * (internal_padding + glyph_height),
-                glyph_width + glyph_spacing);
-        
-		for (unsigned int y_idx = 0; y_idx < puzzle_info->height; ++y_idx) {
-			if (x_idx == 0) {
-				/*
+            draw_clue_element(
+                video_state, col_clue->blocks[element_idx], start_x,
+                (element_idx + 1) * (internal_padding + glyph_height), glyph_width + glyph_spacing
+            );
+
+        const line_t col_mask = 1U << col_idx;
+
+        for (unsigned int row_idx = 0; row_idx < puzzle_info->height; ++row_idx) {
+            if (col_idx == 0) {
+                /*
                  * Leftmost box on this row, so we might have some row clues.
                  * By convention, row clues come first, so we don't have to offset the index.
                  */
-				const struct ClueData * const row_clue = &clue_data[row_clue_idx++];
+                const struct ClueData * const row_clue = &clue_data[row_clue_idx++];
                 const uint32_t start_y = y_pos + (box_extent / 2) - (glyph_height / 2);
-				for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
-					draw_clue_element(video_state, row_clue->blocks[element_idx],
+                for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
+                    draw_clue_element(
+                        video_state, row_clue->blocks[element_idx],
                         (element_idx + 1) * (internal_padding + glyph_width), start_y,
-                        glyph_width + glyph_spacing);
-			}
+                        glyph_width + glyph_spacing
+                    );
+            }
 
-			draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
-			y_pos += stride;
-		}
+            if (read_solution_bitmap &&
+                (puzzle_info->solution_bitmap[row_idx] & col_mask) == col_mask)
+                draw_filled_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
+            else
+                draw_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
+            y_pos += stride;
+        }
 
-		x_pos += stride;
-		y_pos = external_padding;
-	}
+        x_pos += stride;
+        y_pos = external_padding;
+    }
 
-	Xil_DCacheFlush();
+    if (read_solution_bitmap)
+        xSemaphoreGive(puzzle_info->solution_semaphore);
+
+    Xil_DCacheFlush();
 }

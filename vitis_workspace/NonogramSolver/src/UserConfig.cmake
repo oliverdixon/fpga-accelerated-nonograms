@@ -39,6 +39,8 @@ set(USER_COMPILE_SOURCES
 "network.c"
 "puzzle.c"
 "solver.c"
+"result.c"
+"logging.c"
 )
 
 # -----------------------------------------

@@ -1,3 +1,6 @@
+// clang-format Language: C
+// clang-format off
+
 #ifndef GLYPH_BITMAPS_H
 #define GLYPH_BITMAPS_H
 
