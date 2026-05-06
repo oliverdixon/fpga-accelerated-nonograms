@@ -47,6 +47,7 @@
 \DeclareMathOperator\hour{h}
 \DeclareMathOperator\mls{ms}
 \DeclareMathOperator\second{s}
+\DeclareMathOperator\rank{Rank}
 
 \begin{document}
 \maketitle
@@ -273,31 +274,97 @@
 \subsection{Question 2}
 \begin{enumerate}
     \item \begin{enumerate}
-        \item \Cref{table:sdf} is a topology table for the given SDF graph. Row
-            edges represent edges of the graph, and columns represent vertices.
+        \item In a topology matrix, row edges represent edges of the graph, and
+            columns represent vertices. The entry at position $(i,j)$ has value
+            $((i,j))$ such that
+            \begin{equation}
+                ((i,j)) = \begin{cases}
+                    0 & \text{if edge $i$ does not connect to vertex $j$;} \\
+                    p_{i,j} & \text{if $j$ produces $p_{i,j}$ tokens on the
+                        channel indicated by $i$; or} \\
+                    -c_{i,j} & \text{if $j$ consumes $c_{i,j}$ tokens from the
+                        channel indicated by $i$.}
+                \end{cases}
+            \end{equation}
 
+            \Cref{table:sdf} is a topology table for the given SDF graph.
             \begin{table}[h!]
                 \centering%
                 \begin{tabular}{l|llllll}
-                      & A & B & C & D & E & F \\ \toprule
-                    $c_1$ & \\
-                    $c_2$ & \\
-                    $c_3$ & \\
-                    $c_4$ & \\
-                    $c_5$ & \\
-                    $c_6$ &
+                          & A  & B & C &  D &  E &  F \\ \toprule
+                    $c_1$ & 2 & -1 & 0 &  0 &  0 &  0 \\
+                    $c_2$ & 0 &  1 & 0 & -1 &  0 &  0 \\
+                    $c_3$ & 2 &  0 & 0 & -1 &  0 &  0 \\
+                    $c_4$ & 0 &  0 & 2 & -1 &  0 &  0 \\
+                    $c_5$ & 0 &  0 & 0 &  2 & -2 &  0 \\
+                    $c_6$ & 0 &  0 & 0 &  1 &  0 & -2
                 \end{tabular}
-                \caption{Topology of the SDF}%
+                \caption{Topology table of the SDF}%
                 \label{table:sdf}
             \end{table}
 
             From \Cref{table:sdf}, we can build the topology matrix $\Gamma$:
             \begin{equation}
                 \Gamma = \begin{pmatrix}
-                    
+                    2 & -1 & 0 &  0 &  0 &  0 \\
+                    0 &  1 & 0 & -1 &  0 &  0 \\
+                    2 &  0 & 0 & -1 &  0 &  0 \\
+                    0 &  0 & 2 & -1 &  0 &  0 \\
+                    0 &  0 & 0 &  2 & -2 &  0 \\
+                    0 &  0 & 0 &  1 &  0 & -2
                 \end{pmatrix}
             \end{equation}
+        \item For a connected SDF graph with $n$ vertices, there exists a
+            static schedule if and only if its topology matrix $\Gamma$ has
+            rank $n-1$. In this case, $\rank{\Gamma} = 5$, where the SDF graph
+            contains 6 actors, hence there does exist a static schedule.
+
+        \item The relative firing frequencies are determined by the smallest
+            positive $\vec{q} \in \mathbb{Z}^n$ such that $\Gamma \cdot \vec{q}
+            = 0$, where the SDF contains $n$ vertices (or, equivalently, the
+            topology matrix contains $n$ column entries).
+
+            That is, we wish to find the smallest integer coefficients $q_A,
+            \ldots, q_F$ such that
+            \begin{equation}
+                \Gamma \cdot \begin{pmatrix}
+                    q_A \\ q_B \\ q_C \\ q_D \\ q_E \\ q_F
+                \end{pmatrix} = 0.
+            \end{equation}
+
+            We immediately have the relative firing frequencies of each node:
+            \begin{equation}
+                \begin{pmatrix}
+                    q_A \\ q_B \\ q_C \\ q_D \\ q_E \\ q_F
+                \end{pmatrix} =
+                \begin{pmatrix}
+                    1 \\ 2 \\ 1 \\ 2 \\ 2 \\ 1
+                \end{pmatrix}.%
+                \label{eqn:firing-freqs}
+            \end{equation}
     \end{enumerate}
+    \item The relative firing frequencies from \Cref{eqn:firing-freqs} can be
+        used to propose PASSes.
+        \begin{enumerate}
+            \item \Cref{table:passes} describes two proposed PASSes for the SDF.
+                \begin{table}[h!]
+                    \centering%
+                    \begin{tabular}{lllllllll}
+                        & & \multicolumn{6}{c}{Minimum Buffer Sizes} & \\
+                        \# & Schedule & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ &
+                            $c_6$ & Total Buffer Cost \\
+                        \toprule
+                        A & \texttt{ABBCDDEEF} & 2 & 2 & 2 & 2 & 4 & 2 & 14 \\
+                        B & \texttt{ACBDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11
+                    \end{tabular}
+                    \caption{Two distinct PASSes for the SDF}%
+                    \label{table:passes}
+                \end{table}
+            \item Of the two proposed PASSes, (B) is more memory-efficient due
+                to the lower total buffer cost. From a scheduling perspective,
+                the minimum buffer sizes can be reduced by avoiding consecutive
+                production of tokens without immediate consumption.
+        \end{enumerate}
 \end{enumerate}
 
 \subsection{Question 3}

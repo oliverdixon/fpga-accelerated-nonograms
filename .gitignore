@@ -14,7 +14,7 @@ vitis_workspace/Nonogram
 vitis_workspace/SolverCore/docs
 
 # Ignore startup artefacts from Vivado
-vivado.jou
-vivado.log
+vivado*.jou
+vivado*.log
 vivado_pid*.str
 
