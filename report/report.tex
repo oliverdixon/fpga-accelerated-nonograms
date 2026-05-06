@@ -12,6 +12,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{booktabs}
+\usepackage{subcaption}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
@@ -217,7 +218,7 @@
         4$.
         \begin{table}[h!]
             \centering%
-            \begin{tabular}{llll}
+            \begin{tabular}{l|lll}
                 $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
                 \toprule
                 1 & 1 & 2 & 1.1 \\
@@ -349,7 +350,7 @@
             \item \Cref{table:passes} describes two proposed PASSes for the SDF.
                 \begin{table}[h!]
                     \centering%
-                    \begin{tabular}{lllllllll}
+                    \begin{tabular}{l|llllllll}
                         & & \multicolumn{6}{c}{Minimum Buffer Sizes} & \\
                         \# & Schedule & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ &
                             $c_6$ & Total Buffer Cost \\
@@ -368,6 +369,101 @@
 \end{enumerate}
 
 \subsection{Question 3}
+\begin{enumerate}
+    \item \begin{enumerate}
+        \item TODO
+        \item TODO
+    \end{enumerate}
+    \item \begin{enumerate}
+        \item \Cref{table:diffusion} traces the diffusion algorithm for
+            processing nodes $A$, $B$, $C$, and $D$ from the component graph. At
+            the initial state, the workload is quite unbalanced. Recall that at
+            iteration $k+1$, the processor $i$ forwards to its neighbour $j$ an
+            amount of load proportional to the difference between its load and
+            its neighbours load:
+            \begin{equation}
+                \Delta_{i,j} = \alpha_{i,j}\left( l_i^{(k)} - l_j^{(k)} \right)
+                \quad \text{where $\alpha_{i,j}$ is the weight between $i$ and
+                $j$},
+            \end{equation}
+            and hence the new load $l_i$ of processor $i$ is given by
+            \begin{equation}
+                l_i^{(k+1)} = l_i^{(k)} - \sum_{i \leftrightarrow j}
+                \Delta_{i,j} \quad \text{where} \quad i,j \in V \quad \text{and}
+                \quad k = 1, 2, \ldots
+            \end{equation}
+            $V$ is the set of interconnects between processors and $i
+            \leftrightarrow j$ denotes the interconnects from $i$ to all
+            neighbours $j$.
+            \begin{table}[h!]
+                \centering%
+                \begin{tabular}{l|llll}
+                    Step & A & B & C & D \\
+                    \toprule
+                    0 & 40 & 14 & 8 & 14 \\
+                    1 & \\
+                    2 & \\
+                    3 &
+                \end{tabular}
+                \caption{Diffusion Algorithm Trace}%
+                \label{table:diffusion}
+            \end{table}
+
+            \Crefrange{table:diffusion-working-1}{table:diffusion-working-3}
+            show the intermediary calculations used to arrive at the quantities
+            listed in \Cref{table:diffusion}.
+            \begin{table}[h!]
+                \centering%
+                \begin{subtable}{.48\linewidth}
+                \begin{tabular}{ll|lllll}
+                    $i$ & $j$ & $l_i^1$ & $l_j^1$ & $\alpha_{i,j}$ &
+                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
+                        \Delta_{i,j}$ \\
+                    \toprule
+                    A & B & 40 & 14 & 0.6 & 15.6 & 15.6 \\
+                    A & D & 40 & 14 & 0.4 & 10.4 & 26 \\
+                    B & D & 14 & 14 & 0.3 & 0 & 26 \\
+                    B & C \\
+                    C & D
+                \end{tabular}
+                \caption{Working for $k=0 \to k=1$.}%
+                \label{table:diffusion-working-1}
+                \end{subtable}\hfill%
+                \begin{subtable}{.48\linewidth}
+                \begin{tabular}{ll|lllll}
+                    $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
+                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
+                        \Delta_{i,j}$ \\
+                    \toprule
+                    A & B \\
+                    A & D \\
+                    B & D \\
+                    B & C \\
+                    C & D
+                \end{tabular}
+                \caption{Working for $k=1 \to k=2$.}%
+                \label{table:diffusion-working-2}
+                \end{subtable}\vskip4ex%
+                \begin{subtable}{.48\linewidth}
+                \begin{tabular}{ll|lllll}
+                    $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
+                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
+                        \Delta_{i,j}$ \\
+                    \toprule
+                    A & B \\
+                    A & D \\
+                    B & D \\
+                    B & C \\
+                    C & D
+                \end{tabular}
+                \caption{Working for $k=2 \to k=3$.}%
+                \label{table:diffusion-working-3}
+                \end{subtable}
+                \caption{Working for the diffusion algorithm trace.}
+            \end{table}
+        \item TODO
+    \end{enumerate}
+\end{enumerate}
 
 \section{Real-Time Systems Theory and Analysis}
 \subsection{Question 4}
