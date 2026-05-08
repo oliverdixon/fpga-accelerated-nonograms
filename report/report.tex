@@ -24,6 +24,7 @@
 \setcounter{secnumdepth}{1}
 \numberwithin{equation}{section}
 \numberwithin{table}{section}
+\captionsetup[subtable]{aboveskip=2ex,belowskip=4ex}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -241,7 +242,7 @@
                 1.1 & 0 & 0 \end{pmatrix}}_U \vec{v}_{k+1} +
             \begin{pmatrix} 1 \\ 2 \\ 0 \end{pmatrix}\quad \text{where}\quad
             \vec{v}_i = \begin{pmatrix}
-                x_i \\ y_i \\ z_i
+                x(i) \\ y(i) \\ z(i)
             \end{pmatrix}.
         \end{equation}
 
@@ -401,9 +402,9 @@
                     Step & A & B & C & D \\
                     \toprule
                     0 & 40 & 14 & 8 & 14 \\
-                    1 & \\
-                    2 & \\
-                    3 &
+                    1 & 14 & 27.8 & 11.6 & 22.6 \\
+                    2 & 25.7 & 13.1 & 19.8 & 17.4 \\
+                    3 & 14.8 & 24 & 17.1 & 20.2
                 \end{tabular}
                 \caption{Diffusion Algorithm Trace}%
                 \label{table:diffusion}
@@ -412,58 +413,147 @@
             \Crefrange{table:diffusion-working-1}{table:diffusion-working-3}
             show the intermediary calculations used to arrive at the quantities
             listed in \Cref{table:diffusion}.
-            \begin{table}[h!]
-                \centering%
-                \begin{subtable}{.48\linewidth}
-                \begin{tabular}{ll|lllll}
-                    $i$ & $j$ & $l_i^1$ & $l_j^1$ & $\alpha_{i,j}$ &
-                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
-                        \Delta_{i,j}$ \\
-                    \toprule
-                    A & B & 40 & 14 & 0.6 & 15.6 & 15.6 \\
-                    A & D & 40 & 14 & 0.4 & 10.4 & 26 \\
-                    B & D & 14 & 14 & 0.3 & 0 & 26 \\
-                    B & C \\
-                    C & D
-                \end{tabular}
-                \caption{Working for $k=0 \to k=1$.}%
-                \label{table:diffusion-working-1}
-                \end{subtable}\hfill%
-                \begin{subtable}{.48\linewidth}
-                \begin{tabular}{ll|lllll}
-                    $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
-                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
-                        \Delta_{i,j}$ \\
-                    \toprule
-                    A & B \\
-                    A & D \\
-                    B & D \\
-                    B & C \\
-                    C & D
-                \end{tabular}
-                \caption{Working for $k=1 \to k=2$.}%
-                \label{table:diffusion-working-2}
-                \end{subtable}\vskip4ex%
-                \begin{subtable}{.48\linewidth}
-                \begin{tabular}{ll|lllll}
-                    $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
-                        $\Delta_{i,j}$ & $\sum_{i \leftrightarrow j}
-                        \Delta_{i,j}$ \\
-                    \toprule
-                    A & B \\
-                    A & D \\
-                    B & D \\
-                    B & C \\
-                    C & D
-                \end{tabular}
-                \caption{Working for $k=2 \to k=3$.}%
-                \label{table:diffusion-working-3}
-                \end{subtable}
-                \caption{Working for the diffusion algorithm trace.}
-            \end{table}
-        \item TODO
+        \item To check for convergence to a steady state, we compute the
+            eigenvalues of the update matrix $U$ for the system. Given the
+            generator
+            \begin{equation}
+                l_i^{(k+1)} = l_i^{(k)} - \sum_{i\leftrightarrow j}
+                \Delta_{i,j},
+            \end{equation}
+            the system can be written in the form
+            \begin{equation}
+                \vec{l}^{~(k+1)} = U\vec{l}^{~(k)}
+                \quad\text{for some}\quad U\in\mathbb{R}^{4\times 4}
+                \quad\text{where}\quad \vec{l}^{i} = \begin{pmatrix}
+                    l_A^i \\ l_B^i \\ l_C^i \\ l_D^i
+                \end{pmatrix}.
+            \end{equation}
+
+            With the given weights, set
+            \begin{equation}
+                U := \begin{pmatrix}
+                    0   &  0.6 &   0 & 0.4 \\
+                    0.6 & -0.2 & 0.3 & 0.3 \\
+                    0   &  0.3 & 0.4 & 0.3 \\
+                    0.4 &  0.3 & 0.3 &   0
+                \end{pmatrix}
+            \end{equation}
+            and note the characteristic polynomial
+            \begin{align}
+                p_U\lambda &= \det(\lambda I - U) \\
+                &= \det\begin{pmatrix}
+                    \lambda &          -0.6 &              0 & -0.4    \\
+                       -0.6 & 0.2 + \lambda &           -0.3 & -0.3    \\
+                          0 &          -0.3 & -0.4 + \lambda & -0.3    \\
+                       -0.4 &          -0.3 &           -0.3 & \lambda
+                \end{pmatrix} \\
+                &= \lambda ^4-\frac{\lambda ^3}{5}-\frac{87 \lambda ^2}{100}-
+                    \frac{\lambda}{250}+\frac{37}{500}.
+            \end{align}
+            Defining $\lambda_{1,2,3,4}$ such that $p_U\lambda_{1,2,3,4} := 0$,
+            we can derive the solutions of the characteristic polynomial, and
+            hence the eigenvalues of $U$:
+            \begin{equation}
+                \lambda_1 = -0.765071 \quad
+                \lambda_2 = -0.328958 \quad
+                \lambda_3 = 0.294029 \quad
+                \lambda_4 = 1.
+            \end{equation}
+            Because every non-unitary eigenvalue has magnitude less than one,
+            the system does converge. Since some eigenvalues are negative, the
+            convergence is oscillatory.
+
+            The total workload is $40+14+8+14=76$ units, so the equilibrium
+            workload is
+            \begin{equation}
+                l^\infty_A = l^\infty_B = l^\infty_C = l^\infty_D =
+                \frac{76}{4} = 19.
+            \end{equation}
+
+            Convergence is not guaranteed for this system, since it does not
+            meet the convergence criterion:
+            \begin{equation}
+                \alpha = \frac{1}{\text{max\_degree} + 1} = 1/4,
+            \end{equation}
+            as $\alpha_{i,j} > 1/4$ for all nodes $i,j$.
     \end{enumerate}
 \end{enumerate}
+
+\begin{table}[p]
+    \centering%
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^0$ & $l_j^0$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$40$&$14$&$0.6$&$15.6$& \\
+        $A$&$D$&$40$&$14$&$0.4$&$10.4$&$26$\\
+        
+        $B$&$A$&$14$&$40$&$0.6$&$-15.6$& \\
+        $B$&$C$&$14$&$8$&$0.3$&$1.8$& \\
+        $B$&$D$&$14$&$14$&$0.3$&$0$&$-13.8$\\
+
+        $C$&$B$&$8$&$14$&$0.3$&$-1.8$& \\
+        $C$&$D$&$8$&$14$&$0.3$&$-1.8$&$-3.6$\\
+
+        $D$&$A$&$14$&$40$&$0.4$&$-10.4$& \\
+        $D$&$B$&$14$&$14$&$0.3$&$0$& \\
+        $D$&$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$
+    \end{tabular}
+    \caption{Working for $k=0 \to k=1$.}%
+    \label{table:diffusion-working-1}
+    \end{subtable}
+
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^1$ & $l_j^1$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$14.0$&$27.8$&$0.6$&$-8.3$& \\
+        $A$&$D$&$14.0$&$22.6$&$0.4$&$-3.4$&$-11.7$\\
+        
+        $B$&$A$&$27.8$&$14.0$&$0.6$&$8.3$& \\
+        $B$&$C$&$27.8$&$11.6$&$0.3$&$4.9$& \\
+        $B$&$D$&$27.8$&$22.6$&$0.3$&$1.6$&$14.7$\\
+
+        $C$&$B$&$11.6$&$27.8$&$0.3$&$-4.9$& \\
+        $C$&$D$&$11.6$&$22.6$&$0.3$&$-3.3$&$-8.2$\\
+
+        $D$&$A$&$22.6$&$14.0$&$0.4$&$3.4$& \\
+        $D$&$B$&$22.6$&$27.8$&$0.3$&$-1.6$& \\
+        $D$&$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$
+    \end{tabular}
+    \caption{Working for $k=1 \to k=2$.}%
+    \label{table:diffusion-working-2}
+    \end{subtable}
+
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^3$ & $l_j^3$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$25.7$&$13.1$&$0.6$&$7.6$& \\
+        $A$&$D$&$25.7$&$17.4$&$0.4$&$3.3$&$10.9$\\
+        
+        $B$&$A$&$13.1$&$25.7$&$0.6$&$-7.6$& \\
+        $B$&$C$&$13.1$&$19.8$&$0.3$&$-2.0$& \\
+        $B$&$D$&$13.1$&$17.4$&$0.3$&$-1.3$&$-10.9$\\
+
+        $C$&$B$&$19.8$&$13.1$&$0.3$&$2.0$& \\
+        $C$&$D$&$19.8$&$17.4$&$0.3$&$0.7$&$2.7$\\
+
+        $D$&$A$&$17.4$&$25.7$&$0.4$&$-3.3$& \\
+        $D$&$B$&$17.4$&$13.1$&$0.3$&$1.3$& \\
+        $D$&$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$
+    \end{tabular}
+    \caption{Working for $k=2 \to k=3$.}%
+    \label{table:diffusion-working-3}
+    \end{subtable}
+    \caption{Working for the diffusion algorithm trace.}
+\end{table}
 
 \section{Real-Time Systems Theory and Analysis}
 \subsection{Question 4}
