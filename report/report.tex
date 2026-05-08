@@ -13,6 +13,8 @@
 \usepackage{amsfonts}
 \usepackage{booktabs}
 \usepackage{subcaption}
+\usepackage{pgfgantt}
+\usepackage{pdflscape}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
@@ -24,6 +26,8 @@
 \setcounter{secnumdepth}{1}
 \numberwithin{equation}{section}
 \numberwithin{table}{section}
+\numberwithin{figure}{section}
+\captionsetup[subfigure]{aboveskip=2ex,belowskip=4ex}
 \captionsetup[subtable]{aboveskip=2ex,belowskip=4ex}
 
 \title{EMBS-H Assessment Submission}
@@ -35,12 +39,17 @@
 \let\saveauthor\@author
 \makeatother
 
-\fancyhf{}
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[CF]{Page~\thepage~of~\pageref*{LastPage}}
+    \renewcommand\headrulewidth{0pt}
+}
 
-\fancyhead[LH]{\savetitle}
-\fancyhead[RH]{Part~\Roman{section}}
-\fancyfoot[LF]{\saveauthor}
-\fancyfoot[RF]{Page~\thepage~of~\pageref*{LastPage}}
+\fancypagestyle{fancy}{
+    \fancyfoot{}
+    \fancyfoot[LF]{\saveauthor}
+    \fancyfoot[RF]{Page~\thepage~of~\pageref*{LastPage}}
+}
 
 \pagestyle{fancy}
 
@@ -217,7 +226,7 @@
         \item \Cref{table:evals} shows the system state described by $x(k)$,
         $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
         4$.
-        \begin{table}[h]
+        \begin{table}
             \centering%
             \begin{tabular}{l|lll}
                 $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
@@ -290,7 +299,7 @@
             \end{equation}
 
             \Cref{table:sdf} is a topology table for the given SDF graph.
-            \begin{table}[h]
+            \begin{table}
                 \centering%
                 \begin{tabular}{l|llllll}
                           & A  & B & C &  D &  E &  F \\ \toprule
@@ -304,7 +313,6 @@
                 \caption{Topology table of the SDF}%
                 \label{table:sdf}
             \end{table}
-
             From \Cref{table:sdf}, we can build the topology matrix $\Gamma$:
             \begin{equation}
                 \Gamma = \begin{pmatrix}
@@ -349,7 +357,7 @@
         used to propose PASSes.
         \begin{enumerate}
             \item \Cref{table:passes} describes two proposed PASSes for the SDF.
-                \begin{table}[h]
+                \begin{table}
                     \centering%
                     \begin{tabular}{l|llllllll}
                         & & \multicolumn{6}{c}{Minimum Buffer Sizes} & \\
@@ -391,9 +399,9 @@
                 \quad\text{and}\quad k\in\left\{ \text{HW},\text{SW} \right\}
             \end{equation}
 
-            The quantity $c_i$ represents the cost if component $f_i$ is in
-            partition $p_\text{HW}$. To find the optimal partition, we minimise
-            the cumulative cost function:
+            The quantity $c_{i,k}$ represents the cost if component $f_i$ is in
+            partition $p_k$. To find the optimal partition, we minimise the
+            cumulative cost function:
 
             \begin{align}
                 C &= \sum_{k \in \left\{ \text{SW}, \text{HW} \right\}}
@@ -420,7 +428,7 @@
             x_{i,\text{HW}}$, \Cref{table:ilp-bounds} enumerates the constraints
             on the minimisation problem.
 
-            \begin{table}[h]
+            \begin{table}
                 \centering%
                 \begin{tabular}{ll}
                     Category & Bound \\
@@ -441,7 +449,7 @@
             {\texttt{Minimize}} function, \Cref{eqn:partition-cost} was
             minimised on the constraints on \Cref{table:ilp-bounds}. The result
             is shown by \Cref{table:partitioning}.
-            \begin{table}[h]
+            \begin{table}
                 \centering%
                 \begin{tabular}{llll}
                     Function & Strategy & Time (ms) & Cost (\$) \\
@@ -482,7 +490,7 @@
             $V$ is the set of interconnects between processors and $i
             \leftrightarrow j$ denotes the interconnects from $i$ to all
             neighbours $j$.
-            \begin{table}[h]
+            \begin{table}
                 \centering%
                 \begin{tabular}{l|llll}
                     Step & A & B & C & D \\
@@ -571,7 +579,7 @@
     \centering%
     \begin{tabular}{cc|rrrrr}
         $i$ & $j$ & $l_i^0$ & $l_j^0$ & $\alpha_{i,j}$ &
-            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$40$&$14$&$0.6$&$15.6$& \\
         $A$&$D$&$40$&$14$&$0.4$&$10.4$&$26$\\
@@ -595,7 +603,7 @@
     \centering%
     \begin{tabular}{cc|rrrrr}
         $i$ & $j$ & $l_i^1$ & $l_j^1$ & $\alpha_{i,j}$ &
-            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$14.0$&$27.8$&$0.6$&$-8.3$& \\
         $A$&$D$&$14.0$&$22.6$&$0.4$&$-3.4$&$-11.7$\\
@@ -618,8 +626,8 @@
     \begin{subtable}{\linewidth}
     \centering%
     \begin{tabular}{cc|rrrrr}
-        $i$ & $j$ & $l_i^3$ & $l_j^3$ & $\alpha_{i,j}$ &
-            $\Delta_{i,j}$ & $\sum_j \Delta_{i,j}$ \\
+        $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$25.7$&$13.1$&$0.6$&$7.6$& \\
         $A$&$D$&$25.7$&$17.4$&$0.4$&$3.3$&$10.9$\\
@@ -643,7 +651,59 @@
 
 \section{Real-Time Systems Theory and Analysis}
 \subsection{Question 4}
+\begin{enumerate}
+    \item For a fixed-priority pre-emptive scheduler with rate monotonic
+        priority ordering, the worst-case response time $R\tau$ for some task
+        $\tau$ can be calculated according to \Cref{eqn:response-time} where $C$
+        denotes worst-case execution time (WCET), $I$ denotes interference from
+        higher-priority tasks, and $B$ denotes the blocking time.
+        \begin{equation}
+            R = C + I + B
+            \label{eqn:response-time}
+        \end{equation}
+        Since the scheduler is running on a uniprocessor with no shared
+        resources, $B = 0$, and the response time collapses to the sum of the
+        WCET and interference.
+
+        In rate monotonic scheduling, tasks with lesser periods are assigned
+        higher priorities. Therefore, of the specified tasks, the execution
+        priorities are
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6,
+        \end{equation}
+        where $\alpha > \beta$ indicates task $\alpha$ executes with higher
+        priority than task $\beta$.
+        
+        \begin{landscape}
+        \begin{figure}[p]
+            \begin{subfigure}{\linewidth}
+                \centering%
+                \resizebox{\linewidth}{!}{\input{gantt-first.tex}}%
+                \caption{Period covering 0--$50\mls$.}
+            \end{subfigure}
+
+            \begin{subfigure}{\linewidth}
+                \centering%
+                \resizebox{\linewidth}{!}{\input{gantt-second.tex}}% TODO
+                \caption{Period covering 150--$300\mls$.}
+            \end{subfigure}
+            \caption{Gantt chart showing execution of tasks $\tau_{1,2,3,4,5}$.}
+        \end{figure}
+        \end{landscape}
+    \item TODO
+    \item TODO
+    \item TODO
+\end{enumerate}
+
 \subsection{Question 5}
+\begin{enumerate}
+    \item TODO
+    \item TODO
+    \item \begin{enumerate}
+        \item TODO
+        \item TODO
+    \end{enumerate}
+\end{enumerate}
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
