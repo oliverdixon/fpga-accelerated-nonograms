@@ -88,8 +88,6 @@ static void draw_clue_element(
     const uint32_t y_pos,
     const uint32_t glyph_advance_extent
 ) {
-    return; // TODO
-    
     if (clue > 9)
         x_pos -= glyph_advance_extent / 2;
 

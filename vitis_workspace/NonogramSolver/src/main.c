@@ -94,8 +94,11 @@ static void draw_puzzles_task(
     struct Puzzle puzzle_info;
 
     while (1)
-        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+            vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO + 1);
             video_draw_puzzle(&video_state, &puzzle_info);
+            vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO - 1);
+        }
 
     vTaskDelete(NULL);
 }
