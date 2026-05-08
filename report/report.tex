@@ -217,7 +217,7 @@
         \item \Cref{table:evals} shows the system state described by $x(k)$,
         $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
         4$.
-        \begin{table}[h!]
+        \begin{table}[h]
             \centering%
             \begin{tabular}{l|lll}
                 $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
@@ -290,7 +290,7 @@
             \end{equation}
 
             \Cref{table:sdf} is a topology table for the given SDF graph.
-            \begin{table}[h!]
+            \begin{table}[h]
                 \centering%
                 \begin{tabular}{l|llllll}
                           & A  & B & C &  D &  E &  F \\ \toprule
@@ -349,7 +349,7 @@
         used to propose PASSes.
         \begin{enumerate}
             \item \Cref{table:passes} describes two proposed PASSes for the SDF.
-                \begin{table}[h!]
+                \begin{table}[h]
                     \centering%
                     \begin{tabular}{l|llllllll}
                         & & \multicolumn{6}{c}{Minimum Buffer Sizes} & \\
@@ -372,8 +372,94 @@
 \subsection{Question 3}
 \begin{enumerate}
     \item \begin{enumerate}
-        \item TODO
-        \item TODO
+        \item To derive the optimal partitioning for the described system, we
+            can use the exact method of Integer Linear Programming. ILP is
+            suitable for this problem given the small number of objects.
+
+            Two partitions are defined: $p_\text{HW}$ to detain components
+            implemented in hardware with the FPGA, and $p_\text{SW}$ to detain
+            components implemented in software with the CPU. The binary
+            variables $x_{i,k}$ are used to denote the allocation of a
+            component, and $f\in p$ denotes that object $f$ is allocated to
+            partition $p$.
+            \begin{equation}
+                x_{i,k} = \begin{cases}
+                    1 & \text{if $f_i \in p_k$} \\
+                    0 & \text{if $f_i \not\in p_k$}
+                \end{cases}
+                \quad\text{for}\quad i\in\left\{ 1,2,3,4,5 \right\}
+                \quad\text{and}\quad k\in\left\{ \text{HW},\text{SW} \right\}
+            \end{equation}
+
+            The quantity $c_i$ represents the cost if component $f_i$ is in
+            partition $p_\text{HW}$. To find the optimal partition, we minimise
+            the cumulative cost function:
+
+            \begin{align}
+                C &= \sum_{k \in \left\{ \text{SW}, \text{HW} \right\}}
+                    \sum_{i=1}^n x_{i,k} c_{i,k} \\
+                &= \sum_{i=1}^5 x_{i,\text{SW}} c_{i,\text{SW}} +
+                    \sum_{i=1}^5 x_{i,\text{HW}} c_{i,\text{HW}} \\
+                &= \left( x_{1,\text{SW}} + \ldots + x_{5,\text{SW}} \right) +
+                    \left( x_{1,\text{HW}} + \ldots + x_{5,\text{HW}} \right) \\
+                &= \left( x_{1,\text{HW}} + \ldots + x_{5,\text{HW}} \right)
+            \end{align}
+
+            Since there are only two partitions, the summands over $p_\text{SW}$
+            can be eliminated since the $x_{i,\text{HW}}$ coefficients collapse
+            the software costs to zero. Substituting the cost and timing data,
+            we have the simplified specialised cost function $C_0$:
+            \begin{equation}
+                C_0 = 25 + 25x_{1,\text{HW}} + 20x_{2,\text{HW}} +
+                    35x_{3,\text{HW}} + 15x_{4,\text{HW}} + 10x_{5,\text{HW}}
+                \label{eqn:partition-cost}
+            \end{equation}
+
+            $C_0$ should be minimised, constrained by inequalities on the
+            execution time and total cost. With the alias $x_i :=
+            x_{i,\text{HW}}$, \Cref{table:ilp-bounds} enumerates the constraints
+            on the minimisation problem.
+
+            \begin{table}[h]
+                \centering%
+                \begin{tabular}{ll}
+                    Category & Bound \\
+                    \toprule
+                    Execution Time & $\begin{aligned}[t]
+                        20 &\left(1-x_1\right) + 15\left(1-x_2\right) +
+                        8\left(1-x_3\right) +\\
+                        &12\left(1-x_4\right) + 5\left(1-x_5\right) \leq 30
+                    \end{aligned}$ \\
+                    Cost & $25 + 25x_1 + 20x_2 + 35x_3 + 15x_4 + 10x_5 \leq 70$
+                \end{tabular}
+                \caption{Inequality conditions for ILP partitioning.}%
+                \label{table:ilp-bounds}
+            \end{table}
+
+            Using \emph{Wolfram Mathematica}, in particular the
+            \href{https://reference.wolfram.com/language/ref/Minimize.html}%
+            {\texttt{Minimize}} function, \Cref{eqn:partition-cost} was
+            minimised on the constraints on \Cref{table:ilp-bounds}. The result
+            is shown by \Cref{table:partitioning}.
+            \begin{table}[h]
+                \centering%
+                \begin{tabular}{llll}
+                    Function & Strategy & Time (ms) & Cost (\$) \\
+                    \toprule
+                    $f_1$ & Hardware & 2 & 30 \\
+                    $f_2$ & Software & 15 & 5 \\
+                    $f_3$ & Software & 8 & 5 \\
+                    $f_4$ & Hardware & 4 & 20 \\
+                    $f_5$ & Software & 5 & 5
+                \end{tabular}
+                \caption{HW/SW Partitioning}%
+                \label{table:partitioning}
+            \end{table}
+
+            The cumulative cost is \$65 with runtime of 28ms, which fits within
+            the specified constraints.
+        \item Yes, the partition specified in \Cref{table:partitioning} is
+            optimal, since it was derived analytically without heuristics.
     \end{enumerate}
     \item \begin{enumerate}
         \item \Cref{table:diffusion} traces the diffusion algorithm for
@@ -396,7 +482,7 @@
             $V$ is the set of interconnects between processors and $i
             \leftrightarrow j$ denotes the interconnects from $i$ to all
             neighbours $j$.
-            \begin{table}[h!]
+            \begin{table}[h]
                 \centering%
                 \begin{tabular}{l|llll}
                     Step & A & B & C & D \\
