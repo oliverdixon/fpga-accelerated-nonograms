@@ -502,7 +502,8 @@ In line with the assessment regulations, no generative AI/ML features of
             Using \mma{Minimize} from \emph{Mathematica},
             \Cref{eqn:partition-cost} was minimised on the constraints on
             \Cref{table:ilp-bounds}. The result is shown by
-            \Cref{table:partitioning}.
+            \Cref{table:partitioning}. The cumulative cost is \$65 with runtime
+            of 28ms, which fits within the specified constraints.
             \begin{table}
                 \centering%
                 \begin{tabular}{llll}
@@ -518,9 +519,6 @@ In line with the assessment regulations, no generative AI/ML features of
                 \caption{HW/SW Partitioning}%
                 \label{table:partitioning}
             \end{table}
-
-            The cumulative cost is \$65 with runtime of 28ms, which fits within
-            the specified constraints.
         \item Yes, the partition specified in \Cref{table:partitioning} is
             optimal, since it was derived analytically without heuristics. This
             was verified exhaustively by enumerating and checking the bounds of
@@ -924,10 +922,10 @@ In line with the assessment regulations, no generative AI/ML features of
         task set is scheduleable.
 
         These results were attained with the C++ source code detained in
-        \Cref{sec:cpp}. To switch the ordering scheme, the
+        \Cref{sec:cpp}\footnote{To switch the priority-ordering scheme, the
         \href{https://cppreference.com/cpp/container/set}{ordered set} was
         instantiated to use \texttt{DMTaskComparator} as opposed to
-        \texttt{RMTaskComparator}.
+        \texttt{RMTaskComparator}.}.
     \item Under RM-priority ordering, the task set can be scheduled if $\tau_6$
         has a WCET less than or equal to 49. This result was computed using the
         C++ routines given in \Cref{sec:cpp} with brute-force iterative
@@ -1041,6 +1039,9 @@ The solution sources have been submitted as a separate archive.
 \subsection{Response-Time Analysis}
 \subsubsection{RTA/Task.hpp}
 \lstinputlisting[language=C++]{RTA/Task.hpp}
+
+\clearpage\subsubsection{RTA/ResponseTimeAnalyser.hpp}
+\lstinputlisting[language=C++]{RTA/ResponseTimeAnalyser.hpp}
 
 \clearpage\subsubsection{RTA/driver.cpp}
 \lstinputlisting[language=C++]{RTA/driver.cpp}
