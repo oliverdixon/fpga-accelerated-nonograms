@@ -84,6 +84,9 @@
 \DeclareMathOperator\second{s}
 \DeclareMathOperator\rank{Rank}
 \DeclareMathOperator\hp{hp}
+\DeclareMathOperator\usage{Usage}
+\DeclareMathOperator\cs{CS}
+\DeclareMathOperator\uses{Uses}
 
 \begin{document}
 \maketitle
@@ -92,12 +95,12 @@
 
 \section*{Note}
 Some calculations described in the following exam script were performed with a
-computer. For each response where computer-assisted calculations are provided, a
-description of the problem setup and a link to the relevant software
-implementation and output is given. In particular, Wolfram \emph{Mathematica}
-14.0 and C++20 were used. The C++ code is listed in \Cref{sec:cpp} and the
-\emph{Mathematica} notebook has been submitted in the archive as
-\texttt{mma.pdf}.
+computer. For each response where computer-assisted calculations are presented
+or otherwise relied upon, a description of the computational problem setup is
+given alongside a link to the relevant software implementation. In particular,
+Wolfram \emph{Mathematica} 14.0 and C++23 were used. The C++ code is listed in
+\Cref{sec:cpp} and the exported \emph{Mathematica} notebook has been submitted
+in the archive as \texttt{mma.pdf}.
 
 In line with the assessment regulations, no generative AI/ML features of
 \emph{Mathematica} (such as interfacing to Wolfram Alpha) were used.
@@ -273,7 +276,8 @@ In line with the assessment regulations, no generative AI/ML features of
                 1 & 1 & 2 & 1.1 \\
                 2 & 3 & 3.1 & 1.1 \\
                 3 & 4.1 & 3.1 & 3.3 \\
-                4 & 4.1 & 5.3 & 4.51
+                4 & 4.1 & 5.3 & 4.51 \\
+                \bottomrule
             \end{tabular}
             \caption{Evaluation of the fusion algorithm state for
                 $1 \leq k \leq 4$.}%
@@ -351,7 +355,8 @@ In line with the assessment regulations, no generative AI/ML features of
                     $c_3$ & 2 &  0 & 0 & -1 &  0 &  0 \\
                     $c_4$ & 0 &  0 & 2 & -1 &  0 &  0 \\
                     $c_5$ & 0 &  0 & 0 &  2 & -2 &  0 \\
-                    $c_6$ & 0 &  0 & 0 &  1 &  0 & -2
+                    $c_6$ & 0 &  0 & 0 &  1 &  0 & -2 \\
+                    \bottomrule
                 \end{tabular}
                 \caption{Topology table of the SDF}%
                 \label{table:sdf}
@@ -413,7 +418,8 @@ In line with the assessment regulations, no generative AI/ML features of
                             $c_6$ & Total Buffer Cost \\
                         \toprule
                         A & \texttt{ABBCDDEEF} & 2 & 2 & 2 & 2 & 4 & 2 & 14 \\
-                        B & \texttt{ACBDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11
+                        B & \texttt{ACBDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11 \\
+                        \bottomrule
                     \end{tabular}
                     \caption{Two distinct PASSes for the SDF}%
                     \label{table:passes}
@@ -487,6 +493,7 @@ In line with the assessment regulations, no generative AI/ML features of
                         &12\left(1-x_4\right) + 5\left(1-x_5\right) \leq 30
                     \end{aligned}$ \\
                     Cost & $25 + 25x_1 + 20x_2 + 35x_3 + 15x_4 + 10x_5 \leq 70$
+                    \\ \bottomrule
                 \end{tabular}
                 \caption{Inequality conditions for ILP partitioning.}%
                 \label{table:ilp-bounds}
@@ -505,7 +512,8 @@ In line with the assessment regulations, no generative AI/ML features of
                     $f_2$ & Software & 15 & 5 \\
                     $f_3$ & Software & 8 & 5 \\
                     $f_4$ & Hardware & 4 & 20 \\
-                    $f_5$ & Software & 5 & 5
+                    $f_5$ & Software & 5 & 5 \\
+                    \bottomrule
                 \end{tabular}
                 \caption{HW/SW Partitioning}%
                 \label{table:partitioning}
@@ -548,7 +556,8 @@ In line with the assessment regulations, no generative AI/ML features of
                     0 & 40 & 14 & 8 & 14 \\
                     1 & 14 & 27.8 & 11.6 & 22.6 \\
                     2 & 25.7 & 13.1 & 19.8 & 17.4 \\
-                    3 & 14.8 & 24 & 17.1 & 20.2
+                    3 & 14.8 & 24 & 17.1 & 20.2 \\
+                    \bottomrule
                 \end{tabular}
                 \caption{Diffusion Algorithm Trace}%
                 \label{table:diffusion}
@@ -647,7 +656,8 @@ In line with the assessment regulations, no generative AI/ML features of
 
         $D$&$A$&$14$&$40$&$0.4$&$-10.4$& \\
         $D$&$B$&$14$&$14$&$0.3$&$0$& \\
-        $D$&$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$
+        $D$&$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$ \\
+        \bottomrule
     \end{tabular}
     \caption{Working for $k=0 \to k=1$.}%
     \label{table:diffusion-working-1}
@@ -671,7 +681,8 @@ In line with the assessment regulations, no generative AI/ML features of
 
         $D$&$A$&$22.6$&$14.0$&$0.4$&$3.4$& \\
         $D$&$B$&$22.6$&$27.8$&$0.3$&$-1.6$& \\
-        $D$&$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$
+        $D$&$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$ \\
+        \bottomrule
     \end{tabular}
     \caption{Working for $k=1 \to k=2$.}%
     \label{table:diffusion-working-2}
@@ -695,7 +706,8 @@ In line with the assessment regulations, no generative AI/ML features of
 
         $D$&$A$&$17.4$&$25.7$&$0.4$&$-3.3$& \\
         $D$&$B$&$17.4$&$13.1$&$0.3$&$1.3$& \\
-        $D$&$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$
+        $D$&$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$ \\
+        \bottomrule
     \end{tabular}
     \caption{Working for $k=2 \to k=3$.}%
     \label{table:diffusion-working-3}
@@ -707,7 +719,7 @@ In line with the assessment regulations, no generative AI/ML features of
 \subsection{Question 4}
 \begin{enumerate}
     \item For a fixed-priority pre-emptive scheduler with rate monotonic
-        priority ordering, the worst-case response time $R\tau$ for some task
+        priority ordering, the worst-case response time $R_\tau$ for some task
         $\tau$ can be calculated according to \Cref{eqn:response-time} where $C$
         denotes worst-case execution time (WCET), $I$ denotes interference from
         higher-priority tasks, and $B$ denotes the blocking time.
@@ -798,29 +810,29 @@ In line with the assessment regulations, no generative AI/ML features of
                 \begin{tabular}{llll}
                     $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
                     \toprule
-                    4 & 0 & 6 & 6 \\
+                    $\tau_4$ & 0 & 6 & 6 \\
                     \midrule
-                    3 & 0 & 11 \\
-                    3 & 1 & 11 & 11 \\
+                    $\tau_3$ & 0 & 11 \\
+                    $\tau_3$ & 1 & 11 & 11 \\
                     \midrule
-                    2 & 0 & 25 \\
-                    2 & 1 & 25 & 25 \\
+                    $\tau_2$ & 0 & 25 \\
+                    $\tau_2$ & 1 & 25 & 25 \\
                     \midrule
-                    5 & 0 & 66 \\
-                    5 & 1 & 77 \\
-                    5 & 2 & 83 \\
-                    5 & 3 & 83 & 83 \\
+                    $\tau_5$ & 0 & 66 \\
+                    $\tau_5$ & 1 & 77 \\
+                    $\tau_5$ & 2 & 83 \\
+                    $\tau_5$ & 3 & 83 & 83 \\
                     \midrule
-                    1 & 0 & 80 \\
-                    1 & 1 & 103 \\
-                    1 & 2 & 128 \\
-                    1 & 3 & 134 \\
-                    1 & 4 & 134 & 134 \\
+                    $\tau_1$ & 0 & 80 \\
+                    $\tau_1$ & 1 & 103 \\
+                    $\tau_1$ & 2 & 128 \\
+                    $\tau_1$ & 3 & 134 \\
+                    $\tau_1$ & 4 & 134 & 134 \\
                     \midrule
-                    6 & 0 & 150 \\
-                    6 & 1 & 187 \\
-                    6 & 2 & 204 \\
-                    6 & 3 & 204 & \emph{Missed.} \\
+                    $\tau_6$ & 0 & 150 \\
+                    $\tau_6$ & 1 & 187 \\
+                    $\tau_6$ & 2 & 204 \\
+                    $\tau_6$ & 3 & 204 & \emph{Missed.} \\
                     \bottomrule
                 \end{tabular}
                 \caption{RTA trace from RM-ordered tasks}%
@@ -831,32 +843,32 @@ In line with the assessment regulations, no generative AI/ML features of
                 \begin{tabular}{llll}
                     $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
                     \toprule
-                    4 & 0 & 6 & 6 \\
+                    $\tau_4$ & 0 & 6 & 6 \\
                     \midrule
-                    3 & 0 & 11 \\
-                    3 & 1 & 11 & 11 \\
+                    $\tau_3$ & 0 & 11 \\
+                    $\tau_3$ & 1 & 11 & 11 \\
                     \midrule
-                    2 & 0 & 25 \\
-                    2 & 1 & 25 & 25 \\
+                    $\tau_2$ & 0 & 25 \\
+                    $\tau_2$ & 1 & 25 & 25 \\
                     \midrule
-                    5 & 0 & 66 \\
-                    5 & 1 & 77 \\
-                    5 & 2 & 83 \\
-                    5 & 3 & 83 & 83 \\
+                    $\tau_5$ & 0 & 66 \\
+                    $\tau_5$ & 1 & 77 \\
+                    $\tau_5$ & 2 & 83 \\
+                    $\tau_5$ & 3 & 83 & 83 \\
                     \midrule
-                    6 & 0 & 130 \\
-                    6 & 1 & 167 \\
-                    6 & 2 & 178 \\
-                    6 & 3 & 184 \\
-                    6 & 4 & 184 \\
+                    $\tau_6$ & 0 & 130 \\
+                    $\tau_6$ & 1 & 167 \\
+                    $\tau_6$ & 2 & 178 \\
+                    $\tau_6$ & 3 & 184 \\
+                    $\tau_6$ & 4 & 184 \\
                     \midrule
-                    1 & 0 & 133 \\
-                    1 & 1 & 187 \\
-                    1 & 2 & 204 \\
-                    1 & 3 & 264 \\
-                    1 & 4 & 281 \\
-                    1 & 5 & 287 \\
-                    1 & 6 & 287 & 287 \\
+                    $\tau_1$ & 0 & 133 \\
+                    $\tau_1$ & 1 & 187 \\
+                    $\tau_1$ & 2 & 204 \\
+                    $\tau_1$ & 3 & 264 \\
+                    $\tau_1$ & 4 & 281 \\
+                    $\tau_1$ & 5 & 287 \\
+                    $\tau_1$ & 6 & 287 & 287 \\
                     \bottomrule
                 \end{tabular}
                 \caption{RTA trace from DM-ordered tasks}%
@@ -870,12 +882,14 @@ In line with the assessment regulations, no generative AI/ML features of
         $\left\{ \tau_1, \ldots, \tau_i, \ldots, \tau_N \right\}$ such that $D_i
         = T_i$ for all $1 \leq i \leq N$,
         \begin{equation}
-            U := \sum_{i=1}^N \frac{C_i}{T_i} \leq N\left( 2^{1/N}-1 \right)
+            U := \sum_{i=1}^N \frac{C_i}{T_i} \leq N\left( 2^{1/N}-1 \right),
         \end{equation}
-        is a simple sufficient but not necessary test of schedulability. Note
-        that $ \lim_{N\to\infty} N\left( 2^{1/N} - 1 \right) = \log{2} $. If
-        this test is performed for the task set $ \left\{ \tau_{1,2,3,4,5,6}
-        \right\} $,
+        where $N$ is the number of tasks\footnote{For an arbitrarily large
+        number of tasks, we can observe that $ \lim_{N\to\infty} N\left( 2^{1/N}
+        - 1 \right) = \log{2} $, where $\log(\cdot)$ represents an evaluation of
+        the natural logarithm.}, is a simple sufficient but not necessary test
+        of schedulability. If this test is performed for the task set $ \left\{
+        \tau_{1,2,3,4,5,6} \right\} $,
         \begin{align}
             U &= \sum_{i=1}^6 \frac{C_i}{T_i} \\
             &= 0.748 \\
@@ -922,8 +936,96 @@ In line with the assessment regulations, no generative AI/ML features of
 
 \subsection{Question 5}
 \begin{enumerate}
-    \item TODO
-    \item TODO
+    \item For a task $i$ involved with $K$ resources, the maximum blocking time
+        $B_i$ over its $m$ critical sections is given by
+        \begin{equation}
+            B_i = \sum_{k\in K} \usage{(k,i)} \cs{k}
+        \end{equation}
+        where $\cs{k}$ is the computational cost of executing the longest $k$-th
+        critical section called by a lower-priority task. $\usage$ is the
+        indicator function such that
+        \begin{equation}
+            \usage{(k,i)} = \begin{cases}
+                1 &\text{if}~%
+                    \exists\left\{t_\alpha,t_\beta\right\}
+                        \left(t_\alpha < i \land
+                            \uses{\left(k,t_\alpha\right)}
+                        \right) \land
+                        \left(t_\beta \geq i \land
+                            \uses{\left(k,t_\beta\right)}
+                        \right)
+                    \text{;} \\
+                0 &\text{otherwise,}
+            \end{cases}
+        \end{equation}
+        where $t_\alpha,t_\beta$ are tasks, operators $<$ and $\geq$ compare
+        tasks by priorities, and $\uses{(r,t)}$ is a predicate encoding whether
+        resource $r$ is used by task $t$.
+
+        Under an RM ordering scheme, the given tasks $\tau_{1,2,3,4,5,6}$ have
+        the same priorities described previously, restated here for clarity:
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6.
+        \end{equation}
+        \Cref{table:pip-blocking} enumerates the maximum blocking times of each
+        task under the simple \emph{Priority Inheritance} (PIP) scheme.
+
+        \begin{table}
+            \centering% TODO
+            \begin{subtable}{.33\linewidth}
+                \centering%
+                \begin{tabular}{ll}
+                    $i$ & $B_i$ \\
+                    \toprule
+                    $\tau_1$ & \\
+                    $\tau_2$ & \\
+                    $\tau_3$ & \\
+                    $\tau_4$ & \\
+                    $\tau_5$ & \\
+                    $\tau_6$ & \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Blocking times under PIP.}%
+                \label{table:pip-blocking}
+            \end{subtable}~%
+            \begin{subtable}{.33\linewidth}
+                \centering%
+                \begin{tabular}{lll}
+                    $R$ & Req. Task & $\Pi_R$ \\
+                    \toprule
+                    $A$ & $\tau_4$ & 6 \\
+                    $B$ & $\tau_4$ & 6 \\
+                    $C$ & $\tau_3$ & 5 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Resource ceilings.}%
+                \label{table:resource-ceilings}
+            \end{subtable}~%
+            \begin{subtable}{.33\linewidth}
+                \centering% TODO
+                \begin{tabular}{ll}
+                    $i$ & $B_i$ \\
+                    \toprule
+                    $\tau_1$ & \\
+                    $\tau_2$ & \\
+                    $\tau_3$ & \\
+                    $\tau_4$ & \\
+                    $\tau_5$ & \\
+                    $\tau_6$ & \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Blocking times under ICPP.}%
+                \label{table:icpp-blocking}
+            \end{subtable}
+            \caption{Maximum blocking times for tasks $\tau_{1,2,3,4,5,6}$ and
+                resource ceilings for $A,B,C$.}
+        \end{table}
+    \item The resource ceilings $\Pi_{A,B,C}$ of each resource $A,B,C$ are given
+        in \Cref{table:resource-ceilings}. In each case, the highest-priority
+        requesting task is provided with its numerical priority.
+        \Cref{table:icpp-blocking} enumerates the blocking times of each task
+        under the \emph{Intermediate Priority Ceiling Inheritance} (ICPP)
+        scheme.
     \item \begin{enumerate}
         \item TODO
         \item TODO
