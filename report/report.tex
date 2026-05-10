@@ -13,13 +13,18 @@
 \usepackage{amsfonts}
 \usepackage{booktabs}
 \usepackage{subcaption}
-\usepackage{pgfgantt}
 \usepackage{pdflscape}
+\usepackage{xcolor}
+\usepackage{listings}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
+\newcommand\mma[1]%
+    {\href{https://reference.wolfram.com/language/ref/#1.html}{\textbf{#1}}}
+
+\setlength\parindent{0pt}
 
 \newcommand\sectionbreak{\ifnum\value{section}>0\clearpage\fi}
 \newcommand\subsectionbreak{\clearpage}
@@ -27,7 +32,6 @@
 \numberwithin{equation}{section}
 \numberwithin{table}{section}
 \numberwithin{figure}{section}
-\captionsetup[subfigure]{aboveskip=2ex,belowskip=4ex}
 \captionsetup[subtable]{aboveskip=2ex,belowskip=4ex}
 
 \title{EMBS-H Assessment Submission}
@@ -35,9 +39,29 @@
 \author{Exam Candidate Y3898772}
 
 \makeatletter
-\let\savetitle\@title
 \let\saveauthor\@author
 \makeatother
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+
+\lstset{
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+}
 
 \fancypagestyle{plain}{
     \fancyhf{}
@@ -59,10 +83,24 @@
 \DeclareMathOperator\mls{ms}
 \DeclareMathOperator\second{s}
 \DeclareMathOperator\rank{Rank}
+\DeclareMathOperator\hp{hp}
 
 \begin{document}
 \maketitle
 \tableofcontents
+\setlength\parskip{1ex}
+
+\section*{Note}
+Some calculations described in the following exam script were performed with a
+computer. For each response where computer-assisted calculations are provided, a
+description of the problem setup and a link to the relevant software
+implementation and output is given. In particular, Wolfram \emph{Mathematica}
+14.0 and C++20 were used. The C++ code is listed in \Cref{sec:cpp} and the
+\emph{Mathematica} notebook has been submitted in the archive as
+\texttt{mma.pdf}.
+
+In line with the assessment regulations, no generative AI/ML features of
+\emph{Mathematica} (such as interfacing to Wolfram Alpha) were used.
 
 \section{Embedded Systems Design}
 \subsection{Question 1}
@@ -224,8 +262,9 @@
         resources such as the local storage or network stack.
     \item \begin{enumerate}
         \item \Cref{table:evals} shows the system state described by $x(k)$,
-        $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
-        4$.
+            $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
+            4$. The results in \Cref{table:evals} were computed with
+            \emph{Mathematica} using \mma{RecurrenceTable}.
         \begin{table}
             \centering%
             \begin{tabular}{l|lll}
@@ -239,7 +278,7 @@
             \caption{Evaluation of the fusion algorithm state for
                 $1 \leq k \leq 4$.}%
             \label{table:evals}
-        \end{table}
+        \end{table}%
 
         \item To determine the convergence characteristics of the system, we
         consider the system update matrix. The $k$th term of the system, for $k
@@ -279,6 +318,10 @@
         not converge to a steady state. Where systems have complex-valued
         eigenvalues, such as $\lambda_{2,3}$, stability requires that all
         eigenvalues have negative real parts.
+
+        The characteristic polynomial was solved using \emph{Mathematica} with
+        the \mma{Solve}, \mma{CharacteristicPolynomial}, and \mma{ComplexExpand}
+        functions.
     \end{enumerate}
 \end{enumerate}
 
@@ -327,7 +370,8 @@
         \item For a connected SDF graph with $n$ vertices, there exists a
             static schedule if and only if its topology matrix $\Gamma$ has
             rank $n-1$. In this case, $\rank{\Gamma} = 5$, where the SDF graph
-            contains 6 actors, hence there does exist a static schedule.
+            contains 6 actors, hence there does exist a static schedule. The
+            rank was computed with \emph{Mathematica} using \mma{MatrixRank}.
 
         \item The relative firing frequencies are determined by the smallest
             positive $\vec{q} \in \mathbb{Z}^n$ such that $\Gamma \cdot \vec{q}
@@ -352,6 +396,10 @@
                 \end{pmatrix}.%
                 \label{eqn:firing-freqs}
             \end{equation}
+
+            Since the minimised coefficients map exactly to the null space of
+            $\Gamma$, the \emph{Mathematica} \mma{NullSpace} function was used
+            to compute the results in \Cref{eqn:firing-freqs}.
     \end{enumerate}
     \item The relative firing frequencies from \Cref{eqn:firing-freqs} can be
         used to propose PASSes.
@@ -444,11 +492,10 @@
                 \label{table:ilp-bounds}
             \end{table}
 
-            Using \emph{Wolfram Mathematica}, in particular the
-            \href{https://reference.wolfram.com/language/ref/Minimize.html}%
-            {\texttt{Minimize}} function, \Cref{eqn:partition-cost} was
-            minimised on the constraints on \Cref{table:ilp-bounds}. The result
-            is shown by \Cref{table:partitioning}.
+            Using \mma{Minimize} from \emph{Mathematica},
+            \Cref{eqn:partition-cost} was minimised on the constraints on
+            \Cref{table:ilp-bounds}. The result is shown by
+            \Cref{table:partitioning}.
             \begin{table}
                 \centering%
                 \begin{tabular}{llll}
@@ -467,7 +514,10 @@
             The cumulative cost is \$65 with runtime of 28ms, which fits within
             the specified constraints.
         \item Yes, the partition specified in \Cref{table:partitioning} is
-            optimal, since it was derived analytically without heuristics.
+            optimal, since it was derived analytically without heuristics. This
+            was verified exhaustively by enumerating and checking the bounds of
+            every other valid solution using the \mma{Flatten} and \mma{Reduce}
+            functions from \emph{Mathematica}.
     \end{enumerate}
     \item \begin{enumerate}
         \item \Cref{table:diffusion} traces the diffusion algorithm for
@@ -506,7 +556,9 @@
 
             \Crefrange{table:diffusion-working-1}{table:diffusion-working-3}
             show the intermediary calculations used to arrive at the quantities
-            listed in \Cref{table:diffusion}.
+            listed in \Cref{table:diffusion}. \emph{Mathematica} was used to
+            execute and trace the diffusion algorithm using the \mma{Graph}
+            family of functions.
         \item To check for convergence to a steady state, we compute the
             eigenvalues of the update matrix $U$ for the system. Given the
             generator
@@ -569,7 +621,9 @@
             \begin{equation}
                 \alpha = \frac{1}{\text{max\_degree} + 1} = 1/4,
             \end{equation}
-            as $\alpha_{i,j} > 1/4$ for all nodes $i,j$.
+            as $\alpha_{i,j} > 1/4$ for all nodes $i,j$. These above results
+            were computed with \emph{Mathematica} using
+            \mma{CharacteristicPolynomial} and \mma{Solve}.
     \end{enumerate}
 \end{enumerate}
 
@@ -672,27 +726,198 @@
             \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6,
         \end{equation}
         where $\alpha > \beta$ indicates task $\alpha$ executes with higher
-        priority than task $\beta$.
-        
-        \begin{landscape}
-        \begin{figure}[p]
-            \begin{subfigure}{\linewidth}
-                \centering%
-                \resizebox{\linewidth}{!}{\input{gantt-first.tex}}%
-                \caption{Period covering 0--$50\mls$.}
-            \end{subfigure}
+        priority. To compute $R_i$ in a closed form for some task $i$, we
+        consider the set of higher-priority tasks $\hp{i}$ and set
+        \begin{align}
+            R_i &= C_i + I_i \\
+            &= C_i + \sum_{j\in\hp{i}} \left\lceil \frac{R_i}{T_j}
+                \right\rceil C_j
+            \label{eqn:rta}
+        \end{align}
+        where $C_i$ and $I_i$ are as described in \Cref{eqn:response-time}, and
+        $T_i$ denotes the task period of task $i$. \Cref{eqn:rta} is known as
+        the \emph{Response-Time Analysis \emph{(RTA)} Equation}. It is solved
+        according to the recurrence relation
+        \begin{equation}
+            w_i^{(n+1)} = C_i + \sum_{j\in\hp{i}} \left\lceil
+                \frac{w_i^{(n)}}{T_j} \right\rceil C_j,
+        \end{equation}
+        where $w_i^0 \geq w_i^1 \geq \ldots \geq w_i^n \geq \ldots$
+        (monotonically non-decreasing).
 
-            \begin{subfigure}{\linewidth}
+        The response times for tasks $\tau_{1,2,3,4,5,6}$ are given by
+        \Cref{table:rm-response-times} and were computed with the C++ source
+        code and relevant outputs provided in \Cref{sec:cpp}\footnote{In
+        particular, the function \texttt{RTA::ResponseTimeAnalyser::rta} was
+        used from \texttt{RTA/ResponseTimeAnalyser.hpp}.}. Note that $\tau_6$
+        does not have a determined response time since it missed the
+        corresponding deadline. \Cref{table:rm-response-times-trace} traces
+        execution of the RTA recurrence showing all intermediary steps.
+
+        \begin{table}[p]
+            \centering%
+            \begin{subtable}{.48\linewidth}
                 \centering%
-                \resizebox{\linewidth}{!}{\input{gantt-second.tex}}% TODO
-                \caption{Period covering 150--$300\mls$.}
-            \end{subfigure}
-            \caption{Gantt chart showing execution of tasks $\tau_{1,2,3,4,5}$.}
-        \end{figure}
-        \end{landscape}
-    \item TODO
-    \item TODO
-    \item TODO
+                \begin{tabular}{cc}
+                    $i$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 6 \\
+                    $\tau_3$ & 11 \\
+                    $\tau_2$ & 25 \\
+                    $\tau_5$ & 83 \\
+                    $\tau_1$ & 134 \\
+                    $\tau_6$ & --- \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RM-ordered response times}%
+                \label{table:rm-response-times}
+            \end{subtable}~%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{cc}
+                    $i$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 6 \\
+                    $\tau_3$ & 11 \\
+                    $\tau_2$ & 25 \\
+                    $\tau_5$ & 83 \\
+                    $\tau_6$ & 184 \\
+                    $\tau_1$ & 287 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{DM-ordered response times}%
+                \label{table:dm-response-times}
+            \end{subtable}
+            \caption{Overall RTA Task Response Times}
+        \end{table}
+
+        \begin{table}[p]
+            \centering%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{llll}
+                    $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
+                    \toprule
+                    4 & 0 & 6 & 6 \\
+                    \midrule
+                    3 & 0 & 11 \\
+                    3 & 1 & 11 & 11 \\
+                    \midrule
+                    2 & 0 & 25 \\
+                    2 & 1 & 25 & 25 \\
+                    \midrule
+                    5 & 0 & 66 \\
+                    5 & 1 & 77 \\
+                    5 & 2 & 83 \\
+                    5 & 3 & 83 & 83 \\
+                    \midrule
+                    1 & 0 & 80 \\
+                    1 & 1 & 103 \\
+                    1 & 2 & 128 \\
+                    1 & 3 & 134 \\
+                    1 & 4 & 134 & 134 \\
+                    \midrule
+                    6 & 0 & 150 \\
+                    6 & 1 & 187 \\
+                    6 & 2 & 204 \\
+                    6 & 3 & 204 & \emph{Missed.} \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RTA trace from RM-ordered tasks}%
+                \label{table:rm-response-times-trace}
+            \end{subtable}~%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{llll}
+                    $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
+                    \toprule
+                    4 & 0 & 6 & 6 \\
+                    \midrule
+                    3 & 0 & 11 \\
+                    3 & 1 & 11 & 11 \\
+                    \midrule
+                    2 & 0 & 25 \\
+                    2 & 1 & 25 & 25 \\
+                    \midrule
+                    5 & 0 & 66 \\
+                    5 & 1 & 77 \\
+                    5 & 2 & 83 \\
+                    5 & 3 & 83 & 83 \\
+                    \midrule
+                    6 & 0 & 130 \\
+                    6 & 1 & 167 \\
+                    6 & 2 & 178 \\
+                    6 & 3 & 184 \\
+                    6 & 4 & 184 \\
+                    \midrule
+                    1 & 0 & 133 \\
+                    1 & 1 & 187 \\
+                    1 & 2 & 204 \\
+                    1 & 3 & 264 \\
+                    1 & 4 & 281 \\
+                    1 & 5 & 287 \\
+                    1 & 6 & 287 & 287 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RTA trace from DM-ordered tasks}%
+                \label{table:dm-response-times-trace}
+            \end{subtable}
+            \caption{RTA Algorithm Traces}
+        \end{table}
+    \item To assess the schedulability of the task set without using RTA, we can
+        use the Liu-Layland (L\&L) test, also known as \emph{Rate Monotonic
+        Priority Analysis} (for fixed-priority scheduling). For task sets
+        $\left\{ \tau_1, \ldots, \tau_i, \ldots, \tau_N \right\}$ such that $D_i
+        = T_i$ for all $1 \leq i \leq N$,
+        \begin{equation}
+            U := \sum_{i=1}^N \frac{C_i}{T_i} \leq N\left( 2^{1/N}-1 \right)
+        \end{equation}
+        is a simple sufficient but not necessary test of schedulability. Note
+        that $ \lim_{N\to\infty} N\left( 2^{1/N} - 1 \right) = \log{2} $. If
+        this test is performed for the task set $ \left\{ \tau_{1,2,3,4,5,6}
+        \right\} $,
+        \begin{align}
+            U &= \sum_{i=1}^6 \frac{C_i}{T_i} \\
+            &= 0.748 \\
+            &> 6 \left( 2^{1/6} - 1 \right) \\
+            &= 0.734772.
+        \end{align}
+        The above results were computed with \emph{Mathematica} using standard
+        arithmetic functions. However, this test on the given task set is not
+        particularly useful for two reasons:
+        \begin{itemize}
+            \item The deadlines are not explicit (i.e. $ D \neq T $); and
+            \item Even were the deadlines explicit, $U$ exceeds the bound, and
+                the test would be inconclusive. In that case, RTA would be
+                required anyway.
+        \end{itemize}
+        Utilisation-based tests are sometimes useful due to their worse-case
+        average runtime complexity of $\mathcal{O}(N)$, but for small, simple
+        task sets with fixed-priority ordering, exact methods such as RTA should
+        normally be preferred.
+    \item If deadline-monotonic (DM) priority ordering is used, whereby tasks
+        are ordered by shortest deadline rather than the shortest period, the
+        execution priorities become
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_6 > \tau_1.
+        \end{equation}
+
+        \Cref{table:dm-response-times} lists the revised response times under
+        the DM ordering scheme, and \Cref{table:dm-response-times-trace}
+        provides an algorithm trace. In contrast to the RTA on the RM-ordered
+        task set, $\tau_1$ has a response time of $287\mls$ and $\tau_6$ has a
+        response time of $184\mls$. As $R_i$ is determined for all tasks, the
+        task set is scheduleable.
+
+        These results were attained with the C++ source code detained in
+        \Cref{sec:cpp}. To switch the ordering scheme, the
+        \href{https://cppreference.com/cpp/container/set}{ordered set} was
+        instantiated to use \texttt{DMTaskComparator} as opposed to
+        \texttt{RMTaskComparator}.
+    \item Under RM-priority ordering, the task set can be scheduled if $\tau_6$
+        has a WCET less than or equal to 49. This result was computed using the
+        C++ routines given in \Cref{sec:cpp} with brute-force iterative
+        application of the standard RTA algorithm.
 \end{enumerate}
 
 \subsection{Question 5}
@@ -707,5 +932,21 @@
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
+
+\appendix
+\section{C++ Source Code and Raw Outputs}\label{sec:cpp}
+
+\subsection{Response-Time Analysis}
+\subsubsection{RTA/Task.hpp}
+\lstinputlisting[language=C++]{RTA/Task.hpp}
+
+\clearpage\subsubsection{RTA/driver.cpp}
+\lstinputlisting[language=C++]{RTA/driver.cpp}
+
+\clearpage\subsubsection{RTA/rm-output.txt}
+\lstinputlisting{RTA/rm-output.txt}
+
+\clearpage\subsubsection{RTA/dm-output.txt}
+\lstinputlisting{RTA/dm-output.txt}
 
 \end{document}

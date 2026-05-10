@@ -1,0 +1,87 @@
+Weight for step tau_4.0 is 6.
+Task tau_4 converged on weight 6 on step tau_4.0.
+Weight for step tau_3.0 is 11.
+Weight for step tau_3.1 is 11.
+Task tau_3 converged on weight 11 on step tau_3.1.
+Weight for step tau_2.0 is 25.
+Weight for step tau_2.1 is 25.
+Task tau_2 converged on weight 25 on step tau_2.1.
+Weight for step tau_5.0 is 66.
+Weight for step tau_5.1 is 77.
+Weight for step tau_5.2 is 83.
+Weight for step tau_5.3 is 83.
+Task tau_5 converged on weight 83 on step tau_5.3.
+Weight for step tau_1.0 is 80.
+Weight for step tau_1.1 is 103.
+Weight for step tau_1.2 is 128.
+Weight for step tau_1.3 is 134.
+Weight for step tau_1.4 is 134.
+Task tau_1 converged on weight 134 on step tau_1.4.
+Weight for step tau_6.0 is 150.
+Weight for step tau_6.1 is 187.
+Weight for step tau_6.2 is 204.
+Weight for step tau_6.3 is 264.
+Task tau_6 missed its deadline of 250ms on step tau_6.3.
+
+Task	Execution	Period	Deadline	Response
+----	---------	------	--------	--------
+tau_4	[  1,   6]	    25	      25	       6
+tau_3	[  1,   5]	    50	      50	      11
+tau_2	[  7,  14]	   100	     100	      25
+tau_5	[ 18,  35]	   200	     200	      83
+tau_1	[  5,  20]	   500	     400	     134
+tau_6	[ 27,  53]	  1000	     250	 Unknown
+
+TASK SET CANNOT BE SCHEDULED
+tau_6 can be scheduled with WCET 0.
+tau_6 can be scheduled with WCET 1.
+tau_6 can be scheduled with WCET 2.
+tau_6 can be scheduled with WCET 3.
+tau_6 can be scheduled with WCET 4.
+tau_6 can be scheduled with WCET 5.
+tau_6 can be scheduled with WCET 6.
+tau_6 can be scheduled with WCET 7.
+tau_6 can be scheduled with WCET 8.
+tau_6 can be scheduled with WCET 9.
+tau_6 can be scheduled with WCET 10.
+tau_6 can be scheduled with WCET 11.
+tau_6 can be scheduled with WCET 12.
+tau_6 can be scheduled with WCET 13.
+tau_6 can be scheduled with WCET 14.
+tau_6 can be scheduled with WCET 15.
+tau_6 can be scheduled with WCET 16.
+tau_6 can be scheduled with WCET 17.
+tau_6 can be scheduled with WCET 18.
+tau_6 can be scheduled with WCET 19.
+tau_6 can be scheduled with WCET 20.
+tau_6 can be scheduled with WCET 21.
+tau_6 can be scheduled with WCET 22.
+tau_6 can be scheduled with WCET 23.
+tau_6 can be scheduled with WCET 24.
+tau_6 can be scheduled with WCET 25.
+tau_6 can be scheduled with WCET 26.
+tau_6 can be scheduled with WCET 27.
+tau_6 can be scheduled with WCET 28.
+tau_6 can be scheduled with WCET 29.
+tau_6 can be scheduled with WCET 30.
+tau_6 can be scheduled with WCET 31.
+tau_6 can be scheduled with WCET 32.
+tau_6 can be scheduled with WCET 33.
+tau_6 can be scheduled with WCET 34.
+tau_6 can be scheduled with WCET 35.
+tau_6 can be scheduled with WCET 36.
+tau_6 can be scheduled with WCET 37.
+tau_6 can be scheduled with WCET 38.
+tau_6 can be scheduled with WCET 39.
+tau_6 can be scheduled with WCET 40.
+tau_6 can be scheduled with WCET 41.
+tau_6 can be scheduled with WCET 42.
+tau_6 can be scheduled with WCET 43.
+tau_6 can be scheduled with WCET 44.
+tau_6 can be scheduled with WCET 45.
+tau_6 can be scheduled with WCET 46.
+tau_6 can be scheduled with WCET 47.
+tau_6 can be scheduled with WCET 48.
+tau_6 can be scheduled with WCET 49.
+tau_6 cannot be scheduled with WCET 50.
+Maximised WCET: 49
