@@ -4,6 +4,13 @@
 %
 \documentclass{article}
 
+\usepackage[
+    backend=biber,
+    style=authoryear,
+    citestyle=authoryear,
+    bibencoding=utf8
+]{biblatex}
+
 \usepackage[a4paper]{geometry}
 \usepackage[en-GB]{datetime2}
 \usepackage{fancyhdr}
@@ -16,11 +23,15 @@
 \usepackage{pdflscape}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{pgfgantt}
 \usepackage{hyperref}
 \usepackage{cleveref}
 
+\addbibresource{references.bib}
+
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
+\renewcommand\theenumiii{\arabic{enumiii}}
 \newcommand\mma[1]%
     {\href{https://reference.wolfram.com/language/ref/#1.html}{\textbf{#1}}}
 
@@ -32,7 +43,7 @@
 \numberwithin{equation}{section}
 \numberwithin{table}{section}
 \numberwithin{figure}{section}
-\captionsetup[subtable]{aboveskip=2ex,belowskip=4ex}
+\captionsetup[subtable]{aboveskip=2ex,belowskip=3ex}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -45,6 +56,9 @@
 \definecolor{codegreen}{rgb}{0,0.6,0}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
+
+\definecolor{taskblocked}{HTML}{ffcccc}
+\definecolor{taskrunning}{HTML}{dfdfdf}
 
 \lstset{
     commentstyle=\color{codegreen},
@@ -84,7 +98,8 @@
 \DeclareMathOperator\second{s}
 \DeclareMathOperator\rank{Rank}
 \DeclareMathOperator\hp{hp}
-\DeclareMathOperator\usage{Usage}
+\DeclareMathOperator\lp{lp}
+\DeclareMathOperator\usage{Usg}
 \DeclareMathOperator\cs{CS}
 \DeclareMathOperator\uses{Uses}
 
@@ -643,18 +658,18 @@ In line with the assessment regulations, no generative AI/ML features of
             $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$40$&$14$&$0.6$&$15.6$& \\
-        $A$&$D$&$40$&$14$&$0.4$&$10.4$&$26$\\
-        
+        &$D$&$40$&$14$&$0.4$&$10.4$&$26$\\
+        \midrule
         $B$&$A$&$14$&$40$&$0.6$&$-15.6$& \\
-        $B$&$C$&$14$&$8$&$0.3$&$1.8$& \\
-        $B$&$D$&$14$&$14$&$0.3$&$0$&$-13.8$\\
-
+        &$C$&$14$&$8$&$0.3$&$1.8$& \\
+        &$D$&$14$&$14$&$0.3$&$0$&$-13.8$\\
+        \midrule
         $C$&$B$&$8$&$14$&$0.3$&$-1.8$& \\
-        $C$&$D$&$8$&$14$&$0.3$&$-1.8$&$-3.6$\\
-
+        &$D$&$8$&$14$&$0.3$&$-1.8$&$-3.6$\\
+        \midrule
         $D$&$A$&$14$&$40$&$0.4$&$-10.4$& \\
-        $D$&$B$&$14$&$14$&$0.3$&$0$& \\
-        $D$&$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$ \\
+        &$B$&$14$&$14$&$0.3$&$0$& \\
+        &$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$ \\
         \bottomrule
     \end{tabular}
     \caption{Working for $k=0 \to k=1$.}%
@@ -668,18 +683,18 @@ In line with the assessment regulations, no generative AI/ML features of
             $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$14.0$&$27.8$&$0.6$&$-8.3$& \\
-        $A$&$D$&$14.0$&$22.6$&$0.4$&$-3.4$&$-11.7$\\
-        
+        &$D$&$14.0$&$22.6$&$0.4$&$-3.4$&$-11.7$\\
+        \midrule
         $B$&$A$&$27.8$&$14.0$&$0.6$&$8.3$& \\
-        $B$&$C$&$27.8$&$11.6$&$0.3$&$4.9$& \\
-        $B$&$D$&$27.8$&$22.6$&$0.3$&$1.6$&$14.7$\\
-
+        &$C$&$27.8$&$11.6$&$0.3$&$4.9$& \\
+        &$D$&$27.8$&$22.6$&$0.3$&$1.6$&$14.7$\\
+        \midrule
         $C$&$B$&$11.6$&$27.8$&$0.3$&$-4.9$& \\
-        $C$&$D$&$11.6$&$22.6$&$0.3$&$-3.3$&$-8.2$\\
-
+        &$D$&$11.6$&$22.6$&$0.3$&$-3.3$&$-8.2$\\
+        \midrule
         $D$&$A$&$22.6$&$14.0$&$0.4$&$3.4$& \\
-        $D$&$B$&$22.6$&$27.8$&$0.3$&$-1.6$& \\
-        $D$&$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$ \\
+        &$B$&$22.6$&$27.8$&$0.3$&$-1.6$& \\
+        &$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$ \\
         \bottomrule
     \end{tabular}
     \caption{Working for $k=1 \to k=2$.}%
@@ -693,18 +708,18 @@ In line with the assessment regulations, no generative AI/ML features of
             $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
         \toprule
         $A$&$B$&$25.7$&$13.1$&$0.6$&$7.6$& \\
-        $A$&$D$&$25.7$&$17.4$&$0.4$&$3.3$&$10.9$\\
-        
+        &$D$&$25.7$&$17.4$&$0.4$&$3.3$&$10.9$\\
+        \midrule
         $B$&$A$&$13.1$&$25.7$&$0.6$&$-7.6$& \\
-        $B$&$C$&$13.1$&$19.8$&$0.3$&$-2.0$& \\
-        $B$&$D$&$13.1$&$17.4$&$0.3$&$-1.3$&$-10.9$\\
-
+        &$C$&$13.1$&$19.8$&$0.3$&$-2.0$& \\
+        &$D$&$13.1$&$17.4$&$0.3$&$-1.3$&$-10.9$\\
+        \midrule
         $C$&$B$&$19.8$&$13.1$&$0.3$&$2.0$& \\
-        $C$&$D$&$19.8$&$17.4$&$0.3$&$0.7$&$2.7$\\
-
+        &$D$&$19.8$&$17.4$&$0.3$&$0.7$&$2.7$\\
+        \midrule
         $D$&$A$&$17.4$&$25.7$&$0.4$&$-3.3$& \\
-        $D$&$B$&$17.4$&$13.1$&$0.3$&$1.3$& \\
-        $D$&$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$ \\
+        &$B$&$17.4$&$13.1$&$0.3$&$1.3$& \\
+        &$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$ \\
         \bottomrule
     \end{tabular}
     \caption{Working for $k=2 \to k=3$.}%
@@ -805,32 +820,32 @@ In line with the assessment regulations, no generative AI/ML features of
             \centering%
             \begin{subtable}{.48\linewidth}
                 \centering%
-                \begin{tabular}{llll}
+                \begin{tabular}{ll|ll}
                     $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
                     \toprule
                     $\tau_4$ & 0 & 6 & 6 \\
                     \midrule
                     $\tau_3$ & 0 & 11 \\
-                    $\tau_3$ & 1 & 11 & 11 \\
+                    & 1 & 11 & 11 \\
                     \midrule
                     $\tau_2$ & 0 & 25 \\
-                    $\tau_2$ & 1 & 25 & 25 \\
+                    & 1 & 25 & 25 \\
                     \midrule
                     $\tau_5$ & 0 & 66 \\
-                    $\tau_5$ & 1 & 77 \\
-                    $\tau_5$ & 2 & 83 \\
-                    $\tau_5$ & 3 & 83 & 83 \\
+                    & 1 & 77 \\
+                    & 2 & 83 \\
+                    & 3 & 83 & 83 \\
                     \midrule
                     $\tau_1$ & 0 & 80 \\
-                    $\tau_1$ & 1 & 103 \\
-                    $\tau_1$ & 2 & 128 \\
-                    $\tau_1$ & 3 & 134 \\
-                    $\tau_1$ & 4 & 134 & 134 \\
+                    & 1 & 103 \\
+                    & 2 & 128 \\
+                    & 3 & 134 \\
+                    & 4 & 134 & 134 \\
                     \midrule
-                    $\tau_6$ & 0 & 150 \\
                     $\tau_6$ & 1 & 187 \\
-                    $\tau_6$ & 2 & 204 \\
-                    $\tau_6$ & 3 & 204 & \emph{Missed.} \\
+                    & 0 & 150 \\
+                    & 2 & 204 \\
+                    & 3 & 204 & \emph{Missed.} \\
                     \bottomrule
                 \end{tabular}
                 \caption{RTA trace from RM-ordered tasks}%
@@ -838,35 +853,35 @@ In line with the assessment regulations, no generative AI/ML features of
             \end{subtable}~%
             \begin{subtable}{.48\linewidth}
                 \centering%
-                \begin{tabular}{llll}
+                \begin{tabular}{ll|ll}
                     $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
                     \toprule
                     $\tau_4$ & 0 & 6 & 6 \\
                     \midrule
                     $\tau_3$ & 0 & 11 \\
-                    $\tau_3$ & 1 & 11 & 11 \\
+                    & 1 & 11 & 11 \\
                     \midrule
                     $\tau_2$ & 0 & 25 \\
-                    $\tau_2$ & 1 & 25 & 25 \\
+                    & 1 & 25 & 25 \\
                     \midrule
                     $\tau_5$ & 0 & 66 \\
-                    $\tau_5$ & 1 & 77 \\
-                    $\tau_5$ & 2 & 83 \\
-                    $\tau_5$ & 3 & 83 & 83 \\
+                    & 1 & 77 \\
+                    & 2 & 83 \\
+                    & 3 & 83 & 83 \\
                     \midrule
                     $\tau_6$ & 0 & 130 \\
-                    $\tau_6$ & 1 & 167 \\
-                    $\tau_6$ & 2 & 178 \\
-                    $\tau_6$ & 3 & 184 \\
-                    $\tau_6$ & 4 & 184 \\
+                    & 1 & 167 \\
+                    & 2 & 178 \\
+                    & 3 & 184 \\
+                    & 4 & 184 \\
                     \midrule
                     $\tau_1$ & 0 & 133 \\
-                    $\tau_1$ & 1 & 187 \\
-                    $\tau_1$ & 2 & 204 \\
-                    $\tau_1$ & 3 & 264 \\
-                    $\tau_1$ & 4 & 281 \\
-                    $\tau_1$ & 5 & 287 \\
-                    $\tau_1$ & 6 & 287 & 287 \\
+                    & 1 & 187 \\
+                    & 2 & 204 \\
+                    & 3 & 264 \\
+                    & 4 & 281 \\
+                    & 5 & 287 \\
+                    & 6 & 287 & 287 \\
                     \bottomrule
                 \end{tabular}
                 \caption{RTA trace from DM-ordered tasks}%
@@ -935,7 +950,8 @@ In line with the assessment regulations, no generative AI/ML features of
 \subsection{Question 5}
 \begin{enumerate}
     \item For a task $i$ involved with $K$ resources, the maximum blocking time
-        $B_i$ over its $m$ critical sections is given by
+        $B_i$ under the simple \emph{Priority Inheritance} (PIP) scheme over its
+        $m$ critical sections is given by
         \begin{equation}
             B_i = \sum_{k\in K} \usage{(k,i)} \cs{k}
         \end{equation}
@@ -966,21 +982,21 @@ In line with the assessment regulations, no generative AI/ML features of
             \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6.
         \end{equation}
         \Cref{table:pip-blocking} enumerates the maximum blocking times of each
-        task under the simple \emph{Priority Inheritance} (PIP) scheme.
-
+        task under PIP. \Cref{table:pip-working} provides a trace of the
+        working, which was computed manually.
         \begin{table}
-            \centering% TODO
+            \centering%
             \begin{subtable}{.33\linewidth}
                 \centering%
                 \begin{tabular}{ll}
                     $i$ & $B_i$ \\
                     \toprule
-                    $\tau_1$ & \\
-                    $\tau_2$ & \\
-                    $\tau_3$ & \\
-                    $\tau_4$ & \\
-                    $\tau_5$ & \\
-                    $\tau_6$ & \\
+                    $\tau_1$ & $0\mls$ \\
+                    $\tau_2$ & $6\mls$ \\
+                    $\tau_3$ & $6\mls$ \\
+                    $\tau_4$ & $5\mls$ \\
+                    $\tau_5$ & $5\mls$ \\
+                    $\tau_6$ & $0\mls$ \\
                     \bottomrule
                 \end{tabular}
                 \caption{Blocking times under PIP.}%
@@ -1000,16 +1016,16 @@ In line with the assessment regulations, no generative AI/ML features of
                 \label{table:resource-ceilings}
             \end{subtable}~%
             \begin{subtable}{.33\linewidth}
-                \centering% TODO
+                \centering%
                 \begin{tabular}{ll}
                     $i$ & $B_i$ \\
                     \toprule
-                    $\tau_1$ & \\
-                    $\tau_2$ & \\
-                    $\tau_3$ & \\
-                    $\tau_4$ & \\
-                    $\tau_5$ & \\
-                    $\tau_6$ & \\
+                    $\tau_1$ & $0\mls$ \\
+                    $\tau_2$ & $3\mls$ \\
+                    $\tau_3$ & $3\mls$ \\
+                    $\tau_4$ & $3\mls$ \\
+                    $\tau_5$ & $3\mls$ \\
+                    $\tau_6$ & $0\mls$ \\
                     \bottomrule
                 \end{tabular}
                 \caption{Blocking times under ICPP.}%
@@ -1018,15 +1034,184 @@ In line with the assessment regulations, no generative AI/ML features of
             \caption{Maximum blocking times for tasks $\tau_{1,2,3,4,5,6}$ and
                 resource ceilings for $A,B,C$.}
         \end{table}
-    \item The resource ceilings $\Pi_{A,B,C}$ of each resource $A,B,C$ are given
+
+        \begin{table}[p]
+            \centering%
+            \begin{tabular}{lll|lll}
+                $i$ &
+                    $\left\{ i \right\} \cup \hp{i}$ &
+                    $\lp{i}$ &
+                    $k$ &
+                    $\usage{(k,i)}$ &
+                    $B_i$ \\
+                \toprule
+                $\tau_4$ & $\left\{ \tau_4 \right\}$ & $\left\{ \tau_3, \tau_2,
+                    \tau_5, \tau_1, \tau_6 \right\}$ & $A$ & 1 \\
+                & & & $B$ & 1 \\
+                & & & $C$ & 0 & $\cs{A} + \cs{B} = 5\mls$ \\
+                \midrule
+                $\tau_3$ & $\left\{ \tau_4, \tau_3 \right\}$ & $\left\{ \tau_2,
+                    \tau_5, \tau_1, \tau_6 \right\}$ & $A$ & 1 \\
+                & & & $B$ & 1 \\
+                & & & $C$ & 1 & $\cs{A} + \cs{B} + \cs{C} = 6\mls$ \\
+                \midrule
+                $\tau_2$ & $\left\{ \tau_4, \tau_3, \tau_2 \right\}$ &
+                    $\left\{ \tau_5, \tau_1, \tau_6 \right\}$ & $A$ & 1 \\
+                & & & $B$ & 1 \\
+                & & & $C$ & 1 & $\cs{A} + \cs{B} + \cs{C} = 6\mls$ \\
+                \midrule
+                $\tau_5$ & $\left\{ \tau_4, \tau_3, \tau_2, \tau_5 \right\}$ &
+                    $\left\{ \tau_1, \tau_6 \right\}$ & $A$ & 1 \\
+                & & & $B$ & 1 \\
+                & & & $C$ & 0 & $\cs{A} + \cs{B} = 5\mls$ \\
+                \midrule
+                $\tau_1$ & $\left\{ \tau_4, \tau_3, \tau_2, \tau_5, \tau_1
+                    \right\}$ & $\left\{ \tau_6 \right\}$ & $A$ & 0 \\
+                & & & $B$ & 0 \\
+                & & & $C$ & 0 & $0\mls$ \\
+                \midrule
+                $\tau_6$ & $\left\{ \tau_4, \tau_3, \tau_2, \tau_5, \tau_1,
+                    \tau_6 \right\}$ & $\emptyset$ & $A$ & 0 \\
+                & & & $B$ & 0 \\
+                & & & $C$ & 0 & $0\mls$ \\
+                \bottomrule
+            \end{tabular}
+            \caption{Working for PIP maximum blocking times.}%
+            \label{table:pip-working}
+        \end{table}
+
+        \begin{table}[p]
+            \centering%
+            \begin{tabular}{llllll}
+                $i$ &
+                    $\lp{i}$ &
+                    $k$ &
+                    $\Pi_k \stackrel{?}{\geq}
+                    \Pr{i}$ &
+                    $\left\{ j \in \lp{i} \colon \uses{(k,j)} \right\}$ &
+                    $B_i$ \\
+                \toprule
+                $\tau_4$ & $\left\{ \tau_3, \tau_2, \tau_5, \tau_1, \tau_6
+                    \right\}$ & $A$ & Yes & $\left\{ \tau_5, \tau_1 \right\}$ \\
+                & & $B$ & Yes & $\left\{ \tau_3, \tau_2, \tau_5, \tau_1
+                    \right\}$ \\
+                & & $C$ & No & N/A & $\max\left\{ \cs{A}, \cs{B} \right\} =
+                    3\mls$ \\
+                \midrule
+                $\tau_3$ & $\left\{ \tau_2, \tau_5, \tau_1, \tau_6 \right\}$ &
+                    $A$ & Yes & $\left\{ \tau_5, \tau_1 \right\}$ \\
+                & & $B$ & Yes & $\left\{ \tau_2, \tau_5, \tau_1 \right\}$ \\
+                & & $C$ & Yes & $\left\{ \tau_5 \right\}$ & $\max\left\{
+                    \cs{A}, \cs{B}, \cs{C} \right\} = 3\mls$ \\
+                \midrule
+                $\tau_2$ & $\left\{ \tau_5, \tau_1, \tau_6 \right\}$ & $A$ &
+                    Yes & $\left\{ \tau_5, \tau_1 \right\}$ \\
+                & & $B$ & Yes & $\left\{ \tau_5, \tau_1 \right\}$ \\
+                & & $C$ & Yes & $\left\{ \tau_5 \right\}$ &
+                    $\max\left\{ \cs{A}, \cs{B}, \cs{C} \right\} = 3\mls$ \\
+                \midrule
+                $\tau_5$ & $\left\{ \tau_1, \tau_6 \right\}$ & $A$ & Yes &
+                    $\left\{ \tau_1 \right\}$ \\
+                & & $B$ & Yes & $\left\{ \tau_1 \right\}$ \\
+                & & $C$ & Yes & $\emptyset$ & $\max\left\{ \cs{A}, \cs{B}
+                    \right\} = 3\mls$ \\
+                \midrule
+                $\tau_1$ & $\left\{ \tau_6 \right\}$ & $A$ & Yes &
+                    $\emptyset$ \\
+                & & $B$ & Yes & $\emptyset$ \\
+                & & $C$ & Yes & $\emptyset$ & $0\mls$ \\
+                \midrule
+                $\tau_6$ & $\emptyset$ & $A$ & Yes & $\emptyset$ \\
+                & & $B$ & Yes & $\emptyset$ \\
+                & & $C$ & Yes & $\emptyset$ & $0\mls$ \\
+                \bottomrule
+            \end{tabular}
+            \caption{Working for ICPP maximum blocking times.}%
+            \label{table:icpp-working}
+        \end{table}
+    \item Under the \emph{Intermediate Priority Ceiling Inheritance} (ICPP)
+        scheme, the maximum blocking time $B_i$ is given
+        by\footfullcite{Altmeyer:2013}:
+        \begin{equation}
+            B_i = \max\left\{ \cs{k} \colon \exists j \in \lp{i} \colon \left(
+                \uses(k, j) \land \Pi_k \geq \Pr i \right) \right\}
+            \label{eqn:icpp-max-blocking}
+        \end{equation}
+        where $\lp{i}$ denotes the set of tasks with lower priority than task
+        $i$, $\Pi_k$ is the resource ceiling of resource $k$, and $\Pr i$
+        denotes the numerical priority of task $i$ (to be compared with a
+        resource ceiling). If there is no such task $j \in \lp{i}$ satisfying
+        the constraints, $B_i := 0$.
+        
+        The resource ceilings $\Pi_{A,B,C}$ of each resource $A,B,C$ are given
         in \Cref{table:resource-ceilings}. In each case, the highest-priority
         requesting task is provided with its numerical priority.
-        \Cref{table:icpp-blocking} enumerates the blocking times of each task
-        under the \emph{Intermediate Priority Ceiling Inheritance} (ICPP)
-        scheme.
+        \Cref{table:icpp-blocking} enumerates the blocking times of each task,
+        and \Cref{table:icpp-working} provides the corresponding working.
+        
+        \Cref{table:icpp-working} working uses the following additional
+        notation:
+        \begin{itemize}
+            \item $\Pi_k \stackrel{?}{\geq} \Pr i$: is $\Pi_k$ greater than or
+                equal to $\Pr i$?
+            \item ``N/A'': the set may or may not contain elements, but is
+                omitted from the description as $\Pi_k \not\geq \Pr i$ and thus
+                does not contribute to $B_i$ as defined by
+                \Cref{eqn:icpp-max-blocking}.
+        \end{itemize}
     \item \begin{enumerate}
-        \item TODO
-        \item TODO
+        \item ICPP achieves lower blocking maximum blocking times than PIP for
+            tasks $\tau_4$, $\tau_3$, $\tau_2$, and $\tau_5$. The same maximum
+            blocking times are deduced for tasks $\tau_1$ and $\tau_6$. The ICPP
+            achieves this reduction by preventing \emph{chained blocking} such
+            that a resource must be free prior to the release of a dependent
+            task.
+        \item Yes, it is possible for PIP to experience chained blocking.
+            Consider the following scenario:
+            \begin{enumerate}
+                \item Task $\tau_1$ is released and locks resource $A$;
+                \item Task $\tau_3$ is released, pre-empts $\tau_1$, and locks
+                    resource $B$.
+                \item Task $\tau_4$ is released and requests $A$. It blocks
+                    while waiting for $\tau_1$ to release $A$, and hence
+                    inherits the priority of $\tau_4$ and runs until $A$ is
+                    released.
+                \item Task $\tau_4$ is resumed, then requests $B$. As $\tau_3$
+                    holds $B$, $\tau_3$ inherits the priority of $\tau_4$ and
+                    runs until $B$ is released.
+            \end{enumerate}
+            In this situation, $\tau_4$ is blocked twice in succession; this is
+            pictured with a Gantt chart in \Cref{fig:pip-chained-block}, where
+            the red sections indicate a blocked task.
+
+            \begin{figure}
+                \centering
+                \begin{ganttchart}[
+                    hgrid,
+                    vgrid,
+                    time slot format=simple,
+                    x unit=0.9cm,
+                    y unit chart=0.7cm,
+                    bar height=0.45,
+                    bar label font=\small,
+                    title label font=\small
+                ]{0}{5}
+                    \gantttitlelist{0,...,5}{1} \\
+
+                    \ganttbar[bar/.append style={fill=taskrunning}]
+                        {$\tau_1$ executes, holding $A$}{0}{2} \\
+
+                    \ganttbar[bar/.append style={fill=taskrunning}]
+                        {$\tau_3$ executes, holding $B$}{3}{4} \\
+
+                    \ganttbar[bar/.append style={fill=taskblocked}]
+                        {$\tau_4$ blocked}{0}{2}
+                    \ganttbar[bar/.append style={fill=taskblocked}]{}{3}{4}
+                    \ganttbar[bar/.append style={fill=taskrunning}]{}{5}{5}
+                \end{ganttchart}
+                \caption{Example of chained blocking under PIP.}%
+                \label{fig:pip-chained-block}
+            \end{figure}
     \end{enumerate}
 \end{enumerate}
 

@@ -132,8 +132,8 @@ Cell[BoxData[
     RowBox[{
      RowBox[{"{",
       RowBox[{"2", ",",
-       RowBox[{"-", "1"}], ",", "0", ",", "0", ",", "0", ",", "0"}], "}"}],
-     ",", "\[IndentingNewLine]",
+       RowBox[{"-", "1"}], ",", "0", ",", "0", ",", "0", ",", "0"}], "}"}], ",",
+      "\[IndentingNewLine]",
      RowBox[{"{",
       RowBox[{"0", ",", "1", ",", "0", ",",
        RowBox[{"-", "1"}], ",", "0", ",", "0"}], "}"}], ",",
@@ -202,13 +202,11 @@ Cell[BoxData[{
  RowBox[{
   RowBox[{"hwTime", "=",
    RowBox[{"{",
-    RowBox[{"2", ",", "3", ",", "1", ",", "4", ",", "5"}], "}"}]}],
-  ";"}], "\[IndentingNewLine]",
+    RowBox[{"2", ",", "3", ",", "1", ",", "4", ",", "5"}], "}"}]}], ";"}], "\[IndentingNewLine]",
  RowBox[{
   RowBox[{"swCost", "=",
    RowBox[{"{",
-    RowBox[{"5", ",", "5", ",", "5", ",", "5", ",", "5"}], "}"}]}],
-  ";"}], "\n",
+    RowBox[{"5", ",", "5", ",", "5", ",", "5", ",", "5"}], "}"}]}], ";"}], "\n",
  RowBox[{
   RowBox[{"hwCost", "=",
    RowBox[{"{",
@@ -248,8 +246,7 @@ Cell[BoxData[{
       RowBox[{"swCost", "*",
        RowBox[{"(",
         RowBox[{"1", "-", "designVars"}], ")"}]}], "+",
-      RowBox[{"hwCost", "*", "designVars"}]}], "]"}]}], ";"}],
-  " "}], "\[IndentingNewLine]",
+      RowBox[{"hwCost", "*", "designVars"}]}], "]"}]}], ";"}], " "}], "\[IndentingNewLine]",
  RowBox[{
   RowBox[{
    RowBox[{"timeObjective", "=",
@@ -382,8 +379,8 @@ Cell[BoxData[
      "\[IndentingNewLine]",
      RowBox[{"EdgeWeight", "->",
       RowBox[{"{",
-       RowBox[{".6", ",", ".4", ",", ".3", ",", ".3", ",", ".3"}], "}"}]}],
-     ",", "\[IndentingNewLine]",
+       RowBox[{".6", ",", ".4", ",", ".3", ",", ".3", ",", ".3"}], "}"}]}], ",",
+      "\[IndentingNewLine]",
      RowBox[{"VertexSize", "->", "Medium"}]}], "\[IndentingNewLine]", "]"}]}],
    ";"}]], "Input"],
 
@@ -570,8 +567,8 @@ Cell[BoxData[
                  RowBox[{
                   RowBox[{"u", "\[DirectedEdge]", "v"}], ",",
                   RowBox[{"v", "\[DirectedEdge]", "u"}]}], "}"}]}]}], "//",
-              "Flatten"}], ",", "First"}], "]"}], ")"}]}], ")"}]}]}], "}"}],
-     ",", "\[IndentingNewLine]",
+              "Flatten"}], ",", "First"}], "]"}], ")"}]}], ")"}]}]}], "}"}], ",",
+      "\[IndentingNewLine]",
      RowBox[{"{",
       RowBox[{
        RowBox[{"data", "//", "Dataset"}], ",",
@@ -583,9 +580,9 @@ Cell[BoxData[
           RowBox[{"source", "->",
            RowBox[{"Lookup", "[",
             RowBox[{
-             RowBox[{"Last", "[", "entry", "]"}], ",",
-             "\"\<\[CapitalSigma]\>\""}], "]"}]}]}], ",", "data"}], "]"}]}],
-      "}"}]}], "\[IndentingNewLine]", "]"}]}], ";"}]], "Input"],
+             RowBox[{"Last", "[", "entry", "]"}],
+             ",", "\"\<\[CapitalSigma]\>\""}], "]"}]}]}], ",", "data"}],
+        "]"}]}], "}"}]}], "\[IndentingNewLine]", "]"}]}], ";"}]], "Input"],
 
 Cell[CellGroupData[{
 
