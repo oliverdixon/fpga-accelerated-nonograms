@@ -4,6 +4,7 @@
 #include <xparameters.h>
 
 #include "chunks.h"
+#include "logging.h"
 #include "puzzle.h"
 #include "video.h"
 
@@ -141,8 +142,8 @@ void video_draw_puzzle(
      * size is 15x15).
      */
     static const unsigned int max_digits = 2;
-    static const unsigned int box_extent = 50;       // Pixel extent of boxes in both directions
-    static const unsigned int internal_padding = 15; // Padding between boxes and clues
+    static const unsigned int box_extent = 20;       // Pixel extent of boxes in both directions
+    static const unsigned int internal_padding = 5; // Padding between boxes and clues
     static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
     static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
 
@@ -158,11 +159,14 @@ void video_draw_puzzle(
     // TODO: will need to be updated to support multiple chunks.
     const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
+    const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
+    logging_puts("Will write filled cells.");
+
     /*
      * If the puzzle is solved, we want access to the solution bitmap so it can be
      * visualised as well.
      */
-    if (puzzle_info->is_solved)
+    if (read_solution_bitmap)
         xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
 
     for (unsigned int col_idx = 0; col_idx < puzzle_info->width; ++col_idx) {
@@ -197,7 +201,7 @@ void video_draw_puzzle(
                     );
             }
 
-            if (puzzle_info->is_solved &&
+            if (read_solution_bitmap &&
                 (puzzle_info->solution_bitmap[row_idx] & col_mask) == col_mask)
                 draw_filled_rectangle(video_state, x_pos, y_pos, box_extent, box_extent);
             else
@@ -209,7 +213,7 @@ void video_draw_puzzle(
         y_pos = external_padding;
     }
 
-    if (puzzle_info->is_solved)
+    if (read_solution_bitmap)
         xSemaphoreGive(puzzle_info->solution_semaphore);
 
     Xil_DCacheFlush();

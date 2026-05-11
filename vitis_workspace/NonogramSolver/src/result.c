@@ -48,7 +48,7 @@ int result_send(
     const int sock,
     const struct sockaddr_in * const dst_addr
 ) {
-    if (!puzzle->is_solved)
+    if (puzzle->solved_state == SEARCH_NOT_RUN)
         // What's the point in submitting a solution if we don't have one?
         return -1;
 

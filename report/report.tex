@@ -6,54 +6,1050 @@
 
 \usepackage[a4paper]{geometry}
 \usepackage[en-GB]{datetime2}
-\usepackage{titlesec}
 \usepackage{fancyhdr}
+\usepackage{titlesec}
 \usepackage{lastpage}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{pdflscape}
+\usepackage{xcolor}
+\usepackage{listings}
 \usepackage{hyperref}
+\usepackage{cleveref}
 
 \renewcommand\theenumi{\roman{enumi}}
 \renewcommand\theenumii{\alph{enumii}}
+\newcommand\mma[1]%
+    {\href{https://reference.wolfram.com/language/ref/#1.html}{\textbf{#1}}}
+
+\setlength\parindent{0pt}
 
 \newcommand\sectionbreak{\ifnum\value{section}>0\clearpage\fi}
 \newcommand\subsectionbreak{\clearpage}
+\setcounter{secnumdepth}{1}
+\numberwithin{equation}{section}
+\numberwithin{table}{section}
+\numberwithin{figure}{section}
+\captionsetup[subtable]{aboveskip=2ex,belowskip=4ex}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
 \author{Exam Candidate Y3898772}
 
 \makeatletter
-\let\savetitle\@title
 \let\saveauthor\@author
 \makeatother
 
-\fancyhf{}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
 
-\fancyhead[LH]{\savetitle}
-\fancyhead[RH]{Part~\Roman{section}}
-\fancyfoot[LF]{\saveauthor}
-\fancyfoot[RF]{Page~\thepage~of~\pageref*{LastPage}}
+\lstset{
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[CF]{Page~\thepage~of~\pageref*{LastPage}}
+    \renewcommand\headrulewidth{0pt}
+}
+
+\fancypagestyle{fancy}{
+    \fancyfoot{}
+    \fancyfoot[LF]{\saveauthor}
+    \fancyfoot[RF]{Page~\thepage~of~\pageref*{LastPage}}
+}
 
 \pagestyle{fancy}
+
+\DeclareMathOperator\mah{mAh}
+\DeclareMathOperator\mla{mA}
+\DeclareMathOperator\hour{h}
+\DeclareMathOperator\mls{ms}
+\DeclareMathOperator\second{s}
+\DeclareMathOperator\rank{Rank}
+\DeclareMathOperator\hp{hp}
+\DeclareMathOperator\usage{Usage}
+\DeclareMathOperator\cs{CS}
+\DeclareMathOperator\uses{Uses}
 
 \begin{document}
 \maketitle
 \tableofcontents
+\setlength\parskip{1ex}
+
+\section*{Note}
+Some calculations described in the following exam script were performed with a
+computer. For each response where computer-assisted calculations are presented
+or otherwise relied upon, a description of the computational problem setup is
+given alongside a link to the relevant software implementation. In particular,
+Wolfram \emph{Mathematica} 14.0 and C++23 were used. The C++ code is listed in
+\Cref{sec:cpp} and the exported \emph{Mathematica} notebook has been submitted
+in the archive as \texttt{mma.pdf}.
+
+In line with the assessment regulations, no generative AI/ML features of
+\emph{Mathematica} (such as interfacing to Wolfram Alpha) were used.
 
 \section{Embedded Systems Design}
 \subsection{Question 1}
+\begin{enumerate}
+    \item For the described medical device, the following non-functional
+    requirements should be considered. In addition to the stated requirements,
+    examples of reasonable quantitative targets are specified.
+    \begin{itemize}
+        \item \emph{Maximum data propagation time between a sensor reading and
+        the corresponding report being despatched over the UDP/IP interface.}
+        
+        An upper bound on the processing time of sensor data is important due to
+        the safety-critical nature of the device application. In particular,
+        excessive (potentially unbounded) delays could cause internal buffers to
+        be overrun, thus data dropped, or, depending on the exact application,
+        allow deterioration in patient status to go unreported for an
+        unexpectedly large amount of time.
+        
+        Given that UDP/IP does not natively support guaranteed delivery, it is
+        not practical to place an upper bound on the total round-trip time of
+        data (i.e. from sensing to arrival at the database server). For this
+        application, a maximum processing time of one second is proposed given
+        the sizeable amount of on-board memory yet lower battery capacity, which
+        suggests that the processing unit should run at a lower frequency to
+        conserve power.
+
+        \item \emph{Maximum amount of RAM and flash usage during normal
+        operation.}
+
+        Likewise, an upper bound on the maximum amount of RAM (volatile) and
+        flash (non-volatile) memory usage during normal operation is necessary
+        to guarantee system stability and ability to adapt to worst-case
+        scenarios. During regular operation, it should be considered for the
+        device to require no more than 3MB of RAM and 12MB of flash storage.
+
+        In the case of RAM, limiting the allocation the three-quarters of the
+        available capacity provides a large on-board buffer to store patient
+        data in the event of the database server being temporarily unable to
+        accept new reports. This would allow a user or operator of the device,
+        such as a healthcare professional, to locally review recent (potentially
+        abridged) reports invariant of the state of the remote server. In the
+        case of flash, similarly limiting the maximum typical usage of
+        non-volatile memory provides space for persisting patient data over an
+        unexpected power loss and for future upgrades to the firmware and
+        software.
+
+        \item \emph{Minimum operation time on a single full charge.}
+        
+        As the device has a 500mAh battery, there should be an upper bound on
+        average current draw (averaged over an entire battery cycle) to
+        guarantee a minimum operating time following a single full charge.
+        Ignoring the marginal reduction of total battery capacity over time, it
+        is proposed that a maximum average current draw of 10mA is achieved;
+        with the 500mAh battery, capable of providing 500mA over one hour, a
+        device drawing an average of 10mA would last 50 hours. Battery life
+        guarantees are an important invariant for any mobile product as they
+        provide assurance to the users.
+
+        \item \emph{Maximum downtime for system reset.}
+        
+        Following a device reset (either operator-initiated, required by an
+        unrecoverable fault, or software update), an upper time bound should be
+        imposed between system shutdown (last data collection and report cycle)
+        to restoration of data collection and processing. This is important for
+        a medical device to minimise the probability of a failure to report
+        clinically significant sensor findings.
+
+        An upper bound of one minute is proposed; since UDP is connectionless, a
+        potentially slow handshake with the database server does not have to be
+        established, and given the earlier requirements of sufficiently large
+        local buffers, a long reboot cycle is not necessary. In the case of a
+        software update, any relevant files could be downloaded and verified
+        prior to device shutdown to encourage minimal downtime.
+    \end{itemize}
+    \item \begin{enumerate}
+        \item The current draws specified by the given power profile sum to a
+        total.
+        
+        The LCD backlight draws a continuous $15\mla$; each $100\mls$, an
+        additional $5\mla$ is used for $1\mls$ for the LCD to communicate with
+        the CPU. The duty cycle of the LCD-CPU communication is therefore
+        $1\mls/100\mls=0.01$, so the average current is $I_\text{LCD} = 15\mla +
+        5\mla \cdot 0.01 = 15.05\mla$.
+
+        The sensors draw $5\mla$ for $2\mls$ during a $100\mls$ cycle, hence the
+        current is $ I_\text{sensors} = 5\mla \cdot 2\mls / 100\mls = 0.1\mla $.
+        MQTT transmissions similarly draw $20\mla$ for $50\mls$ during a
+        $5\second$ cycle, hence $ I_\text{transmission} = 20\mla \cdot
+        50\mls/5\second = 0.2\mla $. The MCU is active and drawing $10\mla$
+        during the combined duty cycles of the sensors and transmissions; it is
+        otherwise idle and drawing $0.2\mla$.
+        
+        Thus, the total MCU current draw is $ I_\text{MCU} = 10\mla (2\mls /
+        100\mls + 50\mls/5\second) + 0.2\mla(1 - 2\mls/100\mls -
+        50\mls/5\second) = 0.494\mla $. Therefore, the total power consumption
+        is
+        \begin{equation}
+            I = 15.05\mla + 0.1\mla + 0.2\mla + 0.494\mla = 15.844\mla.
+        \end{equation}
+        With the $500\mah$ battery, this could last approximately 31.56 hours.
+
+        \item With an estimated lifetime of 31.56 hours, the device does not
+        meet its target of 48 hours. If the continuous LCD backlight current
+        draw could be reduced to $9.5\mla$, $ I_\text{LCD}^\prime = 9.55\mla $,
+        so the total current draw on the revised power profile would be $
+        I^\prime = 10.334\mla $, hence the total lifetime $ 500\mah/I^\prime =
+        48.33\hour $.
+    \end{enumerate}
+    \item The following RTOS tasks could be defined in an implementation of the
+        system. Tasks, identified as (T$i$) are specified in descending order of
+        relative priority. Inter-task communication buffers are identified as
+        (B$j$). It is assumed that the following task architecture covers the
+        main runtime of the application, with one-time initialisation steps,
+        such as creation of the network socket and configuration of sensors,
+        completed before the main scheduler is executed.
+        \begingroup
+        \renewcommand\theenumii{T\arabic{enumii}}
+        \begin{enumerate}
+            \item \emph{Data acquisition.} The highest-priority task interacts
+                with the sensor hardware through some on-board interface (e.g.
+                GPIO) to load the reported values into memory and enqueues the
+                raw quantities onto (B1).
+            \item \emph{Post-processing.} The post-processing task retrieves
+                items from (B1), performs any necessary post-processing (e.g.
+                the sensory fusion algorithm) and enqueues duplicates of the
+                results onto buffers (B2) and (B3). This task has a period of
+                $100\mls$, since it executes following the periodic release of
+                (T1).
+            \item \emph{Button reading.} The button task receives events from
+                the local buttons, attached through some simple on-board
+                interface, and enqueues relevant updates onto (B4) for the
+                attention of the GUI task. It also debounces button-presses to
+                prevent duplicated entries, so has a relatively high period of
+                $100\mls$.
+            \item \emph{MQTT transmission.} The MQTT transmission task
+                simultaneously retrieves processed results from (B3), prepares
+                them as a UDP/IP packet in the format expected by the database
+                server, and sends them over a previously established socket.
+                This task is released periodically every $5\second$.
+            \item \emph{GUI management.} The GUI task acts as a state machine to
+                manage local interaction with the device. It performs regular
+                non-blocking reads from (B4) to respond to any button presses,
+                and communicates regularly with the LCD to display any requested
+                information.
+            \item \emph{Local storage.} The local storage task consumes
+                processed results from (B2) and records them in some persistent
+                storage (possibly present on the non-volatile flash or volatile
+                RAM) using a known data structure.
+        \end{enumerate}
+        \endgroup
+
+        For the allocation and execution of these tasks, a deadline-monotonic
+        scheme could be used, whereby tasks with shorter relative deadlines are
+        assigned a higher priority. Choice of this scheduling scheme preserves
+        the safety-critical ordering of the tasks, such as prioritising data
+        acquisition to avoid missing patient data, and reduces the chances of
+        buffer overflow. All inter-task communication data structures are FIFO
+        thread-safe queues. Mutexes may be required to protected shared
+        resources such as the local storage or network stack.
+    \item \begin{enumerate}
+        \item \Cref{table:evals} shows the system state described by $x(k)$,
+            $y(k)$, and $z(k)$ evaluated over the integer parameter $1 \leq k \leq
+            4$. The results in \Cref{table:evals} were computed with
+            \emph{Mathematica} using \mma{RecurrenceTable}.
+        \begin{table}
+            \centering%
+            \begin{tabular}{l|lll}
+                $k$ & $x(k)$ & $y(k)$ & $z(k)$ \\
+                \toprule
+                1 & 1 & 2 & 1.1 \\
+                2 & 3 & 3.1 & 1.1 \\
+                3 & 4.1 & 3.1 & 3.3 \\
+                4 & 4.1 & 5.3 & 4.51 \\
+                \bottomrule
+            \end{tabular}
+            \caption{Evaluation of the fusion algorithm state for
+                $1 \leq k \leq 4$.}%
+            \label{table:evals}
+        \end{table}%
+
+        \item To determine the convergence characteristics of the system, we
+        consider the system update matrix. The $k$th term of the system, for $k
+        > 0$, is computed according to the update matrix $U$:
+        \begin{equation}
+            \vec{v}_k = \underbrace{\begin{pmatrix}
+                0 & 1 & 0 \\
+                0 & 0 & 1 \\
+                1.1 & 0 & 0 \end{pmatrix}}_U \vec{v}_{k+1} +
+            \begin{pmatrix} 1 \\ 2 \\ 0 \end{pmatrix}\quad \text{where}\quad
+            \vec{v}_i = \begin{pmatrix}
+                x(i) \\ y(i) \\ z(i)
+            \end{pmatrix}.
+        \end{equation}
+
+        The characteristic polynomial of $U$ is
+        \begin{align}
+            p_U\lambda &= \det{(\lambda I - U)} \\
+            &= \det{\begin{pmatrix}
+                    \lambda & -1 & 0 \\
+                    0 & \lambda & -1 \\
+                    -1.1 & 0 & \lambda
+                \end{pmatrix}} \\
+            &= \lambda^3 - 1.1.
+        \end{align}
+
+        Defining $\lambda_{1,2,3}$ such that $p_U\lambda_{1,3,3} := 0$, we can
+        derive the solutions of the characteristic polynomial, and hence the
+        eigenvalues of $U$:
+        \begin{equation}
+            \lambda_1 = \sqrt[3]{1.1} \qquad
+            \lambda_{2,3} = \sqrt[3]{1.1}\left( -\frac{1}{2} \pm
+                \frac{\sqrt{3}}{2}i \right).
+        \end{equation}
+        Given that there is at least one eigenvalue with a positive real part
+        ($\Re{\lambda_1} = \sqrt[3]{1.1} > 0$), the system is unstable. It will
+        not converge to a steady state. Where systems have complex-valued
+        eigenvalues, such as $\lambda_{2,3}$, stability requires that all
+        eigenvalues have negative real parts.
+
+        The characteristic polynomial was solved using \emph{Mathematica} with
+        the \mma{Solve}, \mma{CharacteristicPolynomial}, and \mma{ComplexExpand}
+        functions.
+    \end{enumerate}
+\end{enumerate}
+
 \subsection{Question 2}
 \begin{enumerate}
     \item \begin{enumerate}
-        \item ABC
+        \item In a topology matrix, row edges represent edges of the graph, and
+            columns represent vertices. The entry at position $(i,j)$ has value
+            $((i,j))$ such that
+            \begin{equation}
+                ((i,j)) = \begin{cases}
+                    0 & \text{if edge $i$ does not connect to vertex $j$;} \\
+                    p_{i,j} & \text{if $j$ produces $p_{i,j}$ tokens on the
+                        channel indicated by $i$; or} \\
+                    -c_{i,j} & \text{if $j$ consumes $c_{i,j}$ tokens from the
+                        channel indicated by $i$.}
+                \end{cases}
+            \end{equation}
+
+            \Cref{table:sdf} is a topology table for the given SDF graph.
+            \begin{table}
+                \centering%
+                \begin{tabular}{l|llllll}
+                          & A  & B & C &  D &  E &  F \\ \toprule
+                    $c_1$ & 2 & -1 & 0 &  0 &  0 &  0 \\
+                    $c_2$ & 0 &  1 & 0 & -1 &  0 &  0 \\
+                    $c_3$ & 2 &  0 & 0 & -1 &  0 &  0 \\
+                    $c_4$ & 0 &  0 & 2 & -1 &  0 &  0 \\
+                    $c_5$ & 0 &  0 & 0 &  2 & -2 &  0 \\
+                    $c_6$ & 0 &  0 & 0 &  1 &  0 & -2 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Topology table of the SDF}%
+                \label{table:sdf}
+            \end{table}
+            From \Cref{table:sdf}, we can build the topology matrix $\Gamma$:
+            \begin{equation}
+                \Gamma = \begin{pmatrix}
+                    2 & -1 & 0 &  0 &  0 &  0 \\
+                    0 &  1 & 0 & -1 &  0 &  0 \\
+                    2 &  0 & 0 & -1 &  0 &  0 \\
+                    0 &  0 & 2 & -1 &  0 &  0 \\
+                    0 &  0 & 0 &  2 & -2 &  0 \\
+                    0 &  0 & 0 &  1 &  0 & -2
+                \end{pmatrix}
+            \end{equation}
+        \item For a connected SDF graph with $n$ vertices, there exists a
+            static schedule if and only if its topology matrix $\Gamma$ has
+            rank $n-1$. In this case, $\rank{\Gamma} = 5$, where the SDF graph
+            contains 6 actors, hence there does exist a static schedule. The
+            rank was computed with \emph{Mathematica} using \mma{MatrixRank}.
+
+        \item The relative firing frequencies are determined by the smallest
+            positive $\vec{q} \in \mathbb{Z}^n$ such that $\Gamma \cdot \vec{q}
+            = 0$, where the SDF contains $n$ vertices (or, equivalently, the
+            topology matrix contains $n$ column entries).
+
+            That is, we wish to find the smallest integer coefficients $q_A,
+            \ldots, q_F$ such that
+            \begin{equation}
+                \Gamma \cdot \begin{pmatrix}
+                    q_A \\ q_B \\ q_C \\ q_D \\ q_E \\ q_F
+                \end{pmatrix} = 0.
+            \end{equation}
+
+            We immediately have the relative firing frequencies of each node:
+            \begin{equation}
+                \begin{pmatrix}
+                    q_A \\ q_B \\ q_C \\ q_D \\ q_E \\ q_F
+                \end{pmatrix} =
+                \begin{pmatrix}
+                    1 \\ 2 \\ 1 \\ 2 \\ 2 \\ 1
+                \end{pmatrix}.%
+                \label{eqn:firing-freqs}
+            \end{equation}
+
+            Since the minimised coefficients map exactly to the null space of
+            $\Gamma$, the \emph{Mathematica} \mma{NullSpace} function was used
+            to compute the results in \Cref{eqn:firing-freqs}.
+    \end{enumerate}
+    \item The relative firing frequencies from \Cref{eqn:firing-freqs} can be
+        used to propose PASSes.
+        \begin{enumerate}
+            \item \Cref{table:passes} describes two proposed PASSes for the SDF.
+                \begin{table}
+                    \centering%
+                    \begin{tabular}{l|llllllll}
+                        & & \multicolumn{6}{c}{Minimum Buffer Sizes} & \\
+                        \# & Schedule & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ &
+                            $c_6$ & Total Buffer Cost \\
+                        \toprule
+                        A & \texttt{ABBCDDEEF} & 2 & 2 & 2 & 2 & 4 & 2 & 14 \\
+                        B & \texttt{ACBDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11 \\
+                        \bottomrule
+                    \end{tabular}
+                    \caption{Two distinct PASSes for the SDF}%
+                    \label{table:passes}
+                \end{table}
+            \item Of the two proposed PASSes, (B) is more memory-efficient due
+                to the lower total buffer cost. From a scheduling perspective,
+                the minimum buffer sizes can be reduced by avoiding consecutive
+                production of tokens without immediate consumption.
+        \end{enumerate}
+\end{enumerate}
+
+\subsection{Question 3}
+\begin{enumerate}
+    \item \begin{enumerate}
+        \item To derive the optimal partitioning for the described system, we
+            can use the exact method of Integer Linear Programming. ILP is
+            suitable for this problem given the small number of objects.
+
+            Two partitions are defined: $p_\text{HW}$ to detain components
+            implemented in hardware with the FPGA, and $p_\text{SW}$ to detain
+            components implemented in software with the CPU. The binary
+            variables $x_{i,k}$ are used to denote the allocation of a
+            component, and $f\in p$ denotes that object $f$ is allocated to
+            partition $p$.
+            \begin{equation}
+                x_{i,k} = \begin{cases}
+                    1 & \text{if $f_i \in p_k$} \\
+                    0 & \text{if $f_i \not\in p_k$}
+                \end{cases}
+                \quad\text{for}\quad i\in\left\{ 1,2,3,4,5 \right\}
+                \quad\text{and}\quad k\in\left\{ \text{HW},\text{SW} \right\}
+            \end{equation}
+
+            The quantity $c_{i,k}$ represents the cost if component $f_i$ is in
+            partition $p_k$. To find the optimal partition, we minimise the
+            cumulative cost function:
+
+            \begin{align}
+                C &= \sum_{k \in \left\{ \text{SW}, \text{HW} \right\}}
+                    \sum_{i=1}^n x_{i,k} c_{i,k} \\
+                &= \sum_{i=1}^5 x_{i,\text{SW}} c_{i,\text{SW}} +
+                    \sum_{i=1}^5 x_{i,\text{HW}} c_{i,\text{HW}} \\
+                &= \left( x_{1,\text{SW}} + \ldots + x_{5,\text{SW}} \right) +
+                    \left( x_{1,\text{HW}} + \ldots + x_{5,\text{HW}} \right) \\
+                &= \left( x_{1,\text{HW}} + \ldots + x_{5,\text{HW}} \right)
+            \end{align}
+
+            Since there are only two partitions, the summands over $p_\text{SW}$
+            can be eliminated since the $x_{i,\text{HW}}$ coefficients collapse
+            the software costs to zero. Substituting the cost and timing data,
+            we have the simplified specialised cost function $C_0$:
+            \begin{equation}
+                C_0 = 25 + 25x_{1,\text{HW}} + 20x_{2,\text{HW}} +
+                    35x_{3,\text{HW}} + 15x_{4,\text{HW}} + 10x_{5,\text{HW}}
+                \label{eqn:partition-cost}
+            \end{equation}
+
+            $C_0$ should be minimised, constrained by inequalities on the
+            execution time and total cost. With the alias $x_i :=
+            x_{i,\text{HW}}$, \Cref{table:ilp-bounds} enumerates the constraints
+            on the minimisation problem.
+
+            \begin{table}
+                \centering%
+                \begin{tabular}{ll}
+                    Category & Bound \\
+                    \toprule
+                    Execution Time & $\begin{aligned}[t]
+                        20 &\left(1-x_1\right) + 15\left(1-x_2\right) +
+                        8\left(1-x_3\right) +\\
+                        &12\left(1-x_4\right) + 5\left(1-x_5\right) \leq 30
+                    \end{aligned}$ \\
+                    Cost & $25 + 25x_1 + 20x_2 + 35x_3 + 15x_4 + 10x_5 \leq 70$
+                    \\ \bottomrule
+                \end{tabular}
+                \caption{Inequality conditions for ILP partitioning.}%
+                \label{table:ilp-bounds}
+            \end{table}
+
+            Using \mma{Minimize} from \emph{Mathematica},
+            \Cref{eqn:partition-cost} was minimised on the constraints on
+            \Cref{table:ilp-bounds}. The result is shown by
+            \Cref{table:partitioning}. The cumulative cost is \$65 with runtime
+            of 28ms, which fits within the specified constraints.
+            \begin{table}
+                \centering%
+                \begin{tabular}{llll}
+                    Function & Strategy & Time (ms) & Cost (\$) \\
+                    \toprule
+                    $f_1$ & Hardware & 2 & 30 \\
+                    $f_2$ & Software & 15 & 5 \\
+                    $f_3$ & Software & 8 & 5 \\
+                    $f_4$ & Hardware & 4 & 20 \\
+                    $f_5$ & Software & 5 & 5 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{HW/SW Partitioning}%
+                \label{table:partitioning}
+            \end{table}
+        \item Yes, the partition specified in \Cref{table:partitioning} is
+            optimal, since it was derived analytically without heuristics. This
+            was verified exhaustively by enumerating and checking the bounds of
+            every other valid solution using the \mma{Flatten} and \mma{Reduce}
+            functions from \emph{Mathematica}.
+    \end{enumerate}
+    \item \begin{enumerate}
+        \item \Cref{table:diffusion} traces the diffusion algorithm for
+            processing nodes $A$, $B$, $C$, and $D$ from the component graph. At
+            the initial state, the workload is quite unbalanced. Recall that at
+            iteration $k+1$, the processor $i$ forwards to its neighbour $j$ an
+            amount of load proportional to the difference between its load and
+            its neighbours load:
+            \begin{equation}
+                \Delta_{i,j} = \alpha_{i,j}\left( l_i^{(k)} - l_j^{(k)} \right)
+                \quad \text{where $\alpha_{i,j}$ is the weight between $i$ and
+                $j$},
+            \end{equation}
+            and hence the new load $l_i$ of processor $i$ is given by
+            \begin{equation}
+                l_i^{(k+1)} = l_i^{(k)} - \sum_{i \leftrightarrow j}
+                \Delta_{i,j} \quad \text{where} \quad i,j \in V \quad \text{and}
+                \quad k = 1, 2, \ldots
+            \end{equation}
+            $V$ is the set of interconnects between processors and $i
+            \leftrightarrow j$ denotes the interconnects from $i$ to all
+            neighbours $j$.
+            \begin{table}
+                \centering%
+                \begin{tabular}{l|llll}
+                    Step & A & B & C & D \\
+                    \toprule
+                    0 & 40 & 14 & 8 & 14 \\
+                    1 & 14 & 27.8 & 11.6 & 22.6 \\
+                    2 & 25.7 & 13.1 & 19.8 & 17.4 \\
+                    3 & 14.8 & 24 & 17.1 & 20.2 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Diffusion Algorithm Trace}%
+                \label{table:diffusion}
+            \end{table}
+
+            \Crefrange{table:diffusion-working-1}{table:diffusion-working-3}
+            show the intermediary calculations used to arrive at the quantities
+            listed in \Cref{table:diffusion}. \emph{Mathematica} was used to
+            execute and trace the diffusion algorithm using the \mma{Graph}
+            family of functions.
+        \item To check for convergence to a steady state, we compute the
+            eigenvalues of the update matrix $U$ for the system. Given the
+            generator
+            \begin{equation}
+                l_i^{(k+1)} = l_i^{(k)} - \sum_{i\leftrightarrow j}
+                \Delta_{i,j},
+            \end{equation}
+            the system can be written in the form
+            \begin{equation}
+                \vec{l}^{~(k+1)} = U\vec{l}^{~(k)}
+                \quad\text{for some}\quad U\in\mathbb{R}^{4\times 4}
+                \quad\text{where}\quad \vec{l}^{i} = \begin{pmatrix}
+                    l_A^i \\ l_B^i \\ l_C^i \\ l_D^i
+                \end{pmatrix}.
+            \end{equation}
+
+            With the given weights, set
+            \begin{equation}
+                U := \begin{pmatrix}
+                    0   &  0.6 &   0 & 0.4 \\
+                    0.6 & -0.2 & 0.3 & 0.3 \\
+                    0   &  0.3 & 0.4 & 0.3 \\
+                    0.4 &  0.3 & 0.3 &   0
+                \end{pmatrix}
+            \end{equation}
+            and note the characteristic polynomial
+            \begin{align}
+                p_U\lambda &= \det(\lambda I - U) \\
+                &= \det\begin{pmatrix}
+                    \lambda &          -0.6 &              0 & -0.4    \\
+                       -0.6 & 0.2 + \lambda &           -0.3 & -0.3    \\
+                          0 &          -0.3 & -0.4 + \lambda & -0.3    \\
+                       -0.4 &          -0.3 &           -0.3 & \lambda
+                \end{pmatrix} \\
+                &= \lambda ^4-\frac{\lambda ^3}{5}-\frac{87 \lambda ^2}{100}-
+                    \frac{\lambda}{250}+\frac{37}{500}.
+            \end{align}
+            Defining $\lambda_{1,2,3,4}$ such that $p_U\lambda_{1,2,3,4} := 0$,
+            we can derive the solutions of the characteristic polynomial, and
+            hence the eigenvalues of $U$:
+            \begin{equation}
+                \lambda_1 = -0.765071 \quad
+                \lambda_2 = -0.328958 \quad
+                \lambda_3 = 0.294029 \quad
+                \lambda_4 = 1.
+            \end{equation}
+            Because every non-unitary eigenvalue has magnitude less than one,
+            the system does converge. Since some eigenvalues are negative, the
+            convergence is oscillatory.
+
+            The total workload is $40+14+8+14=76$ units, so the equilibrium
+            workload is
+            \begin{equation}
+                l^\infty_A = l^\infty_B = l^\infty_C = l^\infty_D =
+                \frac{76}{4} = 19.
+            \end{equation}
+
+            Convergence is not guaranteed for this system, since it does not
+            meet the convergence criterion:
+            \begin{equation}
+                \alpha = \frac{1}{\text{max\_degree} + 1} = 1/4,
+            \end{equation}
+            as $\alpha_{i,j} > 1/4$ for all nodes $i,j$. These above results
+            were computed with \emph{Mathematica} using
+            \mma{CharacteristicPolynomial} and \mma{Solve}.
     \end{enumerate}
 \end{enumerate}
-\subsection{Question 3}
+
+\begin{table}[p]
+    \centering%
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^0$ & $l_j^0$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$40$&$14$&$0.6$&$15.6$& \\
+        $A$&$D$&$40$&$14$&$0.4$&$10.4$&$26$\\
+        
+        $B$&$A$&$14$&$40$&$0.6$&$-15.6$& \\
+        $B$&$C$&$14$&$8$&$0.3$&$1.8$& \\
+        $B$&$D$&$14$&$14$&$0.3$&$0$&$-13.8$\\
+
+        $C$&$B$&$8$&$14$&$0.3$&$-1.8$& \\
+        $C$&$D$&$8$&$14$&$0.3$&$-1.8$&$-3.6$\\
+
+        $D$&$A$&$14$&$40$&$0.4$&$-10.4$& \\
+        $D$&$B$&$14$&$14$&$0.3$&$0$& \\
+        $D$&$C$&$14$&$8$&$0.3$&$1.8$&$-8.6$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Working for $k=0 \to k=1$.}%
+    \label{table:diffusion-working-1}
+    \end{subtable}
+
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^1$ & $l_j^1$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$14.0$&$27.8$&$0.6$&$-8.3$& \\
+        $A$&$D$&$14.0$&$22.6$&$0.4$&$-3.4$&$-11.7$\\
+        
+        $B$&$A$&$27.8$&$14.0$&$0.6$&$8.3$& \\
+        $B$&$C$&$27.8$&$11.6$&$0.3$&$4.9$& \\
+        $B$&$D$&$27.8$&$22.6$&$0.3$&$1.6$&$14.7$\\
+
+        $C$&$B$&$11.6$&$27.8$&$0.3$&$-4.9$& \\
+        $C$&$D$&$11.6$&$22.6$&$0.3$&$-3.3$&$-8.2$\\
+
+        $D$&$A$&$22.6$&$14.0$&$0.4$&$3.4$& \\
+        $D$&$B$&$22.6$&$27.8$&$0.3$&$-1.6$& \\
+        $D$&$C$&$22.6$&$11.6$&$0.3$&$3.3$&$5.2$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Working for $k=1 \to k=2$.}%
+    \label{table:diffusion-working-2}
+    \end{subtable}
+
+    \begin{subtable}{\linewidth}
+    \centering%
+    \begin{tabular}{cc|rrrrr}
+        $i$ & $j$ & $l_i^2$ & $l_j^2$ & $\alpha_{i,j}$ &
+            $\Delta_{i,j}$ & $\sum_{i\leftrightarrow j} \Delta_{i,j}$ \\
+        \toprule
+        $A$&$B$&$25.7$&$13.1$&$0.6$&$7.6$& \\
+        $A$&$D$&$25.7$&$17.4$&$0.4$&$3.3$&$10.9$\\
+        
+        $B$&$A$&$13.1$&$25.7$&$0.6$&$-7.6$& \\
+        $B$&$C$&$13.1$&$19.8$&$0.3$&$-2.0$& \\
+        $B$&$D$&$13.1$&$17.4$&$0.3$&$-1.3$&$-10.9$\\
+
+        $C$&$B$&$19.8$&$13.1$&$0.3$&$2.0$& \\
+        $C$&$D$&$19.8$&$17.4$&$0.3$&$0.7$&$2.7$\\
+
+        $D$&$A$&$17.4$&$25.7$&$0.4$&$-3.3$& \\
+        $D$&$B$&$17.4$&$13.1$&$0.3$&$1.3$& \\
+        $D$&$C$&$17.4$&$19.8$&$0.3$&$-0.7$&$-2.8$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Working for $k=2 \to k=3$.}%
+    \label{table:diffusion-working-3}
+    \end{subtable}
+    \caption{Working for the diffusion algorithm trace.}
+\end{table}
 
 \section{Real-Time Systems Theory and Analysis}
 \subsection{Question 4}
+\begin{enumerate}
+    \item For a fixed-priority pre-emptive scheduler with rate monotonic
+        priority ordering, the worst-case response time $R_\tau$ for some task
+        $\tau$ can be calculated according to \Cref{eqn:response-time} where $C$
+        denotes worst-case execution time (WCET), $I$ denotes interference from
+        higher-priority tasks, and $B$ denotes the blocking time.
+        \begin{equation}
+            R = C + I + B
+            \label{eqn:response-time}
+        \end{equation}
+        Since the scheduler is running on a uniprocessor with no shared
+        resources, $B = 0$, and the response time collapses to the sum of the
+        WCET and interference.
+
+        In rate monotonic scheduling, tasks with lesser periods are assigned
+        higher priorities. Therefore, of the specified tasks, the execution
+        priorities are
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6,
+        \end{equation}
+        where $\alpha > \beta$ indicates task $\alpha$ executes with higher
+        priority. To compute $R_i$ in a closed form for some task $i$, we
+        consider the set of higher-priority tasks $\hp{i}$ and set
+        \begin{align}
+            R_i &= C_i + I_i \\
+            &= C_i + \sum_{j\in\hp{i}} \left\lceil \frac{R_i}{T_j}
+                \right\rceil C_j
+            \label{eqn:rta}
+        \end{align}
+        where $C_i$ and $I_i$ are as described in \Cref{eqn:response-time}, and
+        $T_i$ denotes the task period of task $i$. \Cref{eqn:rta} is known as
+        the \emph{Response-Time Analysis \emph{(RTA)} Equation}. It is solved
+        according to the recurrence relation
+        \begin{equation}
+            w_i^{(n+1)} = C_i + \sum_{j\in\hp{i}} \left\lceil
+                \frac{w_i^{(n)}}{T_j} \right\rceil C_j,
+        \end{equation}
+        where $w_i^0 \geq w_i^1 \geq \ldots \geq w_i^n \geq \ldots$
+        (monotonically non-decreasing).
+
+        The response times for tasks $\tau_{1,2,3,4,5,6}$ are given by
+        \Cref{table:rm-response-times} and were computed with the C++ source
+        code and relevant outputs provided in \Cref{sec:cpp}\footnote{In
+        particular, the function \texttt{RTA::ResponseTimeAnalyser::rta} was
+        used from \texttt{RTA/ResponseTimeAnalyser.hpp}.}. Note that $\tau_6$
+        does not have a determined response time since it missed the
+        corresponding deadline. \Cref{table:rm-response-times-trace} traces
+        execution of the RTA recurrence showing all intermediary steps.
+
+        \begin{table}[p]
+            \centering%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{cc}
+                    $i$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 6 \\
+                    $\tau_3$ & 11 \\
+                    $\tau_2$ & 25 \\
+                    $\tau_5$ & 83 \\
+                    $\tau_1$ & 134 \\
+                    $\tau_6$ & --- \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RM-ordered response times}%
+                \label{table:rm-response-times}
+            \end{subtable}~%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{cc}
+                    $i$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 6 \\
+                    $\tau_3$ & 11 \\
+                    $\tau_2$ & 25 \\
+                    $\tau_5$ & 83 \\
+                    $\tau_6$ & 184 \\
+                    $\tau_1$ & 287 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{DM-ordered response times}%
+                \label{table:dm-response-times}
+            \end{subtable}
+            \caption{Overall RTA Task Response Times}
+        \end{table}
+
+        \begin{table}[p]
+            \centering%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{llll}
+                    $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 0 & 6 & 6 \\
+                    \midrule
+                    $\tau_3$ & 0 & 11 \\
+                    $\tau_3$ & 1 & 11 & 11 \\
+                    \midrule
+                    $\tau_2$ & 0 & 25 \\
+                    $\tau_2$ & 1 & 25 & 25 \\
+                    \midrule
+                    $\tau_5$ & 0 & 66 \\
+                    $\tau_5$ & 1 & 77 \\
+                    $\tau_5$ & 2 & 83 \\
+                    $\tau_5$ & 3 & 83 & 83 \\
+                    \midrule
+                    $\tau_1$ & 0 & 80 \\
+                    $\tau_1$ & 1 & 103 \\
+                    $\tau_1$ & 2 & 128 \\
+                    $\tau_1$ & 3 & 134 \\
+                    $\tau_1$ & 4 & 134 & 134 \\
+                    \midrule
+                    $\tau_6$ & 0 & 150 \\
+                    $\tau_6$ & 1 & 187 \\
+                    $\tau_6$ & 2 & 204 \\
+                    $\tau_6$ & 3 & 204 & \emph{Missed.} \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RTA trace from RM-ordered tasks}%
+                \label{table:rm-response-times-trace}
+            \end{subtable}~%
+            \begin{subtable}{.48\linewidth}
+                \centering%
+                \begin{tabular}{llll}
+                    $i$ & $n$ & $w_i^{(n)}$ & $R_i$ \\
+                    \toprule
+                    $\tau_4$ & 0 & 6 & 6 \\
+                    \midrule
+                    $\tau_3$ & 0 & 11 \\
+                    $\tau_3$ & 1 & 11 & 11 \\
+                    \midrule
+                    $\tau_2$ & 0 & 25 \\
+                    $\tau_2$ & 1 & 25 & 25 \\
+                    \midrule
+                    $\tau_5$ & 0 & 66 \\
+                    $\tau_5$ & 1 & 77 \\
+                    $\tau_5$ & 2 & 83 \\
+                    $\tau_5$ & 3 & 83 & 83 \\
+                    \midrule
+                    $\tau_6$ & 0 & 130 \\
+                    $\tau_6$ & 1 & 167 \\
+                    $\tau_6$ & 2 & 178 \\
+                    $\tau_6$ & 3 & 184 \\
+                    $\tau_6$ & 4 & 184 \\
+                    \midrule
+                    $\tau_1$ & 0 & 133 \\
+                    $\tau_1$ & 1 & 187 \\
+                    $\tau_1$ & 2 & 204 \\
+                    $\tau_1$ & 3 & 264 \\
+                    $\tau_1$ & 4 & 281 \\
+                    $\tau_1$ & 5 & 287 \\
+                    $\tau_1$ & 6 & 287 & 287 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{RTA trace from DM-ordered tasks}%
+                \label{table:dm-response-times-trace}
+            \end{subtable}
+            \caption{RTA Algorithm Traces}
+        \end{table}
+    \item To assess the schedulability of the task set without using RTA, we can
+        use the Liu-Layland (L\&L) test, also known as \emph{Rate Monotonic
+        Priority Analysis} (for fixed-priority scheduling). For task sets
+        $\left\{ \tau_1, \ldots, \tau_i, \ldots, \tau_N \right\}$ such that $D_i
+        = T_i$ for all $1 \leq i \leq N$,
+        \begin{equation}
+            U := \sum_{i=1}^N \frac{C_i}{T_i} \leq N\left( 2^{1/N}-1 \right),
+        \end{equation}
+        where $N$ is the number of tasks\footnote{For an arbitrarily large
+        number of tasks, we can observe that $ \lim_{N\to\infty} N\left( 2^{1/N}
+        - 1 \right) = \log{2} $, where $\log(\cdot)$ represents an evaluation of
+        the natural logarithm.}, is a simple sufficient but not necessary test
+        of schedulability. If this test is performed for the task set $ \left\{
+        \tau_{1,2,3,4,5,6} \right\} $,
+        \begin{align}
+            U &= \sum_{i=1}^6 \frac{C_i}{T_i} \\
+            &= 0.748 \\
+            &> 6 \left( 2^{1/6} - 1 \right) \\
+            &= 0.734772.
+        \end{align}
+        The above results were computed with \emph{Mathematica} using standard
+        arithmetic functions. However, this test on the given task set is not
+        particularly useful for two reasons:
+        \begin{itemize}
+            \item The deadlines are not explicit (i.e. $ D \neq T $); and
+            \item Even were the deadlines explicit, $U$ exceeds the bound, and
+                the test would be inconclusive. In that case, RTA would be
+                required anyway.
+        \end{itemize}
+        Utilisation-based tests are sometimes useful due to their worse-case
+        average runtime complexity of $\mathcal{O}(N)$, but for small, simple
+        task sets with fixed-priority ordering, exact methods such as RTA should
+        normally be preferred.
+    \item If deadline-monotonic (DM) priority ordering is used, whereby tasks
+        are ordered by shortest deadline rather than the shortest period, the
+        execution priorities become
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_6 > \tau_1.
+        \end{equation}
+
+        \Cref{table:dm-response-times} lists the revised response times under
+        the DM ordering scheme, and \Cref{table:dm-response-times-trace}
+        provides an algorithm trace. In contrast to the RTA on the RM-ordered
+        task set, $\tau_1$ has a response time of $287\mls$ and $\tau_6$ has a
+        response time of $184\mls$. As $R_i$ is determined for all tasks, the
+        task set is scheduleable.
+
+        These results were attained with the C++ source code detained in
+        \Cref{sec:cpp}\footnote{To switch the priority-ordering scheme, the
+        \href{https://cppreference.com/cpp/container/set}{ordered set} was
+        instantiated to use \texttt{DMTaskComparator} as opposed to
+        \texttt{RMTaskComparator}.}.
+    \item Under RM-priority ordering, the task set can be scheduled if $\tau_6$
+        has a WCET less than or equal to 49. This result was computed using the
+        C++ routines given in \Cref{sec:cpp} with brute-force iterative
+        application of the standard RTA algorithm.
+\end{enumerate}
+
 \subsection{Question 5}
+\begin{enumerate}
+    \item For a task $i$ involved with $K$ resources, the maximum blocking time
+        $B_i$ over its $m$ critical sections is given by
+        \begin{equation}
+            B_i = \sum_{k\in K} \usage{(k,i)} \cs{k}
+        \end{equation}
+        where $\cs{k}$ is the computational cost of executing the longest $k$-th
+        critical section called by a lower-priority task. $\usage$ is the
+        indicator function such that
+        \begin{equation}
+            \usage{(k,i)} = \begin{cases}
+                1 &\text{if}~%
+                    \exists\left\{t_\alpha,t_\beta\right\}
+                        \left(t_\alpha < i \land
+                            \uses{\left(k,t_\alpha\right)}
+                        \right) \land
+                        \left(t_\beta \geq i \land
+                            \uses{\left(k,t_\beta\right)}
+                        \right)
+                    \text{;} \\
+                0 &\text{otherwise,}
+            \end{cases}
+        \end{equation}
+        where $t_\alpha,t_\beta$ are tasks, operators $<$ and $\geq$ compare
+        tasks by priorities, and $\uses{(r,t)}$ is a predicate encoding whether
+        resource $r$ is used by task $t$.
+
+        Under an RM ordering scheme, the given tasks $\tau_{1,2,3,4,5,6}$ have
+        the same priorities described previously, restated here for clarity:
+        \begin{equation}
+            \tau_4 > \tau_3 > \tau_2 > \tau_5 > \tau_1 > \tau_6.
+        \end{equation}
+        \Cref{table:pip-blocking} enumerates the maximum blocking times of each
+        task under the simple \emph{Priority Inheritance} (PIP) scheme.
+
+        \begin{table}
+            \centering% TODO
+            \begin{subtable}{.33\linewidth}
+                \centering%
+                \begin{tabular}{ll}
+                    $i$ & $B_i$ \\
+                    \toprule
+                    $\tau_1$ & \\
+                    $\tau_2$ & \\
+                    $\tau_3$ & \\
+                    $\tau_4$ & \\
+                    $\tau_5$ & \\
+                    $\tau_6$ & \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Blocking times under PIP.}%
+                \label{table:pip-blocking}
+            \end{subtable}~%
+            \begin{subtable}{.33\linewidth}
+                \centering%
+                \begin{tabular}{lll}
+                    $R$ & Req. Task & $\Pi_R$ \\
+                    \toprule
+                    $A$ & $\tau_4$ & 6 \\
+                    $B$ & $\tau_4$ & 6 \\
+                    $C$ & $\tau_3$ & 5 \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Resource ceilings.}%
+                \label{table:resource-ceilings}
+            \end{subtable}~%
+            \begin{subtable}{.33\linewidth}
+                \centering% TODO
+                \begin{tabular}{ll}
+                    $i$ & $B_i$ \\
+                    \toprule
+                    $\tau_1$ & \\
+                    $\tau_2$ & \\
+                    $\tau_3$ & \\
+                    $\tau_4$ & \\
+                    $\tau_5$ & \\
+                    $\tau_6$ & \\
+                    \bottomrule
+                \end{tabular}
+                \caption{Blocking times under ICPP.}%
+                \label{table:icpp-blocking}
+            \end{subtable}
+            \caption{Maximum blocking times for tasks $\tau_{1,2,3,4,5,6}$ and
+                resource ceilings for $A,B,C$.}
+        \end{table}
+    \item The resource ceilings $\Pi_{A,B,C}$ of each resource $A,B,C$ are given
+        in \Cref{table:resource-ceilings}. In each case, the highest-priority
+        requesting task is provided with its numerical priority.
+        \Cref{table:icpp-blocking} enumerates the blocking times of each task
+        under the \emph{Intermediate Priority Ceiling Inheritance} (ICPP)
+        scheme.
+    \item \begin{enumerate}
+        \item TODO
+        \item TODO
+    \end{enumerate}
+\end{enumerate}
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
+
+\appendix
+\section{C++ Source Code and Raw Outputs}\label{sec:cpp}
+
+\subsection{Response-Time Analysis}
+\subsubsection{RTA/Task.hpp}
+\lstinputlisting[language=C++]{RTA/Task.hpp}
+
+\clearpage\subsubsection{RTA/ResponseTimeAnalyser.hpp}
+\lstinputlisting[language=C++]{RTA/ResponseTimeAnalyser.hpp}
+
+\clearpage\subsubsection{RTA/driver.cpp}
+\lstinputlisting[language=C++]{RTA/driver.cpp}
+
+\clearpage\subsubsection{RTA/rm-output.txt}
+\lstinputlisting{RTA/rm-output.txt}
+
+\clearpage\subsubsection{RTA/dm-output.txt}
+\lstinputlisting{RTA/dm-output.txt}
 
 \end{document}

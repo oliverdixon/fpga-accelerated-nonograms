@@ -1,0 +1,8 @@
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
+
+#define SOLVER_LOG
+#define VIDEO_LOG
+#define PUZZLE_LOG
+
+#endif // CONFIGURATION

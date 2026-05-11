@@ -11,6 +11,11 @@ report/*.dirty.nb
 # Ignore generated platform from Vivado
 vitis_workspace/Nonogram
 
-sw-prototyping/docs
-sw-prototyping/cmake-build-*
+# Ignore Doxygen
+vitis_workspace/SolverCore/docs
+
+# Ignore startup artefacts from Vivado
+vivado*.jou
+vivado*.log
+vivado_pid*.str
 

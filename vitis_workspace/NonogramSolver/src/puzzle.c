@@ -2,6 +2,7 @@
 #include <lwip/sockets.h>
 #include <xil_printf.h>
 
+#include "chunks.h"
 #include "logging.h"
 #include "puzzle.h"
 #include "solver.h"
@@ -65,7 +66,7 @@ int puzzle_parse(
 
     dst->solution_semaphore = bitmap_mutex;
     dst->solution_bitmap = bitmap_buffer;
-    dst->is_solved = false;
+    dst->solved_state = SEARCH_NOT_RUN;
 
     return 0;
 }
@@ -87,4 +88,9 @@ void puzzle_print(
         print("Puzzle: INVALID\r\n");
 
     print("\r\n");
+}
+
+void puzzle_free(const struct Puzzle * const puzzle)
+{
+    chunk_free(&puzzle->chunk);
 }

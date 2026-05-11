@@ -1,5 +1,5 @@
+#include <FreeRTOS.h>
 #include <assert.h>
-
 #include <lwip/sockets.h>
 #include <xil_cache.h>
 #include <xil_printf.h>
@@ -15,6 +15,8 @@
 #include "video.h"
 
 #define THREAD_STACKSIZE 1024
+
+static uint8_t recv_buffer[1024]; // TODO big enough?
 
 static void accept_input_task(void *);
 static void request_protocol_task(void *);
@@ -92,8 +94,11 @@ static void draw_puzzles_task(
     struct Puzzle puzzle_info;
 
     while (1)
-        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE)
+        if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
+            vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO + 1);
             video_draw_puzzle(&video_state, &puzzle_info);
+            vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO - 1);
+        }
 
     vTaskDelete(NULL);
 }
@@ -111,10 +116,8 @@ static void solve_puzzles_task(
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             solver_solve(&solver, &puzzle_info);
-            if (puzzle_info.is_solved) {
-                xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
-                xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
-            }
+            xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
+            xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
         }
 
     vTaskDelete(NULL);
@@ -127,36 +130,35 @@ static int udp_receive_message(
     const enum MessageType message_type,
     const struct Metadata * const match_metadata
 ) {
-    static uint8_t buffer[256]; // TODO big enough?
     static struct ServerError error;
 
     socklen_t src_len = sizeof(*src);
     const ssize_t data_len = lwip_recvfrom(
-        sock, buffer, sizeof(buffer) / sizeof(*buffer), 0, (struct sockaddr *)src, &src_len
+        sock, recv_buffer, sizeof(recv_buffer) / sizeof(*recv_buffer), 0, (struct sockaddr *)src, &src_len
     );
 
     if (data_len >= 0) {
-        if (*buffer == MSG_ERROR) {
-            if (error_parse(&error, buffer) == 0)
+        if (*recv_buffer == MSG_ERROR) {
+            if (error_parse(&error, recv_buffer) == 0)
                 error_print(&error);
 
             // Well-defined error handled.
             return -1;
-        } else if (message_type == *buffer) {
-            switch (*buffer) {
+        } else if (message_type == *recv_buffer) {
+            switch (*recv_buffer) {
             case MSG_PUZZLE_INFO:
-                return puzzle_parse(dst, buffer);
+                return puzzle_parse(dst, recv_buffer);
             case MSG_CHUNK_DATA:
-                return chunk_parse(dst, match_metadata, buffer);
+                return chunk_parse(dst, match_metadata, recv_buffer);
             case MSG_RESULT:
-                return result_parse(dst, match_metadata, buffer);
+                return result_parse(dst, match_metadata, recv_buffer);
             default:
-                logging_printf("Received message of type %d does not have a parser.", *buffer);
+                logging_printf("Received message of type %d does not have a parser.", *recv_buffer);
                 return -1;
             }
         }
 
-        logging_printf("Received message of type %d, but expected %d.", *buffer, message_type);
+        logging_printf("Received message of type %d, but expected %d.", *recv_buffer, message_type);
         return -1;
     }
 
@@ -210,6 +212,9 @@ static void build_puzzle_data(
     xQueueSend(challenge_queue, &puzzle_info, portMAX_DELAY);
 }
 
+static StackType_t solve_puzzles_stack[8 * THREAD_STACKSIZE];
+static StaticTask_t solve_puzzles_pcb;
+
 static void request_protocol_task(
     void * const data
 ) {
@@ -220,9 +225,9 @@ static void request_protocol_task(
         NULL
     );
 
-    xTaskCreate(
-        &solve_puzzles_task, "solve_puzzles_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
-        NULL
+    xTaskCreateStatic(
+        &solve_puzzles_task, "solve_puzzles_task", 8 * THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
+        solve_puzzles_stack, &solve_puzzles_pcb
     );
 
     xTaskCreate(
