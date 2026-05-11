@@ -1,0 +1,723 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell["EMBS-H Assessment Submission Artefacts", "Title"],
+
+Cell["Exam Candidate Y3898772", "Subtitle"],
+
+Cell[TextData[{
+ "This notebook is submitted as an artefact for the numerical computations \
+done by ",
+ StyleBox["Mathematica",
+  FontSlant->"Italic"],
+ " in support of results provided by the corresponding exam script."
+}], "Text"],
+
+Cell[CellGroupData[{
+
+Cell["Question 1", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["Q1 iv(a)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"RecurrenceTable", "[", "\[IndentingNewLine]",
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]",
+     RowBox[{
+      RowBox[{
+       RowBox[{"x", "[", "k", "]"}], "==",
+       RowBox[{
+        RowBox[{"y", "[",
+         RowBox[{"k", "-", "1"}], "]"}], "+", "1"}]}], ",",
+      "\[IndentingNewLine]",
+      RowBox[{
+       RowBox[{"y", "[", "k", "]"}], "==",
+       RowBox[{
+        RowBox[{"z", "[",
+         RowBox[{"k", "-", "1"}], "]"}], "+", "2"}]}], ",",
+      "\[IndentingNewLine]",
+      RowBox[{
+       RowBox[{"z", "[", "k", "]"}], "==",
+       RowBox[{"1.1", "*",
+        RowBox[{"x", "[",
+         RowBox[{"k", "-", "1"}], "]"}]}]}], ",", "\[IndentingNewLine]",
+      RowBox[{
+       RowBox[{"x", "[", "0", "]"}], "==", "1"}], ",", "\[IndentingNewLine]",
+
+      RowBox[{
+       RowBox[{"y", "[", "0", "]"}], "==", "0"}], ",", "\[IndentingNewLine]",
+
+      RowBox[{
+       RowBox[{"z", "[", "0", "]"}], "==", "0"}]}], "\[IndentingNewLine]",
+     "}"}], ",", "\[IndentingNewLine]",
+    RowBox[{"{",
+     RowBox[{
+      RowBox[{"x", "[", "k", "]"}], ",",
+      RowBox[{"y", "[", "k", "]"}], ",",
+      RowBox[{"z", "[", "k", "]"}]}], "}"}], ",", "\[IndentingNewLine]",
+    RowBox[{"{",
+     RowBox[{"k", ",", "1", ",", "4"}], "}"}]}], "\[IndentingNewLine]", "]"}],
+   "//", "MatrixForm"}]], "Input"]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Q1 iv(b)", "Subsection"],
+
+Cell["\<\
+The stability of a system with an update matrix is determined by its \
+characteristic polynomial.  The coefficients entered symbolically to prevent \
+numerical errors.\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"recurrentUM", "=",
+   RowBox[{
+    RowBox[{"{",
+     RowBox[{
+      RowBox[{"{",
+       RowBox[{"0", ",", "1", ",", "0"}], "}"}], ",",
+      RowBox[{"{",
+       RowBox[{"0", ",", "0", ",", "1"}], "}"}], ",",
+      RowBox[{"{",
+       RowBox[{"1.1", ",", "0", ",", "0"}], "}"}]}], "}"}], "//",
+    "Rationalize"}]}], ";"}], "\[IndentingNewLine]",
+ RowBox[{"%", "//", "MatrixForm"}]}], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"recurrentCP", "=",
+  RowBox[{"CharacteristicPolynomial", "[",
+   RowBox[{"recurrentUM", ",", "\[Lambda]"}], "]"}]}]], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Solve", "[",
+   RowBox[{
+    RowBox[{"recurrentCP", "==", "0"}], ",", "\[Lambda]"}], "]"}], "//",
+  "ComplexExpand"}]], "Input"]
+}]]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Question 2", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["Q2 i(b)", "Subsection"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SDFGamma", "=",
+   RowBox[{"{", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{"{",
+      RowBox[{"2", ",",
+       RowBox[{"-", "1"}], ",", "0", ",", "0", ",", "0", ",", "0"}], "}"}],
+     ",", "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"0", ",", "1", ",", "0", ",",
+       RowBox[{"-", "1"}], ",", "0", ",", "0"}], "}"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"2", ",", "0", ",", "0", ",",
+       RowBox[{"-", "1"}], ",", "0", ",", "0"}], "}"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"0", ",", "0", ",", "2", ",",
+       RowBox[{"-", "1"}], ",", "0", ",", "0"}], "}"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"0", ",", "0", ",", "0", ",", "2", ",",
+       RowBox[{"-", "2"}], ",", "0"}], "}"}], ",", "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"0", ",", "0", ",", "0", ",", "1", ",", "0", ",",
+       RowBox[{"-", "2"}]}], "}"}]}], "\[IndentingNewLine]", "}"}]}],
+  ";"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"MatrixRank", "[", "SDFGamma", "]"}]], "Input"]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Q2 i(c)", "Subsection"],
+
+Cell["\<\
+There is no need to explicitly solve for the minimal coefficients here, since \
+the coefficients must be exactly equivalent to the unique null space of the \
+SDF topology matrix.\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"NullSpace", "[", "SDFGamma", "]"}]], "Input"]
+}]]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Question 3", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["Q3 i(a)", "Subsection"],
+
+Cell["\<\
+We define the constraints i.a.w. the question.  The timing deadline and \
+objective function assumes that all HW components run in parallel and with \
+the SW components.\
+\>", "Text"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"swTime", "=",
+   RowBox[{"{",
+    RowBox[{"20", ",", "15", ",", "8", ",", "12", ",", "5"}], "}"}]}],
+  ";"}], "\n",
+ RowBox[{
+  RowBox[{"hwTime", "=",
+   RowBox[{"{",
+    RowBox[{"2", ",", "3", ",", "1", ",", "4", ",", "5"}], "}"}]}],
+  ";"}], "\[IndentingNewLine]",
+ RowBox[{
+  RowBox[{"swCost", "=",
+   RowBox[{"{",
+    RowBox[{"5", ",", "5", ",", "5", ",", "5", ",", "5"}], "}"}]}],
+  ";"}], "\n",
+ RowBox[{
+  RowBox[{"hwCost", "=",
+   RowBox[{"{",
+    RowBox[{"30", ",", "25", ",", "40", ",", "20", ",", "15"}], "}"}]}],
+  ";"}], "\[IndentingNewLine]",
+ RowBox[{
+  RowBox[{
+   RowBox[{"deadline", "=", "30"}], ";"}], " ",
+  RowBox[{"(*", " ",
+   RowBox[{
+    RowBox[{"The", " ", "timing", " ", "deadline"}], ",", " ",
+    RowBox[{
+    "assuming", " ", "all", " ", "HW", " ", "runs", " ", "in", " ",
+     "parallel", " ", "with", " ",
+     RowBox[{"SW", "."}]}]}], " ", "*)"}]}], "\n",
+ RowBox[{
+  RowBox[{
+   RowBox[{"budget", "=", "70"}], ";"}], " ",
+  RowBox[{"(*", " ",
+   RowBox[{"The", " ", "cost", " ",
+    RowBox[{"(", "$", ")"}], " ",
+    RowBox[{"limit", "."}]}], " ", "*)"}]}], "\[IndentingNewLine]",
+ RowBox[{
+  RowBox[{"designVars", "=",
+   RowBox[{"{",
+    RowBox[{"func1", ",", "func2", ",", "func3", ",", "func4", ",", "func5"}],
+     "}"}]}], ";"}]}], "Input"],
+
+Cell["We define the objective functions w.r.t. cost and time.", "Text"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"costObjective", "=",
+    RowBox[{"Total", "[",
+     RowBox[{
+      RowBox[{"swCost", "*",
+       RowBox[{"(",
+        RowBox[{"1", "-", "designVars"}], ")"}]}], "+",
+      RowBox[{"hwCost", "*", "designVars"}]}], "]"}]}], ";"}],
+  " "}], "\[IndentingNewLine]",
+ RowBox[{
+  RowBox[{
+   RowBox[{"timeObjective", "=",
+    RowBox[{"Total", "[",
+     RowBox[{"swTime", "*",
+      RowBox[{"(",
+       RowBox[{"1", "-", "designVars"}], ")"}]}], "]"}]}], ";"}],
+  " "}]}], "Input"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"constraints", "=",
+   RowBox[{"Join", "[", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]",
+      RowBox[{
+       RowBox[{"timeObjective", "<=", "deadline"}], ",",
+       "\[IndentingNewLine]",
+       RowBox[{"costObjective", "<=", "budget"}]}], "\[IndentingNewLine]",
+      "}"}], ",", "\[IndentingNewLine]",
+     RowBox[{"Thread", "[",
+      RowBox[{
+       RowBox[{"hwTime", "*", "designVars"}], "<=", "deadline"}], "]"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"Thread", "[",
+      RowBox[{"0", "<=", "designVars", "<=", "1"}], "]"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{"Element", "[",
+       RowBox[{"designVars", ",", "Integers"}], "]"}], "}"}]}],
+    "\[IndentingNewLine]", "]"}]}], ";"}]], "Input"],
+
+Cell["\<\
+Solve over cost (we could\[CloseCurlyQuote]ve equivalently solved over the \
+time).  Review the results once done.\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ilpResult", "=",
+  RowBox[{"Minimize", "[",
+   RowBox[{
+    RowBox[{"{",
+     RowBox[{"costObjective", ",", "constraints"}], "}"}], ",",
+    "designVars"}], "]"}]}]], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"{",
+   RowBox[{"costObjective", ",", "timeObjective"}], "}"}], "/.",
+  RowBox[{"ilpResult", "[",
+   RowBox[{"[", "2", "]"}], "]"}]}]], "Input"]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Q3 i(b)", "Subsection"],
+
+Cell["\<\
+Verifies  that  there  is  no  other  solution with lesser objectives by \
+enumerating all valid solutions over the design variables . This  is  \
+expected  since  the  above  was  the  result  of  Integer  Linear  \
+Programming, which is an exact method for design-space partitioning.\
+\>", "Text"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"Flatten", "@",
+   RowBox[{"{", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{
+      RowBox[{"Total", "[",
+       RowBox[{"swTime", "*",
+        RowBox[{"(",
+         RowBox[{"1", "-", "designVars"}], ")"}]}], "]"}], "<=", "deadline"}],
+      ",", "\[IndentingNewLine]",
+     RowBox[{"costObjective", "<=",
+      RowBox[{"ilpResult", "[",
+       RowBox[{"[", "1", "]"}], "]"}]}], ",", "\[IndentingNewLine]",
+     RowBox[{"Thread", "[",
+      RowBox[{
+       RowBox[{"hwTime", "*", "designVars"}], "<=", "deadline"}], "]"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"Thread", "[",
+      RowBox[{"0", "<=", "designVars", "<=", "1"}], "]"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"Element", "[",
+      RowBox[{"designVars", ",", "Integers"}], "]"}]}], "\[IndentingNewLine]",
+     "}"}]}], "//", "Reduce"}]], "Input"]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Q3 ii(a)", "Subsection"],
+
+Cell["Define the dataflow diagram i.a.w. the question.", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"dataflowDiagram", "=",
+   RowBox[{"Graph", "[", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{"UndirectedEdge", "@@@",
+      RowBox[{"{",
+       RowBox[{
+        RowBox[{"{",
+         RowBox[{"a", ",", "b"}], "}"}], ",",
+        RowBox[{"{",
+         RowBox[{"a", ",", "d"}], "}"}], ",",
+        RowBox[{"{",
+         RowBox[{"b", ",", "c"}], "}"}], ",",
+        RowBox[{"{",
+         RowBox[{"b", ",", "d"}], "}"}], ",",
+        RowBox[{"{",
+         RowBox[{"c", ",", "d"}], "}"}]}], "}"}]}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"VertexWeight", "->",
+      RowBox[{"{",
+       RowBox[{"40", ",", "14", ",", "14", ",", "8"}], "}"}]}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"EdgeLabels", "->", "\"\<EdgeWeight\>\""}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{"EdgeWeight", "->",
+      RowBox[{"{",
+       RowBox[{".6", ",", ".4", ",", ".3", ",", ".3", ",", ".3"}], "}"}]}],
+     ",", "\[IndentingNewLine]",
+     RowBox[{"VertexSize", "->", "Medium"}]}], "\[IndentingNewLine]", "]"}]}],
+   ";"}]], "Input"],
+
+Cell["\<\
+Display the graph in its initial configuration.
+N. B. This labelling technique was taken from \
+https://mathematica.stackexchange.com/a/259456\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"ShowGraph", "[",
+    RowBox[{"graph_", ":", "__Graph"}], "]"}], ":=",
+   RowBox[{"Graph", "[", "\[IndentingNewLine]",
+    RowBox[{"dataflowDiagram", ",", "\[IndentingNewLine]",
+     RowBox[{"VertexLabels", "->",
+      RowBox[{"{",
+       RowBox[{"v_", ":>",
+        RowBox[{"Placed", "[",
+         RowBox[{
+          RowBox[{"{",
+           RowBox[{
+            RowBox[{"AnnotationValue", "[",
+             RowBox[{
+              RowBox[{"{",
+               RowBox[{"dataflowDiagram", ",", "v"}], "}"}], ",",
+              "VertexWeight"}], "]"}], ",", "v"}], "}"}], ",",
+          RowBox[{"{",
+           RowBox[{"Center", ",",
+            RowBox[{"{",
+             RowBox[{"After", ",", "Above"}], "}"}]}], "}"}]}], "]"}]}],
+       "}"}]}], ",", "\[IndentingNewLine]",
+     RowBox[{"ImageSize", "->", "Large"}]}], "\[IndentingNewLine]", "]"}]}],
+  ";"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"ShowGraph", "[", "dataflowDiagram", "]"}]], "Input"]
+}]],
+
+Cell["\<\
+Compute the load factor of a single source-destination vertex pair according \
+to the weights.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"ComputeLoadFactor", "[",
+    RowBox[{"sourceWeight_", ",", "destWeight_", ",", "edgeWeight_"}], "]"}],
+   ":=",
+   RowBox[{"edgeWeight", "*",
+    RowBox[{"(",
+     RowBox[{"sourceWeight", "-", "destWeight"}], ")"}]}]}], ";"}]], "Input"],
+
+Cell["\<\
+Compute the load factor of a source\[CloseCurlyQuote]s neighbours and produce \
+records for load differences with each destination.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"ComputeSourceLoadFactor", "[",
+    RowBox[{
+     RowBox[{"edges", ":",
+      RowBox[{"{", "__DirectedEdge", "}"}]}], ",",
+     RowBox[{"graph_", ":",
+      RowBox[{"{", "__Graph", "}"}]}]}], "]"}], ":=",
+   RowBox[{"Module", "[", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{"{",
+      RowBox[{"sourceNode", "=",
+       RowBox[{
+        RowBox[{"edges", "//", "First"}], "//", "First"}]}], "}"}], ",",
+     "\[IndentingNewLine]",
+     RowBox[{
+      RowBox[{
+       RowBox[{"With", "[", "\[IndentingNewLine]",
+        RowBox[{
+         RowBox[{"{", "\[IndentingNewLine]",
+          RowBox[{
+           RowBox[{"destNode", "=",
+            RowBox[{"#", "//", "Last"}]}], ",", "\[IndentingNewLine]",
+           RowBox[{"sourceWeight", "=",
+            RowBox[{"AnnotationValue", "[",
+             RowBox[{
+              RowBox[{"{",
+               RowBox[{"graph", ",", "sourceNode"}], "}"}], ",",
+              "VertexWeight"}], "]"}]}]}], "\[IndentingNewLine]", "}"}], ",",
+         "\[IndentingNewLine]",
+         RowBox[{"With", "[", "\[IndentingNewLine]",
+          RowBox[{
+           RowBox[{"{", "\[IndentingNewLine]",
+            RowBox[{
+             RowBox[{"destWeight", "=",
+              RowBox[{"AnnotationValue", "[",
+               RowBox[{
+                RowBox[{"{",
+                 RowBox[{"graph", ",", "destNode"}], "}"}], ",",
+                "VertexWeight"}], "]"}]}], ",", "\[IndentingNewLine]",
+             RowBox[{"edgeWeight", "=",
+              RowBox[{"AnnotationValue", "[",
+               RowBox[{
+                RowBox[{"{",
+                 RowBox[{"graph", ",",
+                  RowBox[{"sourceNode", "\[UndirectedEdge]", "destNode"}]}],
+                 "}"}], ",", "EdgeWeight"}], "]"}]}]}], "\[IndentingNewLine]",
+             "}"}], ",", "\[IndentingNewLine]",
+           RowBox[{"<|", "\[IndentingNewLine]",
+            RowBox[{
+             RowBox[{"\"\<j\>\"", "->", "destNode"}], ",",
+             "\[IndentingNewLine]",
+             RowBox[{"\"\<l_i\>\"", "->", "sourceWeight"}], ",",
+             "\[IndentingNewLine]",
+             RowBox[{"\"\<l_j\>\"", "->", "destWeight"}], ",",
+             "\[IndentingNewLine]",
+             RowBox[{"\"\<\[Alpha]\>\"", "->", "edgeWeight"}], ",",
+             "\[IndentingNewLine]",
+             RowBox[{"\"\<\[CapitalDelta]\>\"", "->",
+              RowBox[{"ComputeLoadFactor", "[",
+               RowBox[{"sourceWeight", ",", "destWeight", ",", "edgeWeight"}],
+                "]"}]}]}], "\[IndentingNewLine]", "|>"}]}],
+          "\[IndentingNewLine]", "]"}]}], "\[IndentingNewLine]", "]"}], "&"}],
+       "/@", "edges"}]}], "\[IndentingNewLine]", "]"}]}], ";"}]], "Input"],
+
+Cell["\<\
+Encode the sum of load differences into the final record of the source update \
+vector.  (This induces a slightly unintuitive structure, but is required for \
+the format of data expected by the exam Q).\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"SumLoadDifference", "[", "rows_", "]"}], ":=",
+   RowBox[{"ReplacePart", "[",
+    RowBox[{"rows", ",",
+     RowBox[{
+      RowBox[{"-", "1"}], "->",
+      RowBox[{"Append", "[",
+       RowBox[{
+        RowBox[{"Last", "[", "rows", "]"}], ",",
+        RowBox[{"\"\<\[CapitalSigma]\>\"", "->",
+         RowBox[{"Total", "[",
+          RowBox[{
+           RowBox[{
+            RowBox[{"Lookup", "[",
+             RowBox[{"#", ",", "\"\<\[CapitalDelta]\>\""}], "]"}], "&"}], "/@",
+            "rows"}], "]"}]}]}], "]"}]}]}], "]"}]}], ";"}]], "Input"],
+
+Cell["\<\
+Wrap it together and execute the steps of the diffusion algorithm...  The \
+original graph is not mutated.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"DiffusionStep", "[",
+    RowBox[{"graph_", ":", "__Graph"}], "]"}], ":=",
+   RowBox[{"Module", "[", "\[IndentingNewLine]",
+    RowBox[{
+     RowBox[{"{",
+      RowBox[{"data", "=",
+       RowBox[{"SumLoadDifference", "/@",
+        RowBox[{"(",
+         RowBox[{
+          RowBox[{
+           RowBox[{"ComputeSourceLoadFactor", "[",
+            RowBox[{"#", ",", "graph"}], "]"}], "&"}], "/@",
+          RowBox[{"(",
+           RowBox[{"GroupBy", "[",
+            RowBox[{
+             RowBox[{
+              RowBox[{
+               RowBox[{"EdgeList", "[", "graph", "]"}], "/.",
+               RowBox[{
+                RowBox[{"UndirectedEdge", "[",
+                 RowBox[{"u_", ",", "v_"}], "]"}], ":>",
+                RowBox[{"{",
+                 RowBox[{
+                  RowBox[{"u", "\[DirectedEdge]", "v"}], ",",
+                  RowBox[{"v", "\[DirectedEdge]", "u"}]}], "}"}]}]}], "//",
+              "Flatten"}], ",", "First"}], "]"}], ")"}]}], ")"}]}]}], "}"}],
+     ",", "\[IndentingNewLine]",
+     RowBox[{"{",
+      RowBox[{
+       RowBox[{"data", "//", "Dataset"}], ",",
+       RowBox[{"KeyValueMap", "[",
+        RowBox[{
+         RowBox[{
+          RowBox[{"{",
+           RowBox[{"source", ",", "entry"}], "}"}], "|->",
+          RowBox[{"source", "->",
+           RowBox[{"Lookup", "[",
+            RowBox[{
+             RowBox[{"Last", "[", "entry", "]"}], ",",
+             "\"\<\[CapitalSigma]\>\""}], "]"}]}]}], ",", "data"}], "]"}]}],
+      "}"}]}], "\[IndentingNewLine]", "]"}]}], ";"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"DiffusionStep", "[", "dataflowDiagram", "]"}]], "Input"]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Q3 ii(b)", "Subsection"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"DFDGamma", "=",
+   RowBox[{
+    RowBox[{"{",
+     RowBox[{
+      RowBox[{"{",
+       RowBox[{"0", ",", ".6", ",", "0", ",", ".4"}], "}"}], ",",
+      RowBox[{"{",
+       RowBox[{".6", ",",
+        RowBox[{"-", ".2"}], ",", ".3", ",", ".3"}], "}"}], ",",
+      RowBox[{"{",
+       RowBox[{"0", ",", ".3", ",", ".4", ",", ".3"}], "}"}], ",",
+      RowBox[{"{",
+       RowBox[{".4", ",", ".3", ",", ".3", ",", "0"}], "}"}]}], "}"}], "//",
+    "Rationalize"}]}], ";"}], "\[IndentingNewLine]",
+ RowBox[{"%", "//", "MatrixForm"}]}], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"dfdCP", "=",
+  RowBox[{"CharacteristicPolynomial", "[",
+   RowBox[{"DFDGamma", ",", "\[Lambda]"}], "]"}]}]], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Solve", "[",
+  RowBox[{
+   RowBox[{"dfdCP", "==", "0"}], ",", "\[Lambda]"}], "]"}]], "Input"]
+}]]
+}]]
+}]],
+
+Cell[CellGroupData[{
+
+Cell["Question 4", "Section"],
+
+Cell[CellGroupData[{
+
+Cell["Q4 ii", "Subsection"],
+
+Cell["\<\
+Define the fixed bound for the L&L test, determined by the number of tasks.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"llBound", "[", "n_", "]"}], ":=",
+   RowBox[{"n",
+    RowBox[{"(",
+     RowBox[{
+      RowBox[{"2", "^",
+       RowBox[{"(",
+        RowBox[{"1", "/", "n"}], ")"}]}], "-", "1"}], ")"}]}]}],
+  ";"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"Limit", "[",
+  RowBox[{
+   RowBox[{"llBound", "[", "n", "]"}], ",",
+   RowBox[{"n", "->", "Infinity"}]}], "]"}]], "Input"]
+}]],
+
+Cell["\<\
+Do the L&L test for the task set given the period-deadline pairs and compare \
+to the bound. Note that this test is not completely appropriate for this task \
+set, since tasks have differing periods and deadlines.\
+\>", "Text"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"llParameters", "=",
+   RowBox[{"{",
+    RowBox[{
+     RowBox[{"{",
+      RowBox[{"20", ",", "500"}], "}"}], ",",
+     RowBox[{"{",
+      RowBox[{"14", ",", "100"}], "}"}], ",",
+     RowBox[{"{",
+      RowBox[{"5", ",", "50"}], "}"}], ",",
+     RowBox[{"{",
+      RowBox[{"6", ",", "25"}], "}"}], ",",
+     RowBox[{"{",
+      RowBox[{"35", ",", "200"}], "}"}], ",",
+     RowBox[{"{",
+      RowBox[{"53", ",", "1000"}], "}"}]}], "}"}]}], ";"}]], "Input"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"Apply", "[",
+   RowBox[{
+    RowBox[{
+     RowBox[{"#1", "/", "#2"}], "&"}], ",", "llParameters", ",",
+    RowBox[{"{", "1", "}"}]}], "]"}], "//",
+  "Total"}], "\[IndentingNewLine]",
+ RowBox[{"%", "//", "N"}]}], "Input"]
+}]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{"First", "[",
+    RowBox[{"Dimensions", "[", "llParameters", "]"}], "]"}], "//",
+   "llBound"}], "//", "N"}]], "Input"]
+}]]
+}]]
+}]]
+}]]
+}]
+(* End of Notebook Content *)
