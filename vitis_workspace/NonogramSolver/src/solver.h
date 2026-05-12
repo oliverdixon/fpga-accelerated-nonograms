@@ -5,12 +5,14 @@
 
 #include <xsolver_toplevel.h>
 
-#define MAX_SIZE (32)
+#define MAX_SIZE (20)
 
 typedef uint32_t line_t;
 typedef uint16_t extent_t;
 
 struct Puzzle;
+
+void solver_initialise_environment();
 
 void solver_solve(
     XSolver_toplevel * solver,

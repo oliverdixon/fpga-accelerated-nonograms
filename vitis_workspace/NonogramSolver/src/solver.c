@@ -8,9 +8,13 @@
 #include "puzzle.h"
 #include "solver.h"
 #include "logging.h"
+#include "ipcore.h"
 
 #define MAX_PATTERN_COUNT (5005)
-#define MAX_SEARCH_DEPTH (512)
+#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
+#define IPCORE_COUNT (2)
+
+// static struct IPCore cores[IPCORE_COUNT];
 
 struct CellRef
 {
@@ -84,11 +88,6 @@ static enum SolverState run_hls_core(
     XSolver_toplevel_Set_out_black(hls_core, (UINTPTR)local_out_black);
     XSolver_toplevel_Set_out_white(hls_core, (UINTPTR)local_out_white);
 
-    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns));
-    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts));
-    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns));
-    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts));
-
     Xil_DCacheFlushRange((UINTPTR)local_in_black, line_length);
     Xil_DCacheFlushRange((UINTPTR)local_in_white, line_length);
 
@@ -161,6 +160,13 @@ static enum SearchResult search(
     line_t * const white,
     const unsigned int depth
 ) {
+    static unsigned int max_seen_depth;
+
+    if (depth > max_seen_depth) {
+        max_seen_depth = depth;
+        logging_printf("Searcher saw new maximum depth of %d.", depth);
+    }
+
     if (depth > MAX_SEARCH_DEPTH)
         return SEARCH_UNKNOWN;
 
@@ -170,7 +176,6 @@ static enum SearchResult search(
     // Do an initial solve attempt with the input grid assignments to see if we have a trivial case.
 
     const enum SolverState status = run_hls_core(puzzle_info, black, white, propagated_black, propagated_white);
-    logging_printf("Solver completed with status: %d", status);
 
     if (status != SOLVER_STUCK) {
         memcpy(black, propagated_black, puzzle_info->width * sizeof(line_t));
@@ -337,6 +342,11 @@ void solver_solve(
         puzzle_info->width, col_patterns, col_counts,
         &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height
     );
+
+    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns));
+    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts));
+    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns));
+    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts));
 
     // Attempt to solve the Nonogram.
 

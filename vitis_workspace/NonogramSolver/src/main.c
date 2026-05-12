@@ -212,7 +212,7 @@ static void build_puzzle_data(
     xQueueSend(challenge_queue, &puzzle_info, portMAX_DELAY);
 }
 
-static StackType_t solve_puzzles_stack[8 * THREAD_STACKSIZE];
+static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE]; // TODO what's going on here?
 static StaticTask_t solve_puzzles_pcb;
 
 static void request_protocol_task(
@@ -226,7 +226,7 @@ static void request_protocol_task(
     );
 
     xTaskCreateStatic(
-        &solve_puzzles_task, "solve_puzzles_task", 8 * THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
+        &solve_puzzles_task, "solve_puzzles_task", 16 * THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
         solve_puzzles_stack, &solve_puzzles_pcb
     );
 

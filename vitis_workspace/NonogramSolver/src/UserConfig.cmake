@@ -41,6 +41,7 @@ set(USER_COMPILE_SOURCES
 "solver.c"
 "result.c"
 "logging.c"
+"ipcore.c"
 )
 
 # -----------------------------------------
