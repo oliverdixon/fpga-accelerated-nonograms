@@ -6,7 +6,7 @@ report/*.out
 report/*.synctex*
 report/*.toc
 report/*.aux
-report/*.bbl
+report/*.bbl*
 report/*.bcf
 report/*.run.xml
 report/*.dirty.nb
