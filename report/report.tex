@@ -113,7 +113,7 @@ Some calculations described in the following exam script were performed with a
 computer. For each response where computer-assisted calculations are presented
 or otherwise relied upon, a description of the computational problem setup is
 given alongside a link to the relevant software implementation. In particular,
-Wolfram \emph{Mathematica} 14.0 and C++23 were used. The C++ code is listed in
+Wolfram \emph{Mathematica} 14.3 and C++23 were used. The C++ code is listed in
 \Cref{sec:cpp} and the exported \emph{Mathematica} notebook has been submitted
 in the archive as \texttt{mma.pdf}.
 
@@ -208,24 +208,30 @@ In line with the assessment regulations, no generative AI/ML features of
         MQTT transmissions similarly draw $20\mla$ for $50\mls$ during a
         $5\second$ cycle, hence $ I_\text{transmission} = 20\mla \cdot
         50\mls/5\second = 0.2\mla $. The MCU is active and drawing $10\mla$
-        during the combined duty cycles of the sensors and transmissions; it is
-        otherwise idle and drawing $0.2\mla$.
+        during the combined duty cycles of the sensors, transmissions, and LCD
+        communications; it is otherwise idle and drawing $0.2\mla$.
         
-        Thus, the total MCU current draw is $ I_\text{MCU} = 10\mla (2\mls /
-        100\mls + 50\mls/5\second) + 0.2\mla(1 - 2\mls/100\mls -
-        50\mls/5\second) = 0.494\mla $. Therefore, the total power consumption
-        is
-        \begin{equation}
-            I = 15.05\mla + 0.1\mla + 0.2\mla + 0.494\mla = 15.844\mla.
-        \end{equation}
-        With the $500\mah$ battery, this could last approximately 31.56 hours.
+        Thus, the total MCU current draw is
+        \begin{align}
+            I_\text{MCU} &= 10\mla (2\mls / 100\mls + 50\mls/5\second +
+                1\mls/100\mls) \\
+            &\qquad+ 0.2\mla(1 - 2\mls/100\mls - 50\mls/5\second -
+                1\mls/100\mls) \\
+            &= 0.592\mla.
+        \end{align}
 
-        \item With an estimated lifetime of 31.56 hours, the device does not
+        Therefore, the average current consumption is
+        \begin{equation}
+            I = 15.05\mla + 0.1\mla + 0.2\mla + 0.592\mla = 15.942\mla.
+        \end{equation}
+        With the $500\mah$ battery, this could last approximately 31.36 hours.
+
+        \item With an estimated lifetime of 31.36 hours, the device does not
         meet its target of 48 hours. If the continuous LCD backlight current
-        draw could be reduced to $9.5\mla$, $ I_\text{LCD}^\prime = 9.55\mla $,
+        draw could be reduced to $9.47\mla$, $ I_\text{LCD}^\prime = 9.47\mla $,
         so the total current draw on the revised power profile would be $
-        I^\prime = 10.334\mla $, hence the total lifetime $ 500\mah/I^\prime =
-        48.33\hour $.
+        I^\prime = 10.417\mla $, hence the total lifetime $ 500\mah/I^\prime
+        \approx 48\hour $.
     \end{enumerate}
     \item The following RTOS tasks could be defined in an implementation of the
         system. Tasks, identified as (T$i$) are specified in descending order of
@@ -240,7 +246,8 @@ In line with the assessment regulations, no generative AI/ML features of
             \item \emph{Data acquisition.} The highest-priority task interacts
                 with the sensor hardware through some on-board interface (e.g.
                 GPIO) to load the reported values into memory and enqueues the
-                raw quantities onto (B1).
+                raw quantities onto (B1). This has a suggested period of
+                $100\mls$.
             \item \emph{Post-processing.} The post-processing task retrieves
                 items from (B1), performs any necessary post-processing (e.g.
                 the sensory fusion algorithm) and enqueues duplicates of the
@@ -252,7 +259,7 @@ In line with the assessment regulations, no generative AI/ML features of
                 interface, and enqueues relevant updates onto (B4) for the
                 attention of the GUI task. It also debounces button-presses to
                 prevent duplicated entries, so has a relatively high period of
-                $100\mls$.
+                $100\mls$ to guarantee UI responsiveness.
             \item \emph{MQTT transmission.} The MQTT transmission task
                 simultaneously retrieves processed results from (B3), prepares
                 them as a UDP/IP packet in the format expected by the database
@@ -266,7 +273,9 @@ In line with the assessment regulations, no generative AI/ML features of
             \item \emph{Local storage.} The local storage task consumes
                 processed results from (B2) and records them in some persistent
                 storage (possibly present on the non-volatile flash or volatile
-                RAM) using a known data structure.
+                RAM) using a known data structure. This task could be
+                event-driven or have a period of $100\mls$ as it does not form
+                part of the performance-critical path.
         \end{enumerate}
         \endgroup
 
@@ -306,7 +315,7 @@ In line with the assessment regulations, no generative AI/ML features of
             \vec{v}_k = \underbrace{\begin{pmatrix}
                 0 & 1 & 0 \\
                 0 & 0 & 1 \\
-                1.1 & 0 & 0 \end{pmatrix}}_U \vec{v}_{k+1} +
+                1.1 & 0 & 0 \end{pmatrix}}_U \vec{v}_{k-1} +
             \begin{pmatrix} 1 \\ 2 \\ 0 \end{pmatrix}\quad \text{where}\quad
             \vec{v}_i = \begin{pmatrix}
                 x(i) \\ y(i) \\ z(i)
@@ -332,11 +341,11 @@ In line with the assessment regulations, no generative AI/ML features of
             \lambda_{2,3} = \sqrt[3]{1.1}\left( -\frac{1}{2} \pm
                 \frac{\sqrt{3}}{2}i \right).
         \end{equation}
-        Given that there is at least one eigenvalue with a positive real part
-        ($\Re{\lambda_1} = \sqrt[3]{1.1} > 0$), the system is unstable. It will
-        not converge to a steady state. Where systems have complex-valued
-        eigenvalues, such as $\lambda_{2,3}$, stability requires that all
-        eigenvalues have negative real parts.
+        Given that there is at least one eigenvalue with an eigenvalue greater
+        than zero, ($\Re{\lambda_1} = \sqrt[3]{1.1} > 0$), the system is
+        unstable. It will not converge to a steady state. Where discrete-time
+        systems have complex-valued eigenvalues, such as $\lambda_{2,3}$,
+        stability requires that all eigenvalues have magnitude less than one.
 
         The characteristic polynomial was solved using \emph{Mathematica} with
         the \mma{Solve}, \mma{CharacteristicPolynomial}, and \mma{ComplexExpand}
@@ -432,8 +441,8 @@ In line with the assessment regulations, no generative AI/ML features of
                         \# & Schedule & $c_1$ & $c_2$ & $c_3$ & $c_4$ & $c_5$ &
                             $c_6$ & Total Buffer Cost \\
                         \toprule
-                        A & \texttt{ABBCDDEEF} & 2 & 2 & 2 & 2 & 4 & 2 & 14 \\
-                        B & \texttt{ACBDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11 \\
+                        A & \texttt{CABBDDEEF} & 2 & 2 & 2 & 2 & 4 & 2 & 14 \\
+                        B & \texttt{CABDEBDEF} & 2 & 1 & 2 & 2 & 2 & 2 & 11 \\
                         \bottomrule
                     \end{tabular}
                     \caption{Two distinct PASSes for the SDF}%
@@ -638,14 +647,14 @@ In line with the assessment regulations, no generative AI/ML features of
                 \frac{76}{4} = 19.
             \end{equation}
 
-            Convergence is not guaranteed for this system, since it does not
-            meet the convergence criterion:
+            Although the sufficient convergence criterion
             \begin{equation}
-                \alpha = \frac{1}{\text{max\_degree} + 1} = 1/4,
+                \alpha = \frac{1}{\text{max\_degree} + 1} = 1/4
             \end{equation}
-            as $\alpha_{i,j} > 1/4$ for all nodes $i,j$. These above results
-            were computed with \emph{Mathematica} using
-            \mma{CharacteristicPolynomial} and \mma{Solve}.
+            is not satisfied by all edges, the eigenvalues of $U$ show that this
+           particular system is still convergent. The above results were
+           computed with \emph{Mathematica} using \mma{CharacteristicPolynomial}
+           and \mma{Solve}.
     \end{enumerate}
 \end{enumerate}
 
@@ -767,7 +776,7 @@ In line with the assessment regulations, no generative AI/ML features of
             w_i^{(n+1)} = C_i + \sum_{j\in\hp{i}} \left\lceil
                 \frac{w_i^{(n)}}{T_j} \right\rceil C_j,
         \end{equation}
-        where $w_i^0 \geq w_i^1 \geq \ldots \geq w_i^n \geq \ldots$
+        where $w_i^0 \leq w_i^1 \leq \ldots \leq w_i^n \leq \ldots$
         (monotonically non-decreasing).
 
         The response times for tasks $\tau_{1,2,3,4,5,6}$ are given by
@@ -913,8 +922,8 @@ In line with the assessment regulations, no generative AI/ML features of
         arithmetic functions. However, this test on the given task set is not
         particularly useful for two reasons:
         \begin{itemize}
-            \item The deadlines are not explicit (i.e. $ D \neq T $); and
-            \item Even were the deadlines explicit, $U$ exceeds the bound, and
+            \item The deadlines are not implicit (i.e. $ D \neq T $); and
+            \item Even were the deadlines implicit, $U$ exceeds the bound, and
                 the test would be inconclusive. In that case, RTA would be
                 required anyway.
         \end{itemize}
@@ -1037,7 +1046,7 @@ In line with the assessment regulations, no generative AI/ML features of
 
         \begin{table}[p]
             \centering%
-            \begin{tabular}{lll|lll}
+            \begin{tabular}{llllll}
                 $i$ &
                     $\left\{ i \right\} \cup \hp{i}$ &
                     $\lp{i}$ &
@@ -1088,7 +1097,9 @@ In line with the assessment regulations, no generative AI/ML features of
                     $k$ &
                     $\Pi_k \stackrel{?}{\geq}
                     \Pr{i}$ &
-                    $\left\{ j \in \lp{i} \colon \uses{(k,j)} \right\}$ &
+                    {$\!\begin{aligned}
+                        \{ j &\in \lp{i} \colon \\[-.5ex] &\uses{(k,j)} \}
+                    \end{aligned}$} &
                     $B_i$ \\
                 \toprule
                 $\tau_4$ & $\left\{ \tau_3, \tau_2, \tau_5, \tau_1, \tau_6
@@ -1205,7 +1216,7 @@ In line with the assessment regulations, no generative AI/ML features of
                         {$\tau_3$ executes, holding $B$}{3}{4} \\
 
                     \ganttbar[bar/.append style={fill=taskblocked}]
-                        {$\tau_4$ blocked}{0}{2}
+                        {$\tau_4$ blocked until $\tau_3$ finishes}{0}{2}
                     \ganttbar[bar/.append style={fill=taskblocked}]{}{3}{4}
                     \ganttbar[bar/.append style={fill=taskrunning}]{}{5}{5}
                 \end{ganttchart}
@@ -1217,6 +1228,21 @@ In line with the assessment regulations, no generative AI/ML features of
 
 \section{Custom Hardware and System Design}
 The solution sources have been submitted as a separate archive.
+\vfill%
+\begin{figure}[h]
+    \newlength\cellsize
+    \setlength\cellsize{0.55cm}
+    \begin{subfigure}{\linewidth}
+        \input{blank-nonogram.tikz.tex}%
+        \caption{Blank Nonogram.}
+    \end{subfigure}\par%
+    \begin{subfigure}{\linewidth}
+        \input{solved-nonogram.tikz.tex}%
+        \caption{Solved Nonogram.}
+    \end{subfigure}
+    \caption{An example Nonogram.}
+\end{figure}
+\vfill%
 
 \appendix
 \section{C++ Source Code and Raw Outputs}\label{sec:cpp}
