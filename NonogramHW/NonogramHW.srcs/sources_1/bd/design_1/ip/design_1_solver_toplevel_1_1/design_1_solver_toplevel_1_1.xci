@@ -4,7 +4,7 @@
     "xci_name": "design_1_solver_toplevel_1_1",
     "cell_name": "solver_toplevel_1",
     "component_reference": "xilinx.com:hls:solver_toplevel:1.0",
-    "ip_revision": "2114605084",
+    "ip_revision": "2114605433",
     "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_1_1",
     "parameters": {
       "component_parameters": {
@@ -24,8 +24,8 @@
         "clk_period": [ { "value": "10", "enabled": false, "usage": "all" } ],
         "machine": [ { "value": "64", "enabled": false, "usage": "all" } ],
         "combinational": [ { "value": "0", "enabled": false, "usage": "all" } ],
-        "latency": [ { "value": "1", "enabled": false, "usage": "all" } ],
-        "II": [ { "value": "2 ~ 12027354276500", "enabled": false, "usage": "all" } ]
+        "latency": [ { "value": "undef", "enabled": false, "usage": "all" } ],
+        "II": [ { "value": "undef", "enabled": false, "usage": "all" } ]
       },
       "model_parameters": {
         "C_S_AXI_AXILITES_ADDR_WIDTH": [ { "value": "7", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -57,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "2114605084" } ],
+        "IPREVISION": [ { "value": "2114605433" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_solver_toplevel_1_1" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
@@ -776,5 +776,5 @@
       }
     }
   },
-  "checksum": "4b512b83"
+  "checksum": "42fd956e"
 }

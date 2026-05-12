@@ -28,9 +28,8 @@
       "solver_toplevel_0": "",
       "solver_toplevel_1": "",
       "control_smc": "",
-      "solver0_data_smc": "",
-      "solver1_data_smc": "",
-      "video_smc": ""
+      "solver0_video_data_smc": "",
+      "solver1_data_smc": ""
     },
     "interface_ports": {
       "DDR": {
@@ -1883,7 +1882,7 @@
             "value": "1"
           },
           "PCW_USE_S_AXI_HP2": {
-            "value": "1"
+            "value": "0"
           },
           "PCW_USE_S_AXI_HP3": {
             "value": "0"
@@ -1933,11 +1932,6 @@
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
             "mode": "Slave",
             "memory_map_ref": "S_AXI_HP1"
-          },
-          "S_AXI_HP2": {
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "mode": "Slave",
-            "memory_map_ref": "S_AXI_HP2"
           }
         },
         "addressing": {
@@ -2663,7 +2657,7 @@
       },
       "solver_toplevel_0": {
         "vlnv": "xilinx.com:hls:solver_toplevel:1.0",
-        "ip_revision": "2114605084",
+        "ip_revision": "2114605433",
         "xci_name": "design_1_solver_toplevel_0_2",
         "xci_path": "ip/design_1_solver_toplevel_0_2/design_1_solver_toplevel_0_2.xci",
         "inst_hier_path": "solver_toplevel_0",
@@ -2697,7 +2691,7 @@
       },
       "solver_toplevel_1": {
         "vlnv": "xilinx.com:hls:solver_toplevel:1.0",
-        "ip_revision": "2114605084",
+        "ip_revision": "2114605433",
         "xci_name": "design_1_solver_toplevel_1_1",
         "xci_path": "ip/design_1_solver_toplevel_1_1/design_1_solver_toplevel_1_1.xci",
         "inst_hier_path": "solver_toplevel_1",
@@ -2738,7 +2732,7 @@
         "has_run_ip_tcl": "true",
         "parameters": {
           "NUM_MI": {
-            "value": "5"
+            "value": "6"
           },
           "NUM_SI": {
             "value": "1"
@@ -2762,9 +2756,14 @@
               "M01_AXI",
               "M02_AXI",
               "M03_AXI",
-              "M04_AXI"
+              "M04_AXI",
+              "M05_AXI"
             ],
             "bd_attributes": {
+              "BRIDGES": {
+                "value": "M00_AXI:M01_AXI:M02_AXI:M03_AXI:M04_AXI:M05_AXI",
+                "value_src": "auto"
+              },
               "TYPE": {
                 "value": "interior",
                 "value_src": "default"
@@ -2925,19 +2924,50 @@
                 "value_src": "default"
               }
             }
+          },
+          "M05_AXI": {
+            "mode": "Master",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "NUM_READ_OUTSTANDING": {
+                "value": "8"
+              },
+              "NUM_READ_THREADS": {
+                "value": "1"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "8"
+              },
+              "NUM_WRITE_THREADS": {
+                "value": "1"
+              },
+              "RUSER_BITS_PER_BYTE": {
+                "value": "0"
+              },
+              "WUSER_BITS_PER_BYTE": {
+                "value": "0"
+              }
+            },
+            "bd_attributes": {
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
           }
         }
       },
-      "solver0_data_smc": {
+      "solver0_video_data_smc": {
         "vlnv": "xilinx.com:ip:smartconnect:1.0",
         "ip_revision": "28",
         "xci_name": "design_1_smartconnect_1_0",
         "xci_path": "ip/design_1_smartconnect_1_0/design_1_smartconnect_1_0.xci",
-        "inst_hier_path": "solver0_data_smc",
+        "inst_hier_path": "solver0_video_data_smc",
         "has_run_ip_tcl": "true",
         "parameters": {
           "NUM_SI": {
-            "value": "1"
+            "value": "2"
           }
         },
         "interface_ports": {
@@ -2951,6 +2981,32 @@
               },
               "NUM_WRITE_OUTSTANDING": {
                 "value": "16"
+              }
+            },
+            "bridges": [
+              "M00_AXI"
+            ],
+            "bd_attributes": {
+              "BRIDGES": {
+                "value": "M00_AXI",
+                "value_src": "auto"
+              },
+              "TYPE": {
+                "value": "interior",
+                "value_src": "default"
+              }
+            }
+          },
+          "S01_AXI": {
+            "mode": "Slave",
+            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
+            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
+            "parameters": {
+              "NUM_READ_OUTSTANDING": {
+                "value": "2"
+              },
+              "NUM_WRITE_OUTSTANDING": {
+                "value": "2"
               }
             },
             "bridges": [
@@ -3083,84 +3139,6 @@
             }
           }
         }
-      },
-      "video_smc": {
-        "vlnv": "xilinx.com:ip:smartconnect:1.0",
-        "ip_revision": "28",
-        "xci_name": "design_1_smartconnect_0_2",
-        "xci_path": "ip/design_1_smartconnect_0_2/design_1_smartconnect_0_2.xci",
-        "inst_hier_path": "video_smc",
-        "has_run_ip_tcl": "true",
-        "parameters": {
-          "NUM_SI": {
-            "value": "1"
-          }
-        },
-        "interface_ports": {
-          "S00_AXI": {
-            "mode": "Slave",
-            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "parameters": {
-              "NUM_READ_OUTSTANDING": {
-                "value": "2"
-              },
-              "NUM_WRITE_OUTSTANDING": {
-                "value": "2"
-              }
-            },
-            "bridges": [
-              "M00_AXI"
-            ],
-            "bd_attributes": {
-              "BRIDGES": {
-                "value": "M00_AXI",
-                "value_src": "auto"
-              },
-              "TYPE": {
-                "value": "interior",
-                "value_src": "default"
-              }
-            }
-          },
-          "M00_AXI": {
-            "mode": "Master",
-            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0",
-            "parameters": {
-              "MAX_BURST_LENGTH": {
-                "value": "16"
-              },
-              "NUM_READ_OUTSTANDING": {
-                "value": "2"
-              },
-              "NUM_READ_THREADS": {
-                "value": "1"
-              },
-              "NUM_WRITE_OUTSTANDING": {
-                "value": "2"
-              },
-              "NUM_WRITE_THREADS": {
-                "value": "1"
-              },
-              "RUSER_BITS_PER_BYTE": {
-                "value": "0"
-              },
-              "SUPPORTS_NARROW_BURST": {
-                "value": "0"
-              },
-              "WUSER_BITS_PER_BYTE": {
-                "value": "0"
-              }
-            },
-            "bd_attributes": {
-              "TYPE": {
-                "value": "interior",
-                "value_src": "default"
-              }
-            }
-          }
-        }
       }
     },
     "interface_nets": {
@@ -3196,8 +3174,8 @@
       },
       "hdmi_M00_AXI": {
         "interface_ports": [
-          "video_smc/S00_AXI",
-          "hdmi/M00_AXI"
+          "hdmi/M00_AXI",
+          "solver0_video_data_smc/S01_AXI"
         ]
       },
       "hdmi_hdmi_out": {
@@ -3226,7 +3204,7 @@
       },
       "solver0_data_smc_M00_AXI": {
         "interface_ports": [
-          "solver0_data_smc/M00_AXI",
+          "solver0_video_data_smc/M00_AXI",
           "processing_system7_0/S_AXI_HP0"
         ]
       },
@@ -3238,7 +3216,7 @@
       },
       "solver_toplevel_0_m_axi_MAXI": {
         "interface_ports": [
-          "solver0_data_smc/S00_AXI",
+          "solver0_video_data_smc/S00_AXI",
           "solver_toplevel_0/m_axi_MAXI"
         ]
       },
@@ -3246,12 +3224,6 @@
         "interface_ports": [
           "solver1_data_smc/S00_AXI",
           "solver_toplevel_1/m_axi_MAXI"
-        ]
-      },
-      "video_smc_M00_AXI": {
-        "interface_ports": [
-          "video_smc/M00_AXI",
-          "processing_system7_0/S_AXI_HP2"
         ]
       }
     },
@@ -3264,13 +3236,11 @@
           "processing_system7_0/M_AXI_GP0_ACLK",
           "processing_system7_0/S_AXI_HP0_ACLK",
           "processing_system7_0/S_AXI_HP1_ACLK",
-          "solver_toplevel_0/ap_clk",
-          "processing_system7_0/S_AXI_HP2_ACLK",
-          "solver_toplevel_1/ap_clk",
           "control_smc/aclk",
           "solver1_data_smc/aclk",
-          "solver0_data_smc/aclk",
-          "video_smc/aclk"
+          "solver0_video_data_smc/aclk",
+          "solver_toplevel_0/ap_clk",
+          "solver_toplevel_1/ap_clk"
         ]
       },
       "processing_system7_0_FCLK_RESET0_N": {
@@ -3283,12 +3253,11 @@
         "ports": [
           "rst_ps7_0_100M/peripheral_aresetn",
           "hdmi/s00_axi_aresetn",
-          "solver_toplevel_0/ap_rst_n",
-          "solver_toplevel_1/ap_rst_n",
           "control_smc/aresetn",
-          "video_smc/aresetn",
-          "solver0_data_smc/aresetn",
-          "solver1_data_smc/aresetn"
+          "solver0_video_data_smc/aresetn",
+          "solver1_data_smc/aresetn",
+          "solver_toplevel_0/ap_rst_n",
+          "solver_toplevel_1/ap_rst_n"
         ]
       }
     },
@@ -3325,19 +3294,6 @@
                 "address_block": "/hdmi/v_tc_0/ctrl/Reg",
                 "offset": "0x44A20000",
                 "range": "64K"
-              }
-            }
-          }
-        }
-      },
-      "/hdmi/axi_vdma_0": {
-        "address_spaces": {
-          "Data_MM2S": {
-            "segments": {
-              "SEG_processing_system7_0_HP2_DDR_LOWOCM": {
-                "address_block": "/processing_system7_0/S_AXI_HP2/HP2_DDR_LOWOCM",
-                "offset": "0x00000000",
-                "range": "1G"
               }
             }
           }
