@@ -1,20 +1,21 @@
 #include <assert.h>
+#include <string.h>
 #include <xil_cache.h>
 #include <xil_printf.h>
 #include <xil_types.h>
 #include <xsolver_toplevel.h>
 
 #include "chunks.h"
+#include "ipcore.h"
+#include "logging.h"
 #include "puzzle.h"
 #include "solver.h"
-#include "logging.h"
-#include "ipcore.h"
 
 #define MAX_PATTERN_COUNT (5005)
 #define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
 #define IPCORE_COUNT (2)
 
-// static struct IPCore cores[IPCORE_COUNT];
+static struct IPCore cores[IPCORE_COUNT];
 
 struct CellRef
 {
@@ -22,15 +23,6 @@ struct CellRef
     extent_t col;
     bool valid;
 };
-
-enum SolverState
-{
-    SOLVER_OK,
-    SOLVER_STUCK,
-    SOLVER_CONTRADICTION
-};
-
-static XSolver_toplevel * hls_core = NULL;
 
 static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
 static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
@@ -40,8 +32,16 @@ static extent_t col_counts[MAX_SIZE];
 static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
-static enum SearchResult search(const struct Puzzle * const puzzle_info,
-    line_t * const black, line_t * const white, const unsigned int depth);
+static enum SearchResult search(
+    const struct Puzzle * const puzzle_info,
+    const line_t * row_patterns,
+    const extent_t * row_counts,
+    const line_t * col_patterns,
+    const extent_t * col_counts,
+    line_t * black,
+    line_t * white,
+    const unsigned int depth
+);
 
 static void print_board(
     const line_t black[MAX_SIZE],
@@ -62,46 +62,6 @@ static void print_board(
 
         print("\r\n");
     }
-}
-
-static enum SolverState run_hls_core(
-    const struct Puzzle * const puzzle_info,
-    const line_t * const local_in_black,
-    const line_t * const local_in_white,
-    line_t * const local_out_black,
-    line_t * const local_out_white
-) {
-    const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
-
-    XSolver_toplevel_InterruptEnable(hls_core, 0x01);
-
-    XSolver_toplevel_Set_row_patterns(hls_core, (UINTPTR)row_patterns);
-    XSolver_toplevel_Set_row_counts(hls_core, (UINTPTR)row_counts);
-    XSolver_toplevel_Set_col_patterns(hls_core, (UINTPTR)col_patterns);
-    XSolver_toplevel_Set_col_counts(hls_core, (UINTPTR)col_counts);
-
-    XSolver_toplevel_Set_puzzle_size(hls_core, puzzle_info->width);
-
-    XSolver_toplevel_Set_in_black(hls_core, (UINTPTR)local_in_black);
-    XSolver_toplevel_Set_in_white(hls_core, (UINTPTR)local_in_white);
-
-    XSolver_toplevel_Set_out_black(hls_core, (UINTPTR)local_out_black);
-    XSolver_toplevel_Set_out_white(hls_core, (UINTPTR)local_out_white);
-
-    Xil_DCacheFlushRange((UINTPTR)local_in_black, line_length);
-    Xil_DCacheFlushRange((UINTPTR)local_in_white, line_length);
-
-    Xil_DCacheFlushRange((UINTPTR)local_out_black, line_length);
-    Xil_DCacheFlushRange((UINTPTR)local_out_white, line_length);
-
-    XSolver_toplevel_Start(hls_core);
-    while (!XSolver_toplevel_IsDone(hls_core))
-        ;
-
-    Xil_DCacheInvalidateRange((UINTPTR)local_out_black, line_length);
-    Xil_DCacheInvalidateRange((UINTPTR)local_out_white, line_length);
-
-    return (enum SolverState)XSolver_toplevel_Get_return(hls_core);
 }
 
 struct CellRef choose_unknown(
@@ -131,6 +91,10 @@ struct CellRef choose_unknown(
 
 static enum SearchResult search_branch(
     const struct Puzzle * const puzzle_info,
+    const line_t * const row_patterns,
+    const extent_t * const row_counts,
+    const line_t * const col_patterns,
+    const extent_t * const col_counts,
     const line_t * const in_black,
     const line_t * const in_white,
     line_t * const out_black,
@@ -143,7 +107,10 @@ static enum SearchResult search_branch(
     memcpy(propagated_black, in_black, puzzle_info->width * sizeof(line_t));
     memcpy(propagated_white, in_white, puzzle_info->width * sizeof(line_t));
 
-    const enum SearchResult result = search(puzzle_info, propagated_black, propagated_white, depth + 1);
+    const enum SearchResult result = search(
+        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
+        propagated_white, depth + 1
+    );
 
     if (result == SEARCH_SOLVED) {
         memcpy(out_black, propagated_black, puzzle_info->width * sizeof(line_t));
@@ -156,6 +123,10 @@ static enum SearchResult search_branch(
 
 static enum SearchResult search(
     const struct Puzzle * const puzzle_info,
+    const line_t * const row_patterns,
+    const extent_t * const row_counts,
+    const line_t * const col_patterns,
+    const extent_t * const col_counts,
     line_t * const black,
     line_t * const white,
     const unsigned int depth
@@ -173,27 +144,44 @@ static enum SearchResult search(
     line_t propagated_black[MAX_SIZE];
     line_t propagated_white[MAX_SIZE];
 
-    // Do an initial solve attempt with the input grid assignments to see if we have a trivial case.
+    const extent_t line_size = sizeof(line_t) * puzzle_info->width;
 
-    const enum SolverState status = run_hls_core(puzzle_info, black, white, propagated_black, propagated_white);
+    // Feed current search state into the solver core.
+    memcpy(cores[0].in_black, black, line_size);
+    memcpy(cores[0].in_white, white, line_size);
+
+    ipcore_execute(&cores[0], puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+
+    enum SolverState status = SOLVER_UNFINISHED;
+    while ((status = ipcore_finish(&cores[0], puzzle_info)) == SOLVER_UNFINISHED)
+        ;
+
+    // Read propagated result from the solver core.
+    memcpy(propagated_black, cores[0].out_black, line_size);
+    memcpy(propagated_white, cores[0].out_white, line_size);
 
     if (status != SOLVER_STUCK) {
-        memcpy(black, propagated_black, puzzle_info->width * sizeof(line_t));
-        memcpy(white, propagated_white, puzzle_info->width * sizeof(line_t));
+        memcpy(black, propagated_black, line_size);
+        memcpy(white, propagated_white, line_size);
+
         switch (status) {
-        case SOLVER_CONTRADICTION: return SEARCH_FAILED;
-        case SOLVER_OK: return SEARCH_SOLVED;
-        default: ;
+        case SOLVER_CONTRADICTION:
+            return SEARCH_FAILED;
+
+        case SOLVER_OK:
+            return SEARCH_SOLVED;
+
+        default:
+            break;
         }
     }
 
-    /*
-     * If there's no trivial solution, do a search. Use a simple heuristic (first observed cell
-     * without an assignment in either black or white) and pivot there: first assume black; reset;
-     * then assume white; reset.
-     */
+    const struct CellRef choice =
+        choose_unknown(propagated_black, propagated_white, puzzle_info->width);
 
-    const struct CellRef choice = choose_unknown(propagated_black, propagated_white, puzzle_info->width);
+    if (!choice.valid)
+        return SEARCH_UNKNOWN;
+
     const line_t col_mask = 1U << choice.col;
 
     if (!choice.valid)
@@ -208,8 +196,10 @@ static enum SearchResult search(
     assert((propagated_black[choice.row] & col_mask) == 0);
     propagated_black[choice.row] |= col_mask;
 
-    const enum SearchResult black_branch_result = search_branch(puzzle_info, propagated_black,
-        propagated_white, black, white, depth);
+    const enum SearchResult black_branch_result = search_branch(
+        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
+        propagated_white, black, white, depth
+    );
 
     propagated_black[choice.row] &= ~col_mask;
 
@@ -221,8 +211,10 @@ static enum SearchResult search(
     assert((propagated_white[choice.row] & col_mask) == 0);
     propagated_white[choice.row] |= col_mask;
 
-    const enum SearchResult white_branch_result = search_branch(puzzle_info, propagated_black,
-        propagated_white, black, white, depth);
+    const enum SearchResult white_branch_result = search_branch(
+        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
+        propagated_white, black, white, depth
+    );
 
     propagated_white[choice.row] &= ~col_mask;
 
@@ -314,15 +306,20 @@ static void compute_valid_patterns(
             generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
 }
 
+void solver_initialise_environment() {
+    static uint32_t base_addresses[IPCORE_COUNT] = {
+        XPAR_XSOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
+    };
+
+    for (unsigned int core_idx = 0; core_idx < IPCORE_COUNT; ++core_idx)
+        assert(ipcore_initialise(&cores[core_idx], base_addresses[core_idx]));
+}
+
 void solver_solve(
-    XSolver_toplevel * const solver,
     struct Puzzle * const puzzle_info
 ) {
-    assert(solver != NULL);
     assert(puzzle_info->width == puzzle_info->height);
     assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
-
-    hls_core = solver;
 
     memset(row_patterns, 0, sizeof(row_patterns));
     memset(col_patterns, 0, sizeof(col_patterns));
@@ -350,7 +347,9 @@ void solver_solve(
 
     // Attempt to solve the Nonogram.
 
-    const enum SearchResult result = search(puzzle_info, out_black, out_white, 0);
+    const enum SearchResult result = search(
+        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, out_black, out_white, 0
+    );
     logging_printf("Search completed with status: %d", result);
 
     print_board(out_black, out_white, puzzle_info->width);

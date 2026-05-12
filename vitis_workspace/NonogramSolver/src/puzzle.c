@@ -90,7 +90,8 @@ void puzzle_print(
     print("\r\n");
 }
 
-void puzzle_free(const struct Puzzle * const puzzle)
-{
+void puzzle_free(
+    const struct Puzzle * const puzzle
+) {
     chunk_free(&puzzle->chunk);
 }

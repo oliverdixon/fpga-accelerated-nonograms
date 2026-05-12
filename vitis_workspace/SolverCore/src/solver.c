@@ -21,8 +21,8 @@
  */
 enum RefinementResult
 {
-    REFINEMENT_UNCHANGED, /**< @brief The refinement did not make any updates. */
-    REFINEMENT_CHANGED, /**< @brief The refinement made at least one update. */
+    REFINEMENT_UNCHANGED,    /**< @brief The refinement did not make any updates. */
+    REFINEMENT_CHANGED,      /**< @brief The refinement made at least one update. */
     REFINEMENT_CONTRADICTION /**< @brief The refinement discovered a contradictory assignment. */
 };
 

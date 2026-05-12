@@ -142,7 +142,7 @@ void video_draw_puzzle(
      * size is 15x15).
      */
     static const unsigned int max_digits = 2;
-    static const unsigned int box_extent = 20;       // Pixel extent of boxes in both directions
+    static const unsigned int box_extent = 20;      // Pixel extent of boxes in both directions
     static const unsigned int internal_padding = 5; // Padding between boxes and clues
     static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
     static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue

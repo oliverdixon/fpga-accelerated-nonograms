@@ -109,13 +109,12 @@ static void solve_puzzles_task(
     (void)data;
 
     struct Puzzle puzzle_info;
-    XSolver_toplevel solver;
 
-    XSolver_toplevel_Initialize(&solver, XPAR_XSOLVER_TOPLEVEL_0_BASEADDR);
+    solver_initialise_environment();
 
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-            solver_solve(&solver, &puzzle_info);
+            solver_solve(&puzzle_info);
             xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
             xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
         }
@@ -134,7 +133,8 @@ static int udp_receive_message(
 
     socklen_t src_len = sizeof(*src);
     const ssize_t data_len = lwip_recvfrom(
-        sock, recv_buffer, sizeof(recv_buffer) / sizeof(*recv_buffer), 0, (struct sockaddr *)src, &src_len
+        sock, recv_buffer, sizeof(recv_buffer) / sizeof(*recv_buffer), 0, (struct sockaddr *)src,
+        &src_len
     );
 
     if (data_len >= 0) {
@@ -226,8 +226,8 @@ static void request_protocol_task(
     );
 
     xTaskCreateStatic(
-        &solve_puzzles_task, "solve_puzzles_task", 16 * THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1,
-        solve_puzzles_stack, &solve_puzzles_pcb
+        &solve_puzzles_task, "solve_puzzles_task", 16 * THREAD_STACKSIZE, NULL,
+        DEFAULT_THREAD_PRIO - 1, solve_puzzles_stack, &solve_puzzles_pcb
     );
 
     xTaskCreate(

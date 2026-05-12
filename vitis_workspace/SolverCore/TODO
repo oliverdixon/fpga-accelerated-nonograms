@@ -1,0 +1,30 @@
+Enter a seed: ([0]-4294967295) [B[B[B[A[A[A[A[Enter a size index: ([0]-15) [A[A[A[A[A[A[A[Enter a difficulty tier: ([E],M,H,C) [B[B[B[B[B[B[B[[draw_puzz] Will write filled cells.
+
+Puzzle:
+        Seed: 74AF3E99
+        Size Index: 0
+        Difficulty Tier: 1
+        Width: 5
+        Height: 5
+        Chunk Count: 1
+        Clue Bytes: 26
+
+
+Chunk data:
+        Chunk ID: 0
+        Chunk Count: 1
+        Offset: 0
+        Data Length: 26
+        Clue Count (derived): 10
+        Clue 00: 05 FF FF FF 00 /// ??????????????????????????????????????????????????????????? 
+        Clue 01: 05 
+        Clue 02: 05 01 01 
+        Clue 03: 05 01 
+        Clue 04: 05 
+        Clue 05: 05 
+        Clue 06: 05 01 
+        Clue 07: 05 01 
+        Clue 08: 05 01 
+        Clue 09: 05 
+
+[draw_puzz] Will write filled cells.

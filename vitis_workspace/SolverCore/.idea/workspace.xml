@@ -7,9 +7,9 @@
     <option name="/Default/Housekeeping/FeatureSuggestion/FeatureSuggestionManager/DisabledSuggesters/=SwitchToGoToActionSuggester/@EntryIndexedValue" value="true" type="bool" />
     <option name="/Default/Housekeeping/OptionsDialog/SelectedPageId/@EntryValue" value="CppFormatterOtherPage" type="string" />
   </component>
-  <component name="CMakePresetLoader"><![CDATA[{
-  "useNewFormat": true
-}]]></component>
+  <component name="CMakePresetLoader">{
+  &quot;useNewFormat&quot;: true
+}</component>
   <component name="CMakeProjectFlavorService">
     <option name="flavorId" value="CMakePlainProjectFlavor" />
   </component>
@@ -28,22 +28,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bbe715b2-f3c2-4761-ae3d-8b24f8853b37" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/.name" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/CMakeLists.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../../.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/design_1.bd" beforeDir="false" afterPath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/design_1.bd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_axi_mem_intercon_imp_auto_pc_0/design_1_axi_mem_intercon_imp_auto_pc_0.xci" beforeDir="false" afterPath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_axi_mem_intercon_imp_auto_pc_0/design_1_axi_mem_intercon_imp_auto_pc_0.xci" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_processing_system7_0_0/design_1_processing_system7_0_0.xci" beforeDir="false" afterPath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_processing_system7_0_0/design_1_processing_system7_0_0.xci" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_solver_toplevel_0_1/design_1_solver_toplevel_0_1.xci" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_v_tc_0_9/design_1_v_tc_0_9.xci" beforeDir="false" afterPath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.srcs/sources_1/bd/design_1/ip/design_1_v_tc_0_9/design_1_v_tc_0_9.xci" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.xpr" beforeDir="false" afterPath="$PROJECT_DIR$/../../NonogramHW/NonogramHW.xpr" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../NonogramSolver/src/main.c" beforeDir="false" afterPath="$PROJECT_DIR$/../NonogramSolver/src/main.c" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/Project.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/editor.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/editor.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../NonogramSolver/src/ipcore.c" beforeDir="false" afterPath="$PROJECT_DIR$/../NonogramSolver/src/ipcore.c" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../NonogramSolver/src/ipcore.h" beforeDir="false" afterPath="$PROJECT_DIR$/../NonogramSolver/src/ipcore.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -83,38 +71,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "CMake Application.SolverCoreTestBench.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Native Application.Vitis CSIM.executor": "Run",
-    "RunOnceActivity.RadMigrateCodeStyle": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "Shell Script.Unnamed.executor": "Run",
-    "Shell Script.Vitis CSIM.executor": "Run",
-    "Shell Script.Vitis Synthesis.executor": "Run",
-    "cf.advertisement.text.overridden": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "codeWithMe.voiceChat.enabledByDefault": "false",
-    "last_opened_file_path": "/home/owd/Documents/embs-assessment/vitis_workspace/SolverCore/src",
-    "settings.editor.selected.configurable": "advanced.settings"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;CMake Application.SolverCoreTestBench.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Native Application.Vitis CSIM.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.RadMigrateCodeStyle&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Shell Script.Unnamed.executor&quot;: &quot;Run&quot;,
+    &quot;Shell Script.Vitis CSIM.executor&quot;: &quot;Run&quot;,
+    &quot;Shell Script.Vitis Synthesis.executor&quot;: &quot;Run&quot;,
+    &quot;cf.advertisement.text.overridden&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/owd/Documents/embs-assessment/vitis_workspace/SolverCore/src&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;advanced.settings&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/testbench" />
     </key>
   </component>
   <component name="RunManager" selected="CMake Application.SolverCoreTestBench">
-    <configuration default="true" type="CLionExternalRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true">
-      <method v="2">
-        <option name="CLION.EXTERNAL.BUILD" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="SolverCoreTestBench" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" EMULATE_TERMINAL="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="SolverCoreTestBench" TARGET_NAME="SolverCoreTestBench" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="SolverCoreTestBench" RUN_TARGET_NAME="SolverCoreTestBench">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
@@ -151,7 +134,9 @@
       <workItem from="1778426610817" duration="38000" />
       <workItem from="1778553654220" duration="989000" />
       <workItem from="1778554653617" duration="43000" />
-      <workItem from="1778554706011" duration="2929000" />
+      <workItem from="1778554706011" duration="3584000" />
+      <workItem from="1778565482336" duration="9000" />
+      <workItem from="1778565539228" duration="2674000" />
     </task>
     <servers />
   </component>
