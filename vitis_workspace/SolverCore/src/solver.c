@@ -270,7 +270,7 @@ static enum RefinementResult refine_row(
             row_patterns, row_pattern_count, puzzle_size, old_black, old_white, &forced_black,
             &forced_white
         ))
-        return REFINEMENT_UNCHANGED;
+        return REFINEMENT_CONTRADICTION;
 
     *out_black |= forced_black;
     *out_white |= forced_white;
