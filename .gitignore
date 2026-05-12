@@ -22,3 +22,5 @@ vivado*.jou
 vivado*.log
 vivado_pid*.str
 
+# IntelliJ
+workspace.xml

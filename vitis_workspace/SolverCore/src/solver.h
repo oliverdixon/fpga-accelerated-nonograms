@@ -43,7 +43,7 @@ typedef uint16_t extent_t;
  */
 enum SolverState
 {
-    SOLVER_OK,    /**< @brief Solver successfully produced (and validated) the cell assignments. */
+    SOLVER_OK,    /**< @brief Solver produced the cell assignments which require validation. */
     SOLVER_STUCK, /**< @brief Solver got stuck and needs to backtrack. */
     SOLVER_CONTRADICTION /**< @brief Solver encountered an assignment contradiction. */
 };
