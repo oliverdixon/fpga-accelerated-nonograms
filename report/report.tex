@@ -44,6 +44,7 @@
 \numberwithin{table}{section}
 \numberwithin{figure}{section}
 \captionsetup[subtable]{aboveskip=2ex,belowskip=3ex}
+\captionsetup[subfigure]{aboveskip=2ex,belowskip=3ex}
 
 \title{EMBS-H Assessment Submission}
 \date{\today}
@@ -777,13 +778,13 @@ in the archive as \texttt{mma.pdf}.
         (monotonically non-decreasing).
 
         The response times for tasks $\tau_{1,2,3,4,5,6}$ are given by
-        \Cref{table:rm-response-times} and were computed with the C++ source
-        code and relevant outputs provided in \Cref{sec:cpp}\footnote{In
-        particular, the function \texttt{RTA::ResponseTimeAnalyser::rta} was
-        used from \texttt{RTA/ResponseTimeAnalyser.hpp}.}. Note that $\tau_6$
-        does not have a determined response time since it missed the
-        corresponding deadline. \Cref{table:rm-response-times-trace} traces
-        execution of the RTA recurrence showing all intermediary steps.
+        \Cref{table:rm-response-times}. These quantities were computed by
+        manually dry-running the algorithm with intermediary steps shown in
+        \Cref{table:rm-response-times-trace}. The results were then verified
+        with the C++ source provided in \Cref{sec:cpp}.
+
+        Note that $\tau_6$ does not have a determined response time since it
+        missed the corresponding deadline.
 
         \begin{table}[p]
             \centering%
@@ -942,15 +943,15 @@ in the archive as \texttt{mma.pdf}.
         response time of $184\mls$. As $R_i$ is determined for all tasks, the
         task set is scheduleable.
 
-        These results were attained with the C++ source code detained in
-        \Cref{sec:cpp}\footnote{To switch the priority-ordering scheme, the
-        \href{https://cppreference.com/cpp/container/set}{ordered set} was
-        instantiated to use \texttt{DMTaskComparator} as opposed to
+        Similarly to the RM case, the results were attained by manually
+        dry-running the algorithm and verifying with the C++ implementation
+        provided in \Cref{sec:cpp}\footnote{To switch the priority-ordering
+        scheme, the \href{https://cppreference.com/cpp/container/set}{ordered
+        set} was instantiated to use \texttt{DMTaskComparator} as opposed to
         \texttt{RMTaskComparator}.}.
     \item Under RM-priority ordering, the task set can be scheduled if $\tau_6$
-        has a WCET less than or equal to 49. This result was computed using the
-        C++ routines given in \Cref{sec:cpp} with brute-force iterative
-        application of the standard RTA algorithm.
+        has a WCET less than or equal to 49. This result was computed by
+        brute-force iterative application of the standard RTA algorithm.
 \end{enumerate}
 
 \subsection{Question 5}
