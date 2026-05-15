@@ -92,17 +92,17 @@ int result_send(
 void result_print(
     const struct Result * const result
 ) {
-    xil_printf("Result in %d milliseconds: ", result->solve_time);
+    logging_printf("Server timed result to %d milliseconds: ", result->solve_time);
 
     switch (result->status) {
     case RESULT_INCORRECT:
-        print("Incorrect!\r\n");
+        logging_puts("Server says: Incorrect!\r\n");
         break;
     case RESULT_CORRECT:
-        print("Correct!\r\n");
+        logging_puts("Server says: Correct!\r\n");
         break;
     case RESULT_ERROR:
-        print("Error!\r\n");
+        logging_puts("Server says: Error!\r\n");
         break;
     }
 }

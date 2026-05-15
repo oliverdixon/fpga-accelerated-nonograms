@@ -16,8 +16,6 @@
 
 #define THREAD_STACKSIZE 1024
 
-static uint8_t recv_buffer[1024]; // TODO big enough?
-
 static void accept_input_task(void *);
 static void request_protocol_task(void *);
 static void draw_puzzles_task(void *);
@@ -31,6 +29,7 @@ QueueHandle_t solution_queue;  // PUZZLE_INFO messages for verifying.
 
 TaskHandle_t accept_input_task_handle;
 
+static uint8_t recv_buffer[1024];
 struct NetworkState network_state;
 
 int main() {
@@ -184,7 +183,7 @@ static void build_puzzle_data(
     // For info, describe the puzzle on the serial output.
     puzzle_print(&puzzle_info);
 
-    assert(puzzle_info.num_chunks == 1); // TODO remove constraint
+    assert(puzzle_info.num_chunks == 1);
 
     // Request, receive, and parse each chunk of clue data.
     for (uint8_t chunk_id = 0; chunk_id < puzzle_info.num_chunks; ++chunk_id) {
@@ -273,6 +272,11 @@ static void submit_protocol_task(
             result.status = RESULT_ERROR;
 
             // This puzzle is done (and the serial line is clear), so query for the next.
+
+            xSemaphoreTake(puzzle_info.solution_semaphore, portMAX_DELAY);
+            puzzle_free(&puzzle_info);
+            xSemaphoreGive(puzzle_info.solution_semaphore);
+            
             xTaskNotify(accept_input_task_handle, 0, eNoAction);
         }
 

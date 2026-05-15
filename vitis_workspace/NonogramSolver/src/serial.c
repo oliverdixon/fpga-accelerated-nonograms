@@ -1,5 +1,6 @@
 #include <xil_printf.h>
 
+#include "logging.h"
 #include "serial.h"
 
 static char buffer[16];
@@ -68,10 +69,14 @@ uint32_t parse_uint32(
     if (bytes_read > 0 && buffer[bytes_read] == '\0') {
         for (unsigned int pv_idx = 0; pv_idx < bytes_read; ++pv_idx)
             value += (buffer[pv_idx] - '0') * pow_uint32(10, bytes_read - pv_idx - 1);
-        if (value < lower_bound || value > upper_bound)
+        if (value < lower_bound || value > upper_bound) {
             value = default_value;
-    } else
+            logging_puts("Value out of bounds; using default.");
+        }
+    } else {
         value = default_value;
+        logging_puts("Invalid value; using default.");
+    }
 
     return value;
 }
@@ -93,6 +98,7 @@ enum DifficultyTier parse_difficulty_tier(
         case 'C':
             return DIFFICULTY_CUSTOM;
         default:
+            logging_puts("Invalid selection; using default.");
             return default_tier;
         }
 

@@ -27,8 +27,7 @@ struct Puzzle
     uint16_t clue_bytes;
 
     unsigned int global_max_clue_data_count;
-    struct Chunk
-        chunk; // TODO: support multiple chunks // TODO needs to be a ptr protected by mutexes.
+    struct Chunk chunk;
 
     enum SearchResult solved_state;
     SemaphoreHandle_t solution_semaphore;
@@ -47,6 +46,6 @@ int puzzle_parse(
 );
 
 void puzzle_print(const struct Puzzle * puzzle_info);
-void puzzle_free(const struct Puzzle * puzzle);
+void puzzle_free(struct Puzzle * puzzle);
 
 #endif // PUZZLE_H

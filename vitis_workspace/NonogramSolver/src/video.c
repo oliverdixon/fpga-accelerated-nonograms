@@ -163,7 +163,6 @@ void video_draw_puzzle(
     unsigned int col_clue_idx = puzzle_info->height;
     unsigned int row_clue_idx = 0;
 
-    // TODO: will need to be updated to support multiple chunks.
     const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
     const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;

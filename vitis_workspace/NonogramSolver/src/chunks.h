@@ -56,12 +56,13 @@ void chunk_request(
 /**
  * @brief Parse a received <code>MSG_CHUNK_DATA</code> into the given destination Chunk.
  * @param dst The destination of the parsed Chunk.
- * @param match_metadata Metadata of the puzzle being requested, which the received Chunk is expected to match.
+ * @param match_metadata Metadata of the puzzle being requested, which the received Chunk is
+ * expected to match.
  * @param payload The entire bytes received from the server.
  * @return 0 on success, -1 on failure (if the payload metadata didn't match the expected metadata).
  * @pre The payload contains the <code>MSG_CHUNK_DATA</code> identifier in the first byte.
- * @note This function performs dynamic allocation to store the clues, as there is no upper bound on their size or
- *  numerosity.
+ * @note This function performs dynamic allocation to store the clues, as there is no upper bound on
+ * their size or numerosity.
  */
 int chunk_parse(
     struct Chunk * dst,

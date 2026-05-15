@@ -91,7 +91,8 @@ void puzzle_print(
 }
 
 void puzzle_free(
-    const struct Puzzle * const puzzle
+    struct Puzzle * const puzzle
 ) {
+    puzzle->solution_bitmap = NULL;
     chunk_free(&puzzle->chunk);
 }

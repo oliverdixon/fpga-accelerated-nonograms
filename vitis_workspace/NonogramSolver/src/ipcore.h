@@ -5,9 +5,9 @@
 
 #include <stdbool.h>
 
-#include <xsolver_toplevel.h>
 #include <FreeRTOS.h>
 #include <task.h>
+#include <xsolver_toplevel.h>
 
 #include "solver.h"
 
@@ -31,10 +31,10 @@ struct IPCore
     XSolver_toplevel solver;
     TaskHandle_t notify_task;
     uint32_t notify_bits;
-    
+
     struct SearchJob job;
     enum SolverState return_code;
-    
+
     line_t in_black[MAX_SIZE];
     line_t in_white[MAX_SIZE];
     line_t out_black[MAX_SIZE];
@@ -62,12 +62,8 @@ void ipcore_finish(
     const struct Puzzle * const puzzle_info
 );
 
-bool ipcore_enqueue_job(
-    const struct SearchJob * job
-);
+bool ipcore_enqueue_job(const struct SearchJob * job);
 
-bool ipcore_dequeue_job(
-    struct SearchJob * job
-);
+bool ipcore_dequeue_job(struct SearchJob * job);
 
 #endif // IPCORE_H

@@ -31,7 +31,6 @@ struct CellRef
  *  <code>valid</code> flag is not set, the indices are garbage.
  * @post If the returned CellRef is valid, the row and column indices refer to a puzzle square that
  *  is not assigned.
- * @todo This is quite a simple heuristic used by the branch/search algorithm.
  */
 CellRef choose_unknown(
     const line_t * const black,

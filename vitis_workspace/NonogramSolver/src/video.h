@@ -29,14 +29,16 @@ struct Chunk;
 struct Puzzle;
 
 /**
- * @brief Initialises the HDMI video controller with the standard resolution into the given VideoState.
+ * @brief Initialises the HDMI video controller with the standard resolution into the given
+ * VideoState.
  * @param video_state The destination HDMI state.
  * @return 0 on success, -1 on failure.
  */
 int video_initialise(struct VideoState * video_state);
 
 /**
- * @brief Renders the given puzzle grid and clue data (and solution grid, if applicable) to the initialised VideoState.
+ * @brief Renders the given puzzle grid and clue data (and solution grid, if applicable) to the
+ * initialised VideoState.
  * @param video_state The initialised VideoState structure.
  * @param puzzle_info The Puzzle to render on-screen.
  */
