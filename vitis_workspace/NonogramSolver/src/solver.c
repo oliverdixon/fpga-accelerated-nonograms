@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdint.h>
 #include <string.h>
 #include <xil_cache.h>
 #include <xil_printf.h>
@@ -59,7 +60,7 @@ static struct CellRef choose_unknown(
 }
 
 static enum SolverState run_core_sync(
-    struct IPCore *const core,
+    struct IPCore *const ipcore,
     const struct Puzzle *const puzzle_info,
     const line_t *const in_black,
     const line_t *const in_white
@@ -67,15 +68,21 @@ static enum SolverState run_core_sync(
 {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    memcpy(core->in_black, in_black, board_bytes);
-    memcpy(core->in_white, in_white, board_bytes);
+    memcpy(ipcore->in_black, in_black, board_bytes);
+    memcpy(ipcore->in_white, in_white, board_bytes);
 
-    ipcore_execute(core, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+    ipcore_execute(ipcore, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
 
-    enum SolverState status;
-    while ((status = ipcore_finish(core, puzzle_info)) == SOLVER_UNFINISHED);
+    uint32_t notify_bits = 0;
+    xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
+    
+    assert(ipcore->notify_bits & notify_bits);
+    ipcore_finish(ipcore, puzzle_info);
+    
+    assert(!ipcore->busy);
+    assert(ipcore->return_code != SOLVER_UNFINISHED);
 
-    return status;
+    return ipcore->return_code;
 }
 
 static void start_core_job(
@@ -95,26 +102,6 @@ static void start_core_job(
     core->busy = true;
 }
 
-static void wait_for_cores(
-    struct IPCore *const core_1,
-    struct IPCore *const core_2,
-    const struct Puzzle *const puzzle_info,
-    enum SolverState *const a_status,
-    enum SolverState *const b_status
-)
-{
-    *a_status = SOLVER_UNFINISHED;
-    *b_status = SOLVER_UNFINISHED;
-
-    while (*a_status == SOLVER_UNFINISHED || *b_status == SOLVER_UNFINISHED) {
-        if (*a_status == SOLVER_UNFINISHED)
-            *a_status = ipcore_finish(core_1, puzzle_info);
-
-        if (*b_status == SOLVER_UNFINISHED)
-            *b_status = ipcore_finish(core_2, puzzle_info);
-    }
-}
-
 static void make_propagated_job_from_core(
     struct SearchJob *const job,
     const struct IPCore *const core,
@@ -128,6 +115,12 @@ static void make_propagated_job_from_core(
 
     job->depth = core->job.depth;
     job->propagated = true;
+}
+
+static void drain_solver_notifications()
+{
+    uint32_t ignored = 0;
+    while (xTaskNotifyWait(0x00u, UINT32_MAX, &ignored, 0) == pdTRUE);
 }
 
 static void explore_binary_children(
@@ -163,6 +156,9 @@ static void explore_binary_children(
     *black_status = SOLVER_UNFINISHED;
     *white_status = SOLVER_UNFINISHED;
 
+    drain_solver_notifications();
+
+    // By convention, explore the black branch on Core 0, and the white branch on Core 1.
     start_core_job(
         &cores[0],
         puzzle_info,
@@ -175,13 +171,22 @@ static void explore_binary_children(
         &white_child
     );
 
-    wait_for_cores(
-        &cores[0],
-        &cores[1],
-        puzzle_info,
-        black_status,
-        white_status
-    );
+    while (*black_status == SOLVER_UNFINISHED || *white_status == SOLVER_UNFINISHED) {
+        uint32_t notify_bits = 0;
+        xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
+        
+        if (notify_bits & 0x01) {
+            ipcore_finish(&cores[0], puzzle_info);
+            assert(!cores[0].busy && cores[0].return_code != SOLVER_UNFINISHED);
+            *black_status = cores[0].return_code;
+        }
+
+        if (notify_bits & 0x02) {
+            ipcore_finish(&cores[1], puzzle_info);
+            assert(!cores[1].busy && cores[1].return_code != SOLVER_UNFINISHED);
+            *white_status = cores[1].return_code;
+        }
+    }
 }
 
 static enum SearchResult search_two_core_dfs(
@@ -424,8 +429,13 @@ void solver_initialise_environment()
         XPAR_XSOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
     };
 
+    static uint16_t interrupt_intrs[IPCORE_COUNT] = {
+        XPAR_FABRIC_SOLVER_TOPLEVEL_0_INTR, XPAR_FABRIC_SOLVER_TOPLEVEL_1_INTR
+    };
+
+    assert(IPCORE_COUNT < 32);
     for (unsigned int core_idx = 0; core_idx < IPCORE_COUNT; ++core_idx)
-        assert(ipcore_initialise(&cores[core_idx], base_addresses[core_idx]));
+        assert(ipcore_initialise(&cores[core_idx], base_addresses[core_idx], interrupt_intrs[core_idx], 1U << core_idx));
 }
 
 void solver_solve(

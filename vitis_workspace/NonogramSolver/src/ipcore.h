@@ -5,6 +5,10 @@
 
 #include <stdbool.h>
 
+#include <xsolver_toplevel.h>
+#include <FreeRTOS.h>
+#include <task.h>
+
 #include "solver.h"
 
 struct SearchJob
@@ -25,7 +29,12 @@ struct IPCore
 {
     bool busy;
     XSolver_toplevel solver;
+    TaskHandle_t notify_task;
+    uint32_t notify_bits;
+    
     struct SearchJob job;
+    enum SolverState return_code;
+    
     line_t in_black[MAX_SIZE];
     line_t in_white[MAX_SIZE];
     line_t out_black[MAX_SIZE];
@@ -34,7 +43,9 @@ struct IPCore
 
 bool ipcore_initialise(
     struct IPCore * ipcore,
-    uint32_t base_address
+    uint32_t base_address,
+    uint16_t interrupt_intr,
+    uint32_t notify_bits
 );
 
 void ipcore_execute(
@@ -46,9 +57,9 @@ void ipcore_execute(
     const extent_t * col_counts
 );
 
-enum SolverState ipcore_finish(
+void ipcore_finish(
     struct IPCore * ipcore,
-    const struct Puzzle * puzzle_info
+    const struct Puzzle * const puzzle_info
 );
 
 bool ipcore_enqueue_job(
