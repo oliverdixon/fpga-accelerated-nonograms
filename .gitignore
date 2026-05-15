@@ -13,6 +13,7 @@ report/*.dirty.nb
 
 # Ignore generated platform from Vivado
 vitis_workspace/Nonogram
+NonogramHW.ip_user_files/
 
 # Ignore Doxygen
 vitis_workspace/SolverCore/docs

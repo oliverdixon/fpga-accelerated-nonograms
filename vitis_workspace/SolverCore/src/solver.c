@@ -10,8 +10,6 @@
 
 #include "solver.h"
 
-typedef uint8_t coord_t; // 0..MAX_SIZE
-
 /**
  * @brief The maximum number of row-columm refinements on a single solve cycle before bailing out.
  */
@@ -42,8 +40,8 @@ static line_t produce_line_mask(
 static void get_column_masks(
     const line_t * const black,
     const line_t * const white,
-    const coord_t puzzle_size,
-    const coord_t col_idx,
+    const unsigned int puzzle_size,
+    const unsigned int col_idx,
     line_t * const known_black,
     line_t * const known_white
 ) {
@@ -53,7 +51,7 @@ static void get_column_masks(
     const line_t col_bit = (line_t)1U << col_idx;
     line_t row_bit = 1U;
 
-    for (coord_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
+    for (unsigned int row_idx = 0; row_idx < puzzle_size; ++row_idx) {
         if (black[row_idx] & col_bit)
             black_result |= row_bit;
 
@@ -81,13 +79,12 @@ static void get_column_masks(
 static bool refine_line(
     const line_t * const patterns,
     const extent_t pattern_count,
-    const coord_t column_extent,
+    const unsigned int column_extent,
     const line_t known_black,
     const line_t known_white,
     line_t * forced_black,
     line_t * forced_white
 ) {
-#pragma HLS INLINE off
     const line_t line_mask = produce_line_mask(column_extent);
 
     line_t black_disj = 0;
@@ -125,11 +122,11 @@ static bool refine_line(
 static bool are_all_cells_known(
     const line_t * const black,
     const line_t * const white,
-    const coord_t puzzle_size
+    const unsigned int puzzle_size
 ) {
     const line_t col_mask = produce_line_mask(puzzle_size);
 
-    for (coord_t row_idx = 0; row_idx < MAX_SIZE; ++row_idx)
+    for (unsigned int row_idx = 0; row_idx < MAX_SIZE; ++row_idx)
         if (row_idx < puzzle_size && ((black[row_idx] | white[row_idx]) & col_mask) != col_mask)
             return false;
 
@@ -148,7 +145,7 @@ static bool are_all_cells_known(
 static enum RefinementResult refine_row(
     const line_t * const row_patterns,
     const extent_t row_pattern_count,
-    const coord_t puzzle_size,
+    const unsigned int puzzle_size,
     line_t * const out_black,
     line_t * const out_white
 ) {
@@ -187,8 +184,8 @@ static enum RefinementResult refine_row(
 static enum RefinementResult refine_column(
     const line_t * const col_patterns,
     const extent_t col_pattern_count,
-    const coord_t col_idx,
-    const coord_t puzzle_size,
+    const unsigned int col_idx,
+    const unsigned int puzzle_size,
     line_t * const out_black,
     line_t * const out_white
 ) {
@@ -207,7 +204,7 @@ static enum RefinementResult refine_column(
 
     enum RefinementResult result = REFINEMENT_UNCHANGED;
 
-    for (coord_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
+    for (unsigned int row_idx = 0; row_idx < puzzle_size; ++row_idx) {
         const line_t old_black = out_black[row_idx];
         const line_t old_white = out_white[row_idx];
 
@@ -268,6 +265,9 @@ uint32_t solver_toplevel(
     line_t black[MAX_SIZE];
     line_t white[MAX_SIZE];
 
+#pragma HLS ARRAY_PARTITION variable = black type = block factor = 4
+#pragma HLS ARRAY_PARTITION variable = white type = block factor = 4
+
     memcpy(black, in_black, MAX_SIZE * sizeof(line_t));
     memcpy(white, in_white, MAX_SIZE * sizeof(line_t));
 
@@ -275,7 +275,7 @@ uint32_t solver_toplevel(
         bool changed = false;
 
         // Refine the rows.
-        for (coord_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
+        for (unsigned int row_idx = 0; row_idx < puzzle_size; ++row_idx) {
             const enum RefinementResult result = refine_row(
                 &row_patterns[row_idx * MAX_PATTERN_COUNT], row_counts[row_idx], puzzle_size,
                 &black[row_idx], &white[row_idx]
@@ -289,7 +289,7 @@ uint32_t solver_toplevel(
         }
 
         // Refine the columns.
-        for (coord_t col_idx = 0; col_idx < puzzle_size; ++col_idx) {
+        for (unsigned int col_idx = 0; col_idx < puzzle_size; ++col_idx) {
             const enum RefinementResult result = refine_column(
                 &col_patterns[col_idx * MAX_PATTERN_COUNT], col_counts[col_idx], col_idx,
                 puzzle_size, black, white
