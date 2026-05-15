@@ -109,7 +109,7 @@ static void solve_puzzles_task(
 
     struct Puzzle puzzle_info;
 
-    solver_initialise_environment();
+    assert(solver_initialise_environment());
 
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {

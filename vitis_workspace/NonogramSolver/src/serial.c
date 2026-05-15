@@ -1,7 +1,7 @@
 #include <xil_printf.h>
 
-#include "logging.h"
 #include "serial.h"
+#include "logging.h"
 
 static char buffer[16];
 
@@ -47,7 +47,7 @@ static unsigned int readline(
 }
 
 static uint32_t pow_uint32(
-    uint32_t base,
+    const uint32_t base,
     unsigned int exp
 ) {
     uint32_t result = 1;

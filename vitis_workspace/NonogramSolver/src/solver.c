@@ -1,9 +1,17 @@
+/**
+ * @file
+ * @brief Nonogram solver driver implementation
+ * @date 2026-05-15
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include <xil_cache.h>
 #include <xil_printf.h>
 #include <xil_types.h>
+#include <xparameters.h>
 #include <xsolver_toplevel.h>
 
 #include "solver.h"
@@ -18,7 +26,11 @@
 
 static struct IPCore cores[IPCORE_COUNT];
 
-struct CellRef
+/**
+ * @struct CellChoice
+ * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a fixed point.
+ */
+struct CellChoice
 {
     extent_t row;
     extent_t col;
@@ -33,13 +45,13 @@ static extent_t col_counts[MAX_SIZE];
 static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
-static struct CellRef choose_unknown(
+static struct CellChoice choose_unknown(
     const line_t *const black,
     const line_t *const white,
     const extent_t puzzle_extent
 )
 {
-    struct CellRef choice = {.valid = false};
+    struct CellChoice choice = {.valid = false};
 
     for (extent_t row_idx = 0; row_idx < puzzle_extent; ++row_idx) {
         const line_t known = black[row_idx] | white[row_idx];
@@ -59,6 +71,14 @@ static struct CellRef choose_unknown(
     return choice;
 }
 
+/**
+ * @brief Execute a job synchronously on a single core, blocking until the IP core returns.
+ * @param ipcore The IP core to execute.
+ * @param puzzle_info The Puzzle to solve.
+ * @param in_black The input black cell assignment lines.
+ * @param in_white The input white cell assignment lines.
+ * @return The return code from the HLS solver.
+ */
 static enum SolverState run_core_sync(
     struct IPCore *const ipcore,
     const struct Puzzle *const puzzle_info,
@@ -75,31 +95,39 @@ static enum SolverState run_core_sync(
 
     uint32_t notify_bits = 0;
     xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
-    
+
+    // We shouldn't be receiving any notifications that don't pertain to our core.
     assert(ipcore->notify_bits & notify_bits);
     ipcore_finish(ipcore, puzzle_info);
-    
+
+    // Similarly, the IP core should be cleaned up and ready for re-use.
     assert(!ipcore->busy);
     assert(ipcore->return_code != SOLVER_UNFINISHED);
 
     return ipcore->return_code;
 }
 
-static void start_core_job(
-    struct IPCore *const core,
+/**
+ * @brief Execute a job asynchronously on a single core.
+ * @param ipcore The IP core to execute.
+ * @param puzzle_info The Puzzle to solve.
+ * @param job The job to assign to the IP core.
+ */
+static void run_core_async(
+    struct IPCore *const ipcore,
     const struct Puzzle *const puzzle_info,
     const struct SearchJob *const job
 )
 {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    core->job = *job;
+    ipcore->job = *job;
 
-    memcpy(core->in_black, job->black, board_bytes);
-    memcpy(core->in_white, job->white, board_bytes);
+    memcpy(ipcore->in_black, job->black, board_bytes);
+    memcpy(ipcore->in_white, job->white, board_bytes);
 
-    ipcore_execute(core, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
-    core->busy = true;
+    ipcore_execute(ipcore, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+    ipcore->busy = true;
 }
 
 static void make_propagated_job_from_core(
@@ -125,7 +153,7 @@ static void drain_solver_notifications()
 
 static void explore_binary_children(
     const struct SearchJob *const current_job,
-    const struct CellRef *const choice,
+    const struct CellChoice *const choice,
     const struct Puzzle *const puzzle_info,
     const line_t *const propagated_black,
     const line_t *const propagated_white,
@@ -159,13 +187,13 @@ static void explore_binary_children(
     drain_solver_notifications();
 
     // By convention, explore the black branch on Core 0, and the white branch on Core 1.
-    start_core_job(
+    run_core_async(
         &cores[0],
         puzzle_info,
         &black_child
     );
 
-    start_core_job(
+    run_core_async(
         &cores[1],
         puzzle_info,
         &white_child
@@ -175,13 +203,13 @@ static void explore_binary_children(
         uint32_t notify_bits = 0;
         xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
         
-        if (notify_bits & 0x01) {
+        if (notify_bits & cores[0].notify_bits) {
             ipcore_finish(&cores[0], puzzle_info);
             assert(!cores[0].busy && cores[0].return_code != SOLVER_UNFINISHED);
             *black_status = cores[0].return_code;
         }
 
-        if (notify_bits & 0x02) {
+        if (notify_bits & cores[1].notify_bits) {
             ipcore_finish(&cores[1], puzzle_info);
             assert(!cores[1].busy && cores[1].return_code != SOLVER_UNFINISHED);
             *white_status = cores[1].return_code;
@@ -264,7 +292,7 @@ static enum SearchResult search_two_core_dfs(
          * Inductive case: if the solver reports SOLVER_STUCK, spawn a couple of new jobs for each branch at the fixed
          * point and allocate one to each solver IP core.
          */
-        const struct CellRef choice =
+        const struct CellChoice choice =
                 choose_unknown(propagated_black, propagated_white, puzzle_info->width);
 
         if (!choice.valid) {
@@ -410,8 +438,16 @@ static extent_t generate_pattern(
     return generate_pattern_induction(puzzle_size, block, 0, 0, 0, dst, 0);
 }
 
+/**
+ * @brief Compute all valid patterns for the characterised Puzzle.
+ * @param puzzle_extent The puzzle extent, in cells.
+ * @param dst The destination pattern array.
+ * @param counts The destination counts array.
+ * @param clues The populated clue data.
+ * @param clue_count The number of clues detained in the given clue data.
+ */
 static void compute_valid_patterns(
-    const extent_t puzzle_size,
+    const extent_t puzzle_extent,
     line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
     extent_t counts[MAX_SIZE],
     const struct ClueData *const clues,
@@ -419,14 +455,13 @@ static void compute_valid_patterns(
 )
 {
     for (unsigned int clue_idx = 0; clue_idx < clue_count; ++clue_idx)
-        counts[clue_idx] =
-                generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
+        counts[clue_idx] = generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_extent, &clues[clue_idx]);
 }
 
-void solver_initialise_environment()
+bool solver_initialise_environment()
 {
     static uint32_t base_addresses[IPCORE_COUNT] = {
-        XPAR_XSOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
+        XPAR_SOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
     };
 
     static uint16_t interrupt_intrs[IPCORE_COUNT] = {
@@ -435,7 +470,10 @@ void solver_initialise_environment()
 
     assert(IPCORE_COUNT < 32);
     for (unsigned int core_idx = 0; core_idx < IPCORE_COUNT; ++core_idx)
-        assert(ipcore_initialise(&cores[core_idx], base_addresses[core_idx], interrupt_intrs[core_idx], 1U << core_idx));
+        if (!ipcore_initialise(&cores[core_idx], base_addresses[core_idx], interrupt_intrs[core_idx], 1U << core_idx))
+            return false;
+
+    return true;
 }
 
 void solver_solve(
@@ -474,7 +512,7 @@ void solver_solve(
     const enum SearchResult result = search_two_core_dfs(puzzle_info);
     logging_printf("Search completed with status: %d", result);
 
-    // Populate the solution bitmap.
+    // Populate the solution bitmap (set bits indicate white cells).
 
     xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
 

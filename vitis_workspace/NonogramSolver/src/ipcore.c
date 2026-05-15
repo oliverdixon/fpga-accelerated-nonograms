@@ -3,7 +3,6 @@
 #include <xsolver_toplevel.h>
 
 #include "ipcore.h"
-#include "logging.h"
 #include "puzzle.h"
 #include "solver.h"
 
@@ -11,6 +10,11 @@ static struct PendingJobs pending_jobs = {
     .count = 0
 };
 
+/**
+ * @brief Clear any pending interrupts on the given solver core.
+ * @param solver The solver from which to clear interrupts.
+ * @return The interrupt state, prior to clearing.
+ */
 static uint32_t clear_pending_interrupts(XSolver_toplevel * const solver)
 {
     const uint32_t interrupt_status = XSolver_toplevel_InterruptGetStatus(solver);
@@ -20,12 +24,15 @@ static uint32_t clear_pending_interrupts(XSolver_toplevel * const solver)
     return interrupt_status;
 }
 
+/**
+ * @brief ISR to receive interrupts from the solver IP cores and propagate notifications to the solver task.
+ * @param data Task payload as the IP core metadata.
+ */
 static void finished_isr(void * const data)
 {
     struct IPCore * const ipcore = data;
     BaseType_t higher_priority_task_woken = pdFALSE;
-    const uint32_t status = XSolver_toplevel_InterruptGetStatus(&ipcore->solver);
-    XSolver_toplevel_InterruptClear(&ipcore->solver, status);
+    const uint32_t status = clear_pending_interrupts(&ipcore->solver);
 
     if ((status & 1) != 0)
         xTaskNotifyFromISR(ipcore->notify_task, ipcore->notify_bits, eSetBits, &higher_priority_task_woken);

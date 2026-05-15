@@ -12,34 +12,81 @@
 
 #include "video.h"
 #include "chunks.h"
+#include "glyph_bitmaps.h"
 #include "logging.h"
 #include "puzzle.h"
-
-#include "glyph_bitmaps.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
 #define FRAME_STRIDE (1440 * 4)
-
 #define FOREGROUND_COLOUR ((uint32_t)0x00FFFFFF);
 
-static void draw_character(
+/**
+ * @brief Write a GIMP-generated glyph bitmap array to the HDMI framebuffer.
+ * @param state The VideoState describing the initialised HDMI video instance.
+ * @param item The glyph to serialise, in range <code>0</code> to <code>9</code>.
+ * @param x The left X coordinate
+ * @param y The top Y coordinate
+ */
+static void draw_gimp_glyph(
     const struct VideoState * const state,
     const char item,
-    const uint32_t x,
-    const uint32_t y
+    const unsigned int x,
+    const unsigned int y
 ) {
-    assert(item >= '0' && item <= '9');
-
     const uint32_t stride = state->display_ctrl.stride / 4;
-    const uint32_t * const glyph = numeric_glyphs[item - '0'];
-    uint32_t * const frame = state->display_ctrl.framePtr[state->display_ctrl.curFrame];
+    uint32_t * const frame =
+        state->display_ctrl.framePtr[state->display_ctrl.curFrame];
 
-    for (unsigned int col_idx = 0; col_idx < glyph_width; ++col_idx) {
-        const uint32_t bits = glyph[col_idx];
-        for (unsigned int row_idx = 0; row_idx < glyph_height; ++row_idx)
-            if (bits & (1U << row_idx))
-                frame[(y + row_idx) * stride + (x + col_idx)] = FOREGROUND_COLOUR;
+    const char *data;
+
+    switch (item) {
+    case 0:
+        data = glyph_zero_header_data;
+        break;
+    case 1:
+        data = glyph_one_header_data;
+        break;
+    case 2:
+        data = glyph_two_header_data;
+        break;
+    case 3:
+        data = glyph_three_header_data;
+        break;
+    case 4:
+        data = glyph_four_header_data;
+        break;
+    case 5:
+        data = glyph_five_header_data;
+        break;
+    case 6:
+        data = glyph_six_header_data;
+        break;
+    case 7:
+        data = glyph_seven_header_data;
+        break;
+    case 8:
+        data = glyph_eight_header_data;
+        break;
+    case 9:
+        data = glyph_nine_header_data;
+        break;
+    default:
+        data = glyph_unknown_header_data;
     }
+
+    uint8_t pixel[3];
+
+    for (unsigned int row_idx = 0; row_idx < GLYPH_BITMAP_HEIGHT; ++row_idx)
+        for (unsigned int col_idx = 0; col_idx < GLYPH_BITMAP_WIDTH; ++col_idx) {
+            // This duplicates the HEADER_PIXEL macro from the exported bitmaps.
+            pixel[0] = (uint8_t)((data[0] - 33) << 2 | (data[1] - 33) >> 4);
+            pixel[1] = (uint8_t)((data[1] - 33 & 0xF) << 4 | (data[2] - 33) >> 2);
+            pixel[2] = (uint8_t)((data[2] - 33 & 0x3) << 6 | data[3] - 33);
+            data += 4;
+
+            if (pixel[0] != 0 || pixel[1] != 0 || pixel[2] != 0)
+                frame[(y + row_idx) * stride + (x + col_idx)] = FOREGROUND_COLOUR;
+        }
 }
 
 static void draw_rectangle(
@@ -99,7 +146,7 @@ static void draw_clue_element(
         x_pos -= glyph_advance_extent / 2;
 
     while (clue != 0) {
-        draw_character(state, (clue % 10) + '0', x_pos, y_pos);
+        draw_gimp_glyph(state, clue % 10, x_pos, y_pos);
         clue /= 10;
         x_pos += glyph_advance_extent;
     }
@@ -141,9 +188,9 @@ void video_draw_puzzle(
         video_state->display_ctrl.framePtr[video_state->display_ctrl.curFrame], 0x00, MAX_FRAME * 4
     );
 
-    // Draw 50x50 rectangles for each square with a bit of padding.
-
     /*
+     * Draw 50x50 rectangles for each square with a bit of padding.
+     *
      * The padding is determined by the maximum number of clues we need to print.
      * Clues take a maximum of two digits' worth of space (since the maximum grid
      * size is 15x15).
@@ -154,7 +201,7 @@ void video_draw_puzzle(
     static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
     static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
 
-    const unsigned int external_padding = (glyph_width + internal_padding + glyph_spacing) *
+    const unsigned int external_padding = (GLYPH_BITMAP_WIDTH + internal_padding + glyph_spacing) *
                                           max_digits * puzzle_info->global_max_clue_data_count;
 
     unsigned int x_pos = external_padding;
@@ -166,7 +213,6 @@ void video_draw_puzzle(
     const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
 
     const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
-    logging_puts("Will write filled cells.");
 
     /*
      * If the puzzle is solved, we want access to the solution bitmap so it can be
@@ -182,11 +228,11 @@ void video_draw_puzzle(
          * as many clues as rows/columns, so we just offset the index.
          */
         const struct ClueData * const col_clue = &clue_data[col_clue_idx++];
-        const uint32_t start_x = x_pos + (box_extent / 2) - (glyph_width / 2);
+        const uint32_t start_x = x_pos + (box_extent / 2) - (GLYPH_BITMAP_WIDTH / 2);
         for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
             draw_clue_element(
                 video_state, col_clue->blocks[element_idx], start_x,
-                (element_idx + 1) * (internal_padding + glyph_height), glyph_width + glyph_spacing
+                (element_idx + 1) * (internal_padding + GLYPH_BITMAP_HEIGHT), GLYPH_BITMAP_WIDTH + glyph_spacing
             );
 
         const line_t col_mask = 1U << col_idx;
@@ -198,12 +244,12 @@ void video_draw_puzzle(
                  * By convention, row clues come first, so we don't have to offset the index.
                  */
                 const struct ClueData * const row_clue = &clue_data[row_clue_idx++];
-                const uint32_t start_y = y_pos + (box_extent / 2) - (glyph_height / 2);
+                const uint32_t start_y = y_pos + (box_extent / 2) - (GLYPH_BITMAP_HEIGHT / 2);
                 for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
                     draw_clue_element(
                         video_state, row_clue->blocks[element_idx],
-                        (element_idx + 1) * (internal_padding + glyph_width), start_y,
-                        glyph_width + glyph_spacing
+                        (element_idx + 1) * (internal_padding + GLYPH_BITMAP_WIDTH), start_y,
+                        GLYPH_BITMAP_WIDTH + glyph_spacing
                     );
             }
 

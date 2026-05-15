@@ -70,10 +70,9 @@ int result_send(
         for (uint8_t col_idx = 0; col_idx < puzzle->width; col_idx += 8) {
             uint8_t packed = 0;
 
-            for (uint8_t bit = 0; bit < 8 && col_idx + bit < puzzle->width; ++bit) {
+            for (uint8_t bit = 0; bit < 8 && col_idx + bit < puzzle->width; ++bit)
                 if (row & (1U << (col_idx + bit)))
                     packed |= (uint8_t)(1U << (7U - bit));
-            }
 
             *buffer_head++ = packed;
         }
@@ -92,17 +91,17 @@ int result_send(
 void result_print(
     const struct Result * const result
 ) {
-    logging_printf("Server timed result to %d milliseconds: ", result->solve_time);
+    xil_printf("Server timed result to %d milliseconds: ", result->solve_time);
 
     switch (result->status) {
     case RESULT_INCORRECT:
-        logging_puts("Server says: Incorrect!\r\n");
+        print("Server says: Incorrect!\r\n");
         break;
     case RESULT_CORRECT:
-        logging_puts("Server says: Correct!\r\n");
+        print("Server says: Correct!\r\n");
         break;
     case RESULT_ERROR:
-        logging_puts("Server says: Error!\r\n");
+        print("Server says: Error!\r\n");
         break;
     }
 }

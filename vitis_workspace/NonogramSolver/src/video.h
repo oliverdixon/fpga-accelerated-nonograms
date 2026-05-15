@@ -10,6 +10,8 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
+#include <stdint.h>
+
 #include "zybo_z7_hdmi/display_ctrl.h"
 
 #define MAX_FRAME (1440 * 900)
