@@ -1,17 +1,19 @@
+/**
+ * @file
+ * @brief Clue data and chunking implementation
+ * @date 2026-05-15
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
-#include <lwip/sockets.h>
 #include <stdlib.h>
 #include <xil_printf.h>
+#include <lwip/sockets.h>
 
 #include "chunks.h"
 #include "logging.h"
 #include "metadata.h"
 
-/*
- * Message ID (1 byte)
- * Metadata
- * Chunk ID (1 byte)
- */
 #define MESSAGE_REQUEST_CHUNK_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1)
 
 static uint8_t send_buf[MESSAGE_REQUEST_CHUNK_LENGTH];
@@ -111,7 +113,7 @@ void chunk_print(
     );
 
     for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx) {
-        struct ClueData * clue_line = &chunk_data->clue_data[line_idx];
+        const struct ClueData * clue_line = &chunk_data->clue_data[line_idx];
         xil_printf("\tClue %02d: ", line_idx);
         for (uint8_t element_idx = 0; element_idx < clue_line->count; ++element_idx)
             xil_printf("%02x ", clue_line->blocks[element_idx]);

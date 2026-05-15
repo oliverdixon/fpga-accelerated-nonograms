@@ -1,5 +1,12 @@
 // clang-format Language: C
 
+/**
+ * @file
+ * @brief HDMI video interface
+ * @date 2026-05-15
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #ifndef VIDEO_H
 #define VIDEO_H
 
@@ -7,6 +14,10 @@
 
 #define MAX_FRAME (1440 * 900)
 
+/**
+ * @struct VideoState
+ * @brief Collects the double-buffered HDMI state
+ */
 struct VideoState
 {
     DisplayCtrl display_ctrl;
@@ -17,8 +28,18 @@ struct VideoState
 struct Chunk;
 struct Puzzle;
 
+/**
+ * @brief Initialises the HDMI video controller with the standard resolution into the given VideoState.
+ * @param video_state The destination HDMI state.
+ * @return 0 on success, -1 on failure.
+ */
 int video_initialise(struct VideoState * video_state);
 
+/**
+ * @brief Renders the given puzzle grid and clue data (and solution grid, if applicable) to the initialised VideoState.
+ * @param video_state The initialised VideoState structure.
+ * @param puzzle_info The Puzzle to render on-screen.
+ */
 void video_draw_puzzle(
     const struct VideoState * video_state,
     const struct Puzzle * puzzle_info

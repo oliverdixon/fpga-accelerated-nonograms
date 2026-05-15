@@ -1,3 +1,10 @@
+/**
+ * @file
+ * @brief Server error message implementation
+ * @date 2026-05-15
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <xil_printf.h>

@@ -3,8 +3,6 @@
 #ifndef SOLUTION_DRIVER_H
 #define SOLUTION_DRIVER_H
 
-#include <xsolver_toplevel.h>
-
 #define MAX_SIZE (20)
 
 typedef uint32_t line_t;

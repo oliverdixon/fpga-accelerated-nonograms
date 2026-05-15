@@ -6,11 +6,18 @@
 #include "puzzle.h"
 #include "solver.h"
 
+static struct PendingJobs pending_jobs = {
+    .count = 0
+};
+
 bool ipcore_initialise(
     struct IPCore * const ipcore,
     const uint32_t base_address
 ) {
     ipcore->busy = true;
+    ipcore->job.depth = 0;
+    ipcore->job.propagated = false;
+    
     const int status = XSolver_toplevel_Initialize(&ipcore->solver, base_address);
 
     if (status == 0) {
@@ -48,7 +55,6 @@ void ipcore_execute(
     Xil_DCacheFlushRange((UINTPTR)ipcore->in_black, line_length);
     Xil_DCacheFlushRange((UINTPTR)ipcore->in_white, line_length);
 
-    // TODO is it necessary to flush outputs here?
     Xil_DCacheFlushRange((UINTPTR)ipcore->out_black, line_length);
     Xil_DCacheFlushRange((UINTPTR)ipcore->out_white, line_length);
 
@@ -73,4 +79,26 @@ enum SolverState ipcore_finish(
     }
 
     return SOLVER_UNFINISHED;
+}
+
+bool ipcore_enqueue_job(
+    const struct SearchJob * const job
+)
+{
+    if (pending_jobs.count >= (MAX_SIZE * MAX_SIZE) + 1)
+        return false;
+
+    pending_jobs.jobs[pending_jobs.count++] = *job;
+    return true;
+}
+
+bool ipcore_dequeue_job(
+    struct SearchJob * const job
+)
+{
+    if (pending_jobs.count == 0)
+        return false;
+
+    *job = pending_jobs.jobs[--pending_jobs.count];
+    return true;
 }

@@ -5,11 +5,11 @@
 #include <xil_types.h>
 #include <xsolver_toplevel.h>
 
+#include "solver.h"
 #include "chunks.h"
 #include "ipcore.h"
 #include "logging.h"
 #include "puzzle.h"
-#include "solver.h"
 
 #define MAX_PATTERN_COUNT (5005)
 #define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
@@ -32,43 +32,12 @@ static extent_t col_counts[MAX_SIZE];
 static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
-static enum SearchResult search(
-    const struct Puzzle * const puzzle_info,
-    const line_t * row_patterns,
-    const extent_t * row_counts,
-    const line_t * col_patterns,
-    const extent_t * col_counts,
-    line_t * black,
-    line_t * white,
-    const unsigned int depth
-);
-
-static void print_board(
-    const line_t black[MAX_SIZE],
-    const line_t white[MAX_SIZE],
-    const extent_t puzzle_size
-) {
-    for (extent_t row_idx = 0; row_idx < puzzle_size; ++row_idx) {
-        for (extent_t col_idx = 0; col_idx < puzzle_size; ++col_idx) {
-            const line_t mask = 1U << col_idx;
-
-            if (black[row_idx] & mask)
-                outbyte('#');
-            else if (white[row_idx] & mask)
-                outbyte('.');
-            else
-                outbyte('?');
-        }
-
-        print("\r\n");
-    }
-}
-
-struct CellRef choose_unknown(
-    const line_t * const black,
-    const line_t * const white,
+static struct CellRef choose_unknown(
+    const line_t *const black,
+    const line_t *const white,
     const extent_t puzzle_extent
-) {
+)
+{
     struct CellRef choice = {.valid = false};
 
     for (extent_t row_idx = 0; row_idx < puzzle_extent; ++row_idx) {
@@ -89,153 +58,293 @@ struct CellRef choose_unknown(
     return choice;
 }
 
-static enum SearchResult search_branch(
-    const struct Puzzle * const puzzle_info,
-    const line_t * const row_patterns,
-    const extent_t * const row_counts,
-    const line_t * const col_patterns,
-    const extent_t * const col_counts,
-    const line_t * const in_black,
-    const line_t * const in_white,
-    line_t * const out_black,
-    line_t * const out_white,
-    const unsigned int depth
-) {
-    line_t propagated_black[MAX_SIZE];
-    line_t propagated_white[MAX_SIZE];
+static enum SolverState run_core_sync(
+    struct IPCore *const core,
+    const struct Puzzle *const puzzle_info,
+    const line_t *const in_black,
+    const line_t *const in_white
+)
+{
+    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    memcpy(propagated_black, in_black, puzzle_info->width * sizeof(line_t));
-    memcpy(propagated_white, in_white, puzzle_info->width * sizeof(line_t));
+    memcpy(core->in_black, in_black, board_bytes);
+    memcpy(core->in_white, in_white, board_bytes);
 
-    const enum SearchResult result = search(
-        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
-        propagated_white, depth + 1
-    );
+    ipcore_execute(core, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
 
-    if (result == SEARCH_SOLVED) {
-        memcpy(out_black, propagated_black, puzzle_info->width * sizeof(line_t));
-        memcpy(out_white, propagated_white, puzzle_info->width * sizeof(line_t));
-        return SEARCH_SOLVED;
-    }
+    enum SolverState status;
+    while ((status = ipcore_finish(core, puzzle_info)) == SOLVER_UNFINISHED);
 
-    return result;
+    return status;
 }
 
-static enum SearchResult search(
-    const struct Puzzle * const puzzle_info,
-    const line_t * const row_patterns,
-    const extent_t * const row_counts,
-    const line_t * const col_patterns,
-    const extent_t * const col_counts,
-    line_t * const black,
-    line_t * const white,
-    const unsigned int depth
-) {
-    static unsigned int max_seen_depth;
+static void start_core_job(
+    struct IPCore *const core,
+    const struct Puzzle *const puzzle_info,
+    const struct SearchJob *const job
+)
+{
+    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    if (depth > max_seen_depth) {
-        max_seen_depth = depth;
-        logging_printf("Searcher saw new maximum depth of %d.", depth);
+    core->job = *job;
+
+    memcpy(core->in_black, job->black, board_bytes);
+    memcpy(core->in_white, job->white, board_bytes);
+
+    ipcore_execute(core, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+    core->busy = true;
+}
+
+static void wait_for_cores(
+    struct IPCore *const core_1,
+    struct IPCore *const core_2,
+    const struct Puzzle *const puzzle_info,
+    enum SolverState *const a_status,
+    enum SolverState *const b_status
+)
+{
+    *a_status = SOLVER_UNFINISHED;
+    *b_status = SOLVER_UNFINISHED;
+
+    while (*a_status == SOLVER_UNFINISHED || *b_status == SOLVER_UNFINISHED) {
+        if (*a_status == SOLVER_UNFINISHED)
+            *a_status = ipcore_finish(core_1, puzzle_info);
+
+        if (*b_status == SOLVER_UNFINISHED)
+            *b_status = ipcore_finish(core_2, puzzle_info);
     }
+}
 
-    if (depth > MAX_SEARCH_DEPTH)
-        return SEARCH_UNKNOWN;
+static void make_propagated_job_from_core(
+    struct SearchJob *const job,
+    const struct IPCore *const core,
+    const struct Puzzle *const puzzle_info
+)
+{
+    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    line_t propagated_black[MAX_SIZE];
-    line_t propagated_white[MAX_SIZE];
+    memcpy(job->black, core->out_black, board_bytes);
+    memcpy(job->white, core->out_white, board_bytes);
 
-    const extent_t line_size = sizeof(line_t) * puzzle_info->width;
+    job->depth = core->job.depth;
+    job->propagated = true;
+}
 
-    // Feed current search state into the solver core.
-    memcpy(cores[0].in_black, black, line_size);
-    memcpy(cores[0].in_white, white, line_size);
+static void explore_binary_children(
+    const struct SearchJob *const current_job,
+    const struct CellRef *const choice,
+    const struct Puzzle *const puzzle_info,
+    const line_t *const propagated_black,
+    const line_t *const propagated_white,
+    enum SolverState *const black_status,
+    enum SolverState *const white_status
+)
+{
+    struct SearchJob black_child = {
+        .propagated = false,
+        .depth = current_job->depth + 1
+    };
 
-    ipcore_execute(&cores[0], puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+    struct SearchJob white_child = {
+        .propagated = false,
+        .depth = current_job->depth + 1
+    };
 
-    enum SolverState status = SOLVER_UNFINISHED;
-    while ((status = ipcore_finish(&cores[0], puzzle_info)) == SOLVER_UNFINISHED)
-        ;
+    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
+    memcpy(black_child.black, propagated_black, board_bytes);
+    memcpy(black_child.white, propagated_white, board_bytes);
+    memcpy(white_child.black, propagated_black, board_bytes);
+    memcpy(white_child.white, propagated_white, board_bytes);
 
-    // Read propagated result from the solver core.
-    memcpy(propagated_black, cores[0].out_black, line_size);
-    memcpy(propagated_white, cores[0].out_white, line_size);
+    const line_t mask = (line_t) 1U << choice->col;
+    black_child.black[choice->row] |= mask;
+    white_child.white[choice->row] |= mask;
 
-    if (status != SOLVER_STUCK) {
-        memcpy(black, propagated_black, line_size);
-        memcpy(white, propagated_white, line_size);
+    *black_status = SOLVER_UNFINISHED;
+    *white_status = SOLVER_UNFINISHED;
 
-        switch (status) {
-        case SOLVER_CONTRADICTION:
-            return SEARCH_FAILED;
+    start_core_job(
+        &cores[0],
+        puzzle_info,
+        &black_child
+    );
 
-        case SOLVER_OK:
-            return SEARCH_SOLVED;
+    start_core_job(
+        &cores[1],
+        puzzle_info,
+        &white_child
+    );
 
-        default:
-            break;
+    wait_for_cores(
+        &cores[0],
+        &cores[1],
+        puzzle_info,
+        black_status,
+        white_status
+    );
+}
+
+static enum SearchResult search_two_core_dfs(
+    const struct Puzzle *const puzzle_info
+)
+{
+    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
+    bool saw_unknown = false;
+
+    struct SearchJob current = {
+        .propagated = false,
+        .depth = 0
+    };
+
+    memset(current.black, 0, board_bytes);
+    memset(current.white, 0, board_bytes);
+
+    unsigned int max_seen_depth = 0;
+
+    while (1) {
+        if (current.depth > max_seen_depth) {
+            max_seen_depth = current.depth;
+            logging_printf("Searcher saw new maximum depth of %d.", current.depth);
         }
-    }
 
-    const struct CellRef choice =
-        choose_unknown(propagated_black, propagated_white, puzzle_info->width);
+        if (current.depth > MAX_SEARCH_DEPTH) {
+            saw_unknown = true;
 
-    if (!choice.valid)
-        return SEARCH_UNKNOWN;
+            if (!ipcore_dequeue_job(&current))
+                return SEARCH_UNKNOWN;
 
-    const line_t col_mask = 1U << choice.col;
+            continue;
+        }
 
-    if (!choice.valid)
+        enum SolverState status;
+        line_t propagated_black[MAX_SIZE];
+        line_t propagated_white[MAX_SIZE];
+
+        if (current.propagated) {
+            // If this job came directly from a previous SOLVER_STUCK result, it is already propagated.
+            memcpy(propagated_black, current.black, board_bytes);
+            memcpy(propagated_white, current.white, board_bytes);
+            status = SOLVER_STUCK;
+        } else {
+            // Otherwise, allocate a core to run the job.
+            status = run_core_sync(
+                &cores[0],
+                puzzle_info,
+                current.black,
+                current.white
+            );
+
+            if (status == SOLVER_OK || status == SOLVER_STUCK) {
+                memcpy(propagated_black, cores[0].out_black, board_bytes);
+                memcpy(propagated_white, cores[0].out_white, board_bytes);
+            }
+        }
+
+        // Base case: if the job derived a contradiction, dequeue it and report back up the chain.
+        if (status == SOLVER_CONTRADICTION) {
+            if (!ipcore_dequeue_job(&current))
+                return saw_unknown ? SEARCH_UNKNOWN : SEARCH_FAILED;
+
+            continue;
+        }
+
+        // Base case: likewise, if the job derived a solution, report it back up the chain.
+        if (status == SOLVER_OK) {
+            memcpy(out_black, propagated_black, board_bytes);
+            memcpy(out_white, propagated_white, board_bytes);
+            return SEARCH_SOLVED;
+        }
+
         /*
-         * If an unknown cell couldn't be chosen, all cells must have assignments. In this case, one
-         * assignment must be wrong, so backtrack.
+         * Inductive case: if the solver reports SOLVER_STUCK, spawn a couple of new jobs for each branch at the fixed
+         * point and allocate one to each solver IP core.
          */
-        return SEARCH_UNKNOWN;
+        const struct CellRef choice =
+                choose_unknown(propagated_black, propagated_white, puzzle_info->width);
 
-    // Assume the unknown cell is black and recurse.
+        if (!choice.valid) {
+            /*
+             * If there's no valid choice, no fixed point was reached. We didn't reach an explicit contradiction in the
+             * clue data, but this branch is useless.
+             */
+            saw_unknown = true;
+            if (!ipcore_dequeue_job(&current))
+                return SEARCH_UNKNOWN;
 
-    assert((propagated_black[choice.row] & col_mask) == 0);
-    propagated_black[choice.row] |= col_mask;
+            continue;
+        }
 
-    const enum SearchResult black_branch_result = search_branch(
-        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
-        propagated_white, black, white, depth
-    );
+        const line_t mask = (line_t) 1U << choice.col;
+        if ((propagated_black[choice.row] | propagated_white[choice.row]) & mask) {
+            saw_unknown = true;
 
-    propagated_black[choice.row] &= ~col_mask;
+            if (!ipcore_dequeue_job(&current))
+                return SEARCH_UNKNOWN;
 
-    if (black_branch_result == SEARCH_SOLVED)
-        return SEARCH_SOLVED;
+            continue;
+        }
 
-    // If the black assumption didn't yield anything, assume the unknown cell is white and recurse.
+        enum SolverState black_status = SOLVER_UNFINISHED;
+        enum SolverState white_status = SOLVER_UNFINISHED;
+        explore_binary_children(&current, &choice, puzzle_info, propagated_black, propagated_white, &black_status,
+                                &white_status);
 
-    assert((propagated_white[choice.row] & col_mask) == 0);
-    propagated_white[choice.row] |= col_mask;
+        // If one of the branches derived a solution, we're done.
+        if (black_status == SOLVER_OK) {
+            memcpy(out_black, cores[0].out_black, board_bytes);
+            memcpy(out_white, cores[0].out_white, board_bytes);
+            return SEARCH_SOLVED;
+        }
 
-    const enum SearchResult white_branch_result = search_branch(
-        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, propagated_black,
-        propagated_white, black, white, depth
-    );
+        if (white_status == SOLVER_OK) {
+            memcpy(out_black, cores[1].out_black, board_bytes);
+            memcpy(out_white, cores[1].out_white, board_bytes);
+            return SEARCH_SOLVED;
+        }
 
-    propagated_white[choice.row] &= ~col_mask;
+        // Otherwise, propagate jobs for each stuck branch.
+        struct SearchJob black_next;
+        struct SearchJob white_next;
 
-    if (white_branch_result == SEARCH_SOLVED)
-        return SEARCH_SOLVED;
+        const bool black_stuck = black_status == SOLVER_STUCK;
+        const bool white_stuck = white_status == SOLVER_STUCK;
 
-    /*
-     * If neither search yielded something useful, the grid is either definitively unsolvable (if
-     * the solver returned a contradiction), or the result is known (happens in case of exceeding
-     * stack depth limits).
-     */
-    if (black_branch_result == SEARCH_UNKNOWN || white_branch_result == SEARCH_UNKNOWN)
-        return SEARCH_UNKNOWN;
+        if (black_stuck)
+            make_propagated_job_from_core(&black_next, &cores[0], puzzle_info);
 
-    return SEARCH_FAILED;
+        if (white_stuck)
+            make_propagated_job_from_core(&white_next, &cores[1], puzzle_info);
+
+        // Continue depth-first. If both are stuck, continue with the black branch and defer white.
+        if (black_stuck && white_stuck) {
+            if (!ipcore_enqueue_job(&white_next))
+                saw_unknown = true;
+
+            current = black_next;
+            continue;
+        }
+
+        if (black_stuck) {
+            current = black_next;
+            continue;
+        }
+
+        if (white_stuck) {
+            current = white_next;
+            continue;
+        }
+
+        // Both children contradicted. Backtrack to deferred work.
+        if (!ipcore_dequeue_job(&current))
+            return saw_unknown ? SEARCH_UNKNOWN : SEARCH_FAILED;
+    }
 }
 
 static unsigned int min_required_tail(
-    const struct ClueData * const block,
+    const struct ClueData *const block,
     const unsigned int start_idx
-) {
+)
+{
     if (start_idx >= block->count)
         return 0;
 
@@ -249,13 +358,14 @@ static unsigned int min_required_tail(
 
 static extent_t generate_pattern_induction(
     const extent_t puzzle_size,
-    const struct ClueData * const block,
+    const struct ClueData *const block,
     const unsigned int clue_idx,
     const unsigned int min_start_idx,
     const line_t partial_line,
-    line_t * const pattern_out,
+    line_t *const pattern_out,
     extent_t next_pattern_idx
-) {
+)
+{
     if (clue_idx == block->count) {
         // Base case: we've reached the end of the clues, so commit our current line.
         pattern_out[next_pattern_idx++] = partial_line;
@@ -263,14 +373,14 @@ static extent_t generate_pattern_induction(
     }
 
     const unsigned int block_len =
-        block->blocks[clue_idx]; // The length of the target continuous block.
+            block->blocks[clue_idx]; // The length of the target continuous block.
     const unsigned int latest_start_idx =
-        puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
+            puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
     for (unsigned int start_idx = min_start_idx; start_idx <= latest_start_idx; ++start_idx) {
         const line_t block_mask = ((1U << block_len) - 1) << start_idx;
         const unsigned next_idx =
-            clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
+                clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
 
         next_pattern_idx = generate_pattern_induction(
             puzzle_size, block, clue_idx + 1, next_idx, partial_line | block_mask, pattern_out,
@@ -284,8 +394,9 @@ static extent_t generate_pattern_induction(
 static extent_t generate_pattern(
     line_t dst[MAX_SIZE],
     const extent_t puzzle_size,
-    struct ClueData * const block
-) {
+    const struct ClueData *const block
+)
+{
     if (block->count == 0) {
         dst[0] = 0;
         return 1;
@@ -298,15 +409,17 @@ static void compute_valid_patterns(
     const extent_t puzzle_size,
     line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
     extent_t counts[MAX_SIZE],
-    struct ClueData * const clues,
+    const struct ClueData *const clues,
     const unsigned int clue_count
-) {
+)
+{
     for (unsigned int clue_idx = 0; clue_idx < clue_count; ++clue_idx)
         counts[clue_idx] =
-            generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
+                generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_size, &clues[clue_idx]);
 }
 
-void solver_initialise_environment() {
+void solver_initialise_environment()
+{
     static uint32_t base_addresses[IPCORE_COUNT] = {
         XPAR_XSOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
     };
@@ -316,8 +429,9 @@ void solver_initialise_environment() {
 }
 
 void solver_solve(
-    struct Puzzle * const puzzle_info
-) {
+    struct Puzzle *const puzzle_info
+)
+{
     assert(puzzle_info->width == puzzle_info->height);
     assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
 
@@ -340,19 +454,15 @@ void solver_solve(
         &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height
     );
 
-    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns));
-    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts));
-    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns));
-    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts));
+    Xil_DCacheFlushRange((UINTPTR) row_patterns, sizeof(row_patterns));
+    Xil_DCacheFlushRange((UINTPTR) row_counts, sizeof(row_counts));
+    Xil_DCacheFlushRange((UINTPTR) col_patterns, sizeof(col_patterns));
+    Xil_DCacheFlushRange((UINTPTR) col_counts, sizeof(col_counts));
 
-    // Attempt to solve the Nonogram.
+    // Attempt to solve the Nonogram with two-core DFS.
 
-    const enum SearchResult result = search(
-        puzzle_info, row_patterns, row_counts, col_patterns, col_counts, out_black, out_white, 0
-    );
+    const enum SearchResult result = search_two_core_dfs(puzzle_info);
     logging_printf("Search completed with status: %d", result);
-
-    print_board(out_black, out_white, puzzle_info->width);
 
     // Populate the solution bitmap.
 

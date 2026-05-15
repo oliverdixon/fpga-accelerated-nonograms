@@ -1,19 +1,26 @@
+/**
+ * @file
+ * @brief HDMI video implementation
+ * @date 2026-05-15
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <string.h>
 #include <xil_cache.h>
 #include <xparameters.h>
 
+#include "video.h"
 #include "chunks.h"
 #include "logging.h"
 #include "puzzle.h"
-#include "video.h"
 
 #include "glyph_bitmaps.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
 #define FRAME_STRIDE (1440 * 4)
 
-static const uint32_t foreground_colour = 0x00FFFFFF;
+#define FOREGROUND_COLOUR ((uint32_t)0x00FFFFFF);
 
 static void draw_character(
     const struct VideoState * const state,
@@ -31,7 +38,7 @@ static void draw_character(
         const uint32_t bits = glyph[col_idx];
         for (unsigned int row_idx = 0; row_idx < glyph_height; ++row_idx)
             if (bits & (1U << row_idx))
-                frame[(y + row_idx) * stride + (x + col_idx)] = foreground_colour;
+                frame[(y + row_idx) * stride + (x + col_idx)] = FOREGROUND_COLOUR;
     }
 }
 
@@ -51,14 +58,14 @@ static void draw_rectangle(
 
     // Draw the top and bottom lines.
     for (unsigned int x = left_x; x < right_x; ++x) {
-        frame[top_y + x] = foreground_colour;
-        frame[bottom_y + x] = foreground_colour;
+        frame[top_y + x] = FOREGROUND_COLOUR;
+        frame[bottom_y + x] = FOREGROUND_COLOUR;
     }
 
     // Draw the left and right lines.
     for (unsigned int y = top_y; y < bottom_y; y += stride) {
-        frame[y + left_x] = foreground_colour;
-        frame[y + right_x] = foreground_colour;
+        frame[y + left_x] = FOREGROUND_COLOUR;
+        frame[y + right_x] = FOREGROUND_COLOUR;
     }
 }
 
@@ -78,7 +85,7 @@ static void draw_filled_rectangle(
     // Draw the filled rectangle.
     for (unsigned int x = left_x; x < right_x; ++x)
         for (unsigned int y = top_y * stride; y < bottom_y; y += stride)
-            frame[y + x] = foreground_colour;
+            frame[y + x] = FOREGROUND_COLOUR;
 }
 
 static void draw_clue_element(
