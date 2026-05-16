@@ -6,6 +6,7 @@
 #include "metadata.h"
 #include "puzzle.h"
 #include "result.h"
+#include "../../SolverCore/src/solver_params.h"
 
 /*
  * Message ID (1 byte)

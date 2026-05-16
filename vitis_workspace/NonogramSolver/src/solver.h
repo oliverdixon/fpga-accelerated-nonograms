@@ -11,27 +11,8 @@
 #define SOLVER_H
 
 #include <stdbool.h>
-#include <stdint.h>
-
-#define MAX_SIZE (20)
-
-typedef uint32_t line_t;
-typedef uint16_t extent_t;
 
 struct Puzzle;
-
-/**
- * @enum SolverState
- * @brief Describes the return code of the solver.
- */
-enum SolverState
-{
-    SOLVER_OK, /**< @brief The solver reported success */
-    SOLVER_STUCK, /**< @brief The solver reached a fixed point where a cell must be manually chosen. */
-    SOLVER_CONTRADICTION, /**< @brief The solver derived a contradiction against the clue data. */
-    SOLVER_UNFINISHED = 0xFF /**< @brief The solver has not finished execution.  */
-};
-
 
 /**
  * @brief Initialise the solver environment, including all line-solving HLS IP cores.

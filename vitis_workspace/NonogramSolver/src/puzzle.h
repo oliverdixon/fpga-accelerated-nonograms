@@ -8,7 +8,7 @@
 
 #include "chunks.h"
 #include "metadata.h"
-#include "solver.h"
+#include "../../SolverCore/src/solver_params.h"
 
 enum SearchResult
 {

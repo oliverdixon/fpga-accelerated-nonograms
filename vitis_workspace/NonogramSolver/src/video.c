@@ -13,7 +13,6 @@
 #include "video.h"
 #include "chunks.h"
 #include "glyph_bitmaps.h"
-#include "logging.h"
 #include "puzzle.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
@@ -80,8 +79,8 @@ static void draw_gimp_glyph(
         for (unsigned int col_idx = 0; col_idx < GLYPH_BITMAP_WIDTH; ++col_idx) {
             // This duplicates the HEADER_PIXEL macro from the exported bitmaps.
             pixel[0] = (uint8_t)((data[0] - 33) << 2 | (data[1] - 33) >> 4);
-            pixel[1] = (uint8_t)((data[1] - 33 & 0xF) << 4 | (data[2] - 33) >> 2);
-            pixel[2] = (uint8_t)((data[2] - 33 & 0x3) << 6 | data[3] - 33);
+            pixel[1] = (uint8_t)(((data[1] - 33) & 0xF) << 4 | (data[2] - 33) >> 2);
+            pixel[2] = (uint8_t)(((data[2] - 33) & 0x3) << 6 | (data[3] - 33));
             data += 4;
 
             if (pixel[0] != 0 || pixel[1] != 0 || pixel[2] != 0)

@@ -9,7 +9,7 @@
 #include <task.h>
 #include <xsolver_toplevel.h>
 
-#include "solver.h"
+#include "../../SolverCore/src/solver_params.h"
 
 struct SearchJob
 {
@@ -40,6 +40,8 @@ struct IPCore
     line_t out_black[MAX_SIZE];
     line_t out_white[MAX_SIZE];
 };
+
+struct Puzzle;
 
 bool ipcore_initialise(
     struct IPCore * ipcore,

@@ -11,7 +11,7 @@
 
 #include "search_driver.hpp"
 
-#define MAX_SEARCH_DEPTH (1024)
+#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
 
 namespace {
 

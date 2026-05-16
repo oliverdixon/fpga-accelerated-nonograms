@@ -19,8 +19,8 @@
 #include "ipcore.h"
 #include "logging.h"
 #include "puzzle.h"
+#include "../../SolverCore/src/solver_params.h"
 
-#define MAX_PATTERN_COUNT (5005)
 #define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
 #define IPCORE_COUNT (2)
 
@@ -37,8 +37,12 @@ struct CellChoice
     bool valid;
 };
 
+__attribute__((section(".pattern_buffers"), aligned(64)))
 static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+
+__attribute__((section(".pattern_buffers"), aligned(64)))
 static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+
 static extent_t row_counts[MAX_SIZE];
 static extent_t col_counts[MAX_SIZE];
 

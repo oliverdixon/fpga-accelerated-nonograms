@@ -11,6 +11,7 @@ _SUPERVISOR_STACK_SIZE = DEFINED(_SUPERVISOR_STACK_SIZE) ? _SUPERVISOR_STACK_SIZ
 _IRQ_STACK_SIZE = DEFINED(_IRQ_STACK_SIZE) ? _IRQ_STACK_SIZE : 1024;
 _FIQ_STACK_SIZE = DEFINED(_FIQ_STACK_SIZE) ? _FIQ_STACK_SIZE : 1024;
 _UNDEF_STACK_SIZE = DEFINED(_UNDEF_STACK_SIZE) ? _UNDEF_STACK_SIZE : 1024;
+_PATTERN_BUFFERS_SIZE = DEFINED(_PATTERN_BUFFERS_SIZE) ? _PATTERN_BUFFERS_SIZE : 0x25800000;
 
 MEMORY
 {
@@ -245,6 +246,24 @@ SECTIONS
 _SDA_BASE_ = __sdata_start + ((__sbss_end - __sdata_start) / 2 );
 
 _SDA2_BASE_ = __sdata2_start + ((__sbss2_end - __sdata2_start) / 2 );
+
+.pattern_buffers (NOLOAD) : {
+   . = ALIGN(64);
+   __pattern_buffers_start = .;
+
+   *(.pattern_buffers)
+   *(.pattern_buffers.*)
+
+   . = ALIGN(64);
+   __pattern_buffers_used_end = .;
+
+   ASSERT(__pattern_buffers_used_end - __pattern_buffers_start <= _PATTERN_BUFFERS_SIZE,
+          "ERROR: .pattern_buffers input data exceeds _PATTERN_BUFFERS_SIZE");
+
+   . = __pattern_buffers_start + _PATTERN_BUFFERS_SIZE;
+   . = ALIGN(64);
+   __pattern_buffers_end = .;
+} > ps7_ddr_0_memory_0
 
 /* Generate Stack and Heap definitions */
 

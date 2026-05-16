@@ -45,6 +45,12 @@ enum SizeIndex
     SIZE_INDEX_16 = 7,
     SIZE_INDEX_18 = 8,
     SIZE_INDEX_20 = 9,
+    SIZE_INDEX_22 = 10,
+    SIZE_INDEX_24 = 11,
+    SIZE_INDEX_26 = 12,
+    SIZE_INDEX_28 = 13,
+    SIZE_INDEX_30 = 14,
+    SIZE_INDEX_32 = 15,
 };
 
 struct Metadata
