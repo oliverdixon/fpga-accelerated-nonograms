@@ -1,6 +1,7 @@
 #include <FreeRTOS.h>
 #include <assert.h>
 #include <lwip/sockets.h>
+#include <portable.h>
 #include <xil_cache.h>
 #include <xil_printf.h>
 
@@ -22,6 +23,9 @@ static void draw_puzzles_task(void *);
 static void solve_puzzles_task(void *);
 static void submit_protocol_task(void *);
 
+static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE];
+static StaticTask_t solve_puzzles_pcb;
+
 QueueHandle_t requests_queue;  // Metadata for puzzle procurement.
 QueueHandle_t graphics_queue;  // PUZZLE_INFO messages for drawing.
 QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
@@ -34,9 +38,9 @@ struct NetworkState network_state;
 
 int main() {
     requests_queue = xQueueCreate(1, sizeof(struct Metadata));
-    graphics_queue = xQueueCreate(1, sizeof(struct Puzzle));
-    challenge_queue = xQueueCreate(1, sizeof(struct Puzzle));
-    solution_queue = xQueueCreate(1, sizeof(struct Puzzle));
+    graphics_queue = xQueueCreate(1, sizeof(struct Puzzle *));
+    challenge_queue = xQueueCreate(1, sizeof(struct Puzzle *));
+    solution_queue = xQueueCreate(1, sizeof(struct Puzzle *));
 
     logging_initialise();
     network_initialise(&network_state, accept_input_task);
@@ -90,12 +94,12 @@ static void draw_puzzles_task(
         return;
     }
 
-    struct Puzzle puzzle_info;
+    const struct Puzzle * puzzle_info = NULL;
 
     while (1)
         if (xQueueReceive(graphics_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO + 1);
-            video_draw_puzzle(&video_state, &puzzle_info);
+            video_draw_puzzle(&video_state, puzzle_info);
             vTaskPrioritySet(NULL, DEFAULT_THREAD_PRIO - 1);
         }
 
@@ -107,13 +111,12 @@ static void solve_puzzles_task(
 ) {
     (void)data;
 
-    struct Puzzle puzzle_info;
-
     assert(solver_initialise_environment());
+    struct Puzzle * puzzle_info = NULL;
 
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-            solver_solve(&puzzle_info);
+            solver_solve(puzzle_info);
             xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
             xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
         }
@@ -170,49 +173,54 @@ static void build_puzzle_data(
     const struct sockaddr_in * const dst_addr,
     const struct Metadata * const metadata
 ) {
-    static struct Puzzle puzzle_info;
     static struct sockaddr_in src_addr;
+    
+    struct Puzzle * const puzzle_info = malloc(sizeof(struct Puzzle));
+    assert(puzzle_info != NULL);
 
-    struct Chunk * const chunk_data = &puzzle_info.chunk;
+    struct Chunk * const chunk_data = &puzzle_info->chunk;
 
     // Request a puzzle according to the given request_info.
     puzzle_request(metadata, sock, dst_addr);
-    if (udp_receive_message(sock, &src_addr, &puzzle_info, MSG_PUZZLE_INFO, NULL) != 0)
+    if (udp_receive_message(sock, &src_addr, puzzle_info, MSG_PUZZLE_INFO, NULL) != 0) {
+        free(puzzle_info);
         return;
+    }
 
     // For info, describe the puzzle on the serial output.
-    puzzle_print(&puzzle_info);
+    puzzle_print(puzzle_info);
 
-    assert(puzzle_info.num_chunks == 1);
+    assert(puzzle_info->num_chunks == 1);
 
     // Request, receive, and parse each chunk of clue data.
-    for (uint8_t chunk_id = 0; chunk_id < puzzle_info.num_chunks; ++chunk_id) {
-        chunk_request(chunk_id, sock, dst_addr, &puzzle_info.metadata);
+    for (uint8_t chunk_id = 0; chunk_id < puzzle_info->num_chunks; ++chunk_id) {
+        chunk_request(chunk_id, sock, dst_addr, &puzzle_info->metadata);
         if (udp_receive_message(
-                sock, &src_addr, chunk_data, MSG_CHUNK_DATA, &puzzle_info.metadata
+                sock, &src_addr, chunk_data, MSG_CHUNK_DATA, &puzzle_info->metadata
             ) == 0) {
             if (chunk_data->chunk_id == chunk_id) {
                 chunk_print(chunk_data);
-                if (chunk_data->max_clue_data_count > puzzle_info.global_max_clue_data_count)
-                    puzzle_info.global_max_clue_data_count = chunk_data->max_clue_data_count;
+                if (chunk_data->max_clue_data_count > puzzle_info->global_max_clue_data_count)
+                    puzzle_info->global_max_clue_data_count = chunk_data->max_clue_data_count;
             } else {
                 logging_printf(
                     "Unexpected chunk: requested %d, but received %d.", chunk_id,
                     chunk_data->chunk_id
                 );
+                free(puzzle_info);
+
                 return;
             }
-        } else
+        } else {
+            free(puzzle_info);
             return;
+        }
     }
 
     // Broadcast out the (small) puzzle specification to the graphics handler and solver.
     xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
     xQueueSend(challenge_queue, &puzzle_info, portMAX_DELAY);
 }
-
-static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE]; // TODO what's going on here?
-static StaticTask_t solve_puzzles_pcb;
 
 static void request_protocol_task(
     void * const data
@@ -225,7 +233,7 @@ static void request_protocol_task(
     );
 
     xTaskCreateStatic(
-        &solve_puzzles_task, "solve_puzzles_task", 16 * THREAD_STACKSIZE, NULL,
+        &solve_puzzles_task, "solve_puzzles_task", sizeof(solve_puzzles_stack) / sizeof(*solve_puzzles_stack), NULL,
         DEFAULT_THREAD_PRIO - 1, solve_puzzles_stack, &solve_puzzles_pcb
     );
 
@@ -256,15 +264,15 @@ static void submit_protocol_task(
     (void)data;
 
     static struct sockaddr_in src_addr;
-    struct Puzzle puzzle_info;
+    struct Puzzle * puzzle_info = NULL;
     struct Result result = {.status = RESULT_ERROR};
 
     while (1)
         if (xQueueReceive(solution_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
             xSemaphoreTake(network_state.mutex, portMAX_DELAY);
-            if (result_send(&puzzle_info, network_state.sock, &network_state.dst_addr) == 0)
+            if (result_send(puzzle_info, network_state.sock, &network_state.dst_addr) == 0)
                 udp_receive_message(
-                    network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info.metadata
+                    network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info->metadata
                 );
 
             xSemaphoreGive(network_state.mutex);
@@ -273,9 +281,10 @@ static void submit_protocol_task(
 
             // This puzzle is done (and the serial line is clear), so query for the next.
 
-            xSemaphoreTake(puzzle_info.solution_semaphore, portMAX_DELAY);
-            puzzle_free(&puzzle_info);
-            xSemaphoreGive(puzzle_info.solution_semaphore);
+            SemaphoreHandle_t puzzle_semaphore = puzzle_info->solution_semaphore;
+            xSemaphoreTake(puzzle_semaphore, portMAX_DELAY);
+            puzzle_free(puzzle_info);
+            xSemaphoreGive(puzzle_semaphore);
             
             xTaskNotify(accept_input_task_handle, 0, eNoAction);
         }

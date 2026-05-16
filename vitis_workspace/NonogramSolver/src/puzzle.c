@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <string.h>
 #include <lwip/sockets.h>
 #include <xil_printf.h>
 
@@ -93,6 +94,7 @@ void puzzle_print(
 void puzzle_free(
     struct Puzzle * const puzzle
 ) {
-    puzzle->solution_bitmap = NULL;
+    memset(bitmap_buffer, 0, sizeof(line_t) * MAX_SIZE);
     chunk_free(&puzzle->chunk);
+    free(puzzle);
 }

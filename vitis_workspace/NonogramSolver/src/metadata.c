@@ -31,7 +31,7 @@ const uint8_t * metadata_parse(
     metadata->difficulty.size_index = difficulty & 0x0F;
     metadata->difficulty.tier = (difficulty >> 4) & 0x03;
 
-    if (metadata->difficulty.tier > DIFFICULTY_CUSTOM) {
+    if (metadata->difficulty.tier > DIFFICULTY_HARD) {
         logging_printf("metadata_parse: Invalid difficulty tier %02x.", metadata->difficulty.tier);
         valid = false;
     }
