@@ -1,6 +1,6 @@
 #include <assert.h>
-#include <string.h>
 #include <lwip/sockets.h>
+#include <string.h>
 #include <xil_printf.h>
 
 #include "chunks.h"

@@ -35,8 +35,9 @@ typedef uint32_t extent_t;
  */
 enum SolverState
 {
-    SOLVER_OK, /**< @brief The solver reported success */
-    SOLVER_STUCK, /**< @brief The solver reached a fixed point where a cell must be manually chosen. */
+    SOLVER_OK,    /**< @brief The solver reported success */
+    SOLVER_STUCK, /**< @brief The solver reached a fixed point where a cell must be manually chosen.
+                   */
     SOLVER_CONTRADICTION, /**< @brief The solver derived a contradiction against the clue data. */
     SOLVER_UNFINISHED = 0xFF /**< @brief The solver has not finished execution.  */
 };

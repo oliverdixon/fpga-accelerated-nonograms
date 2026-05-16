@@ -191,7 +191,7 @@ static enum RefinementResult refine_column(
 ) {
     line_t known_black;
     line_t known_white;
-    get_column_masks(out_black, out_white, puzzle_size, col_idx,&known_black, &known_white);
+    get_column_masks(out_black, out_white, puzzle_size, col_idx, &known_black, &known_white);
 
     line_t forced_black;
     line_t forced_white;
@@ -257,7 +257,7 @@ uint32_t solver_toplevel(
 #pragma HLS INTERFACE s_axilite port = out_white bundle = AXILiteS
 #pragma HLS INTERFACE s_axilite port = return bundle = AXILiteS
 
-#pragma HLS allocation function instances=refine_line limit=1
+#pragma HLS allocation function instances = refine_line limit = 1
 
     if (puzzle_size == 0 || puzzle_size > MAX_SIZE)
         return SOLVER_CONTRADICTION;

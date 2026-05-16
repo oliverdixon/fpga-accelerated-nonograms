@@ -2,11 +2,11 @@
 #include <lwip/sockets.h>
 #include <xil_printf.h>
 
+#include "../../SolverCore/src/solver_params.h"
 #include "logging.h"
 #include "metadata.h"
 #include "puzzle.h"
 #include "result.h"
-#include "../../SolverCore/src/solver_params.h"
 
 /*
  * Message ID (1 byte)

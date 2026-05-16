@@ -1,7 +1,7 @@
 #include <xil_printf.h>
 
-#include "serial.h"
 #include "logging.h"
+#include "serial.h"
 
 static char buffer[16];
 

@@ -6,9 +6,9 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 
+#include "../../SolverCore/src/solver_params.h"
 #include "chunks.h"
 #include "metadata.h"
-#include "../../SolverCore/src/solver_params.h"
 
 enum SearchResult
 {

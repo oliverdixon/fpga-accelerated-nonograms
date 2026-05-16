@@ -6,17 +6,16 @@
 #include "puzzle.h"
 #include "solver.h"
 
-static struct PendingJobs pending_jobs = {
-    .count = 0
-};
+static struct PendingJobs pending_jobs = {.count = 0};
 
 /**
  * @brief Clear any pending interrupts on the given solver core.
  * @param solver The solver from which to clear interrupts.
  * @return The interrupt state, prior to clearing.
  */
-static uint32_t clear_pending_interrupts(XSolver_toplevel * const solver)
-{
+static uint32_t clear_pending_interrupts(
+    XSolver_toplevel * const solver
+) {
     const uint32_t interrupt_status = XSolver_toplevel_InterruptGetStatus(solver);
     if (interrupt_status != 0)
         XSolver_toplevel_InterruptClear(solver, interrupt_status);
@@ -25,17 +24,21 @@ static uint32_t clear_pending_interrupts(XSolver_toplevel * const solver)
 }
 
 /**
- * @brief ISR to receive interrupts from the solver IP cores and propagate notifications to the solver task.
+ * @brief ISR to receive interrupts from the solver IP cores and propagate notifications to the
+ * solver task.
  * @param data Task payload as the IP core metadata.
  */
-static void finished_isr(void * const data)
-{
+static void finished_isr(
+    void * const data
+) {
     struct IPCore * const ipcore = data;
     BaseType_t higher_priority_task_woken = pdFALSE;
     const uint32_t status = clear_pending_interrupts(&ipcore->solver);
 
     if ((status & 1) != 0)
-        xTaskNotifyFromISR(ipcore->notify_task, ipcore->notify_bits, eSetBits, &higher_priority_task_woken);
+        xTaskNotifyFromISR(
+            ipcore->notify_task, ipcore->notify_bits, eSetBits, &higher_priority_task_woken
+        );
 
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
@@ -52,7 +55,7 @@ bool ipcore_initialise(
     ipcore->job.propagated = false;
     ipcore->notify_task = xTaskGetCurrentTaskHandle();
     ipcore->notify_bits = notify_bits;
-    
+
     const int status = XSolver_toplevel_Initialize(&ipcore->solver, base_address);
 
     if (status == 0) {
@@ -62,7 +65,7 @@ bool ipcore_initialise(
 
         if (xPortInstallInterruptHandler(interrupt_intr, finished_isr, ipcore) != pdPASS)
             return false;
-        
+
         vPortEnableInterrupt(interrupt_intr);
 
         ipcore->busy = false;
@@ -112,8 +115,7 @@ void ipcore_execute(
 void ipcore_finish(
     struct IPCore * const ipcore,
     const struct Puzzle * const puzzle_info
-)
-{
+) {
     ipcore->return_code = (enum SolverState)XSolver_toplevel_Get_return(&ipcore->solver);
 
     if (ipcore->return_code != SOLVER_UNFINISHED) {
@@ -126,8 +128,7 @@ void ipcore_finish(
 
 bool ipcore_enqueue_job(
     const struct SearchJob * const job
-)
-{
+) {
     if (pending_jobs.count >= (MAX_SIZE * MAX_SIZE) + 1)
         return false;
 
@@ -137,8 +138,7 @@ bool ipcore_enqueue_job(
 
 bool ipcore_dequeue_job(
     struct SearchJob * const job
-)
-{
+) {
     if (pending_jobs.count == 0)
         return false;
 

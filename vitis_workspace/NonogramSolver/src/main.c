@@ -174,7 +174,7 @@ static void build_puzzle_data(
     const struct Metadata * const metadata
 ) {
     static struct sockaddr_in src_addr;
-    
+
     struct Puzzle * const puzzle_info = malloc(sizeof(struct Puzzle));
     assert(puzzle_info != NULL);
 
@@ -233,8 +233,9 @@ static void request_protocol_task(
     );
 
     xTaskCreateStatic(
-        &solve_puzzles_task, "solve_puzzles_task", sizeof(solve_puzzles_stack) / sizeof(*solve_puzzles_stack), NULL,
-        DEFAULT_THREAD_PRIO - 1, solve_puzzles_stack, &solve_puzzles_pcb
+        &solve_puzzles_task, "solve_puzzles_task",
+        sizeof(solve_puzzles_stack) / sizeof(*solve_puzzles_stack), NULL, DEFAULT_THREAD_PRIO - 1,
+        solve_puzzles_stack, &solve_puzzles_pcb
     );
 
     xTaskCreate(
@@ -285,7 +286,7 @@ static void submit_protocol_task(
             xSemaphoreTake(puzzle_semaphore, portMAX_DELAY);
             puzzle_free(puzzle_info);
             xSemaphoreGive(puzzle_semaphore);
-            
+
             xTaskNotify(accept_input_task_handle, 0, eNoAction);
         }
 

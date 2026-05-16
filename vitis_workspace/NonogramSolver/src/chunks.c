@@ -6,9 +6,9 @@
  */
 
 #include <assert.h>
+#include <lwip/sockets.h>
 #include <stdlib.h>
 #include <xil_printf.h>
-#include <lwip/sockets.h>
 
 #include "chunks.h"
 #include "logging.h"

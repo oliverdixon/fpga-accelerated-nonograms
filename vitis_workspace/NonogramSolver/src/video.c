@@ -10,10 +10,10 @@
 #include <xil_cache.h>
 #include <xparameters.h>
 
-#include "video.h"
 #include "chunks.h"
 #include "glyph_bitmaps.h"
 #include "puzzle.h"
+#include "video.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
 #define FRAME_STRIDE (1440 * 4)
@@ -27,14 +27,12 @@ static void draw_character(
 ) {
     const uint32_t stride = state->display_ctrl.stride / 4;
     const glyph_word_t * const glyph = glyph_data[item < GLYPH_COUNT ? item : GLYPH_COUNT - 1];
-
-    uint32_t * const frame =
-        state->display_ctrl.framePtr[state->display_ctrl.curFrame];
+    uint32_t * const frame = state->display_ctrl.framePtr[state->display_ctrl.curFrame];
 
     for (unsigned int col_idx = 0; col_idx < GLYPH_WIDTH; ++col_idx) {
         const glyph_word_t bits = glyph[col_idx];
         for (unsigned int row_idx = 0; row_idx < GLYPH_HEIGHT; ++row_idx)
-            if (bits & ((glyph_word_t) 1U << row_idx))
+            if (bits & ((glyph_word_t)1U << row_idx))
                 frame[(y + row_idx) * stride + (x + col_idx)] = FOREGROUND_COLOUR;
     }
 }
@@ -93,7 +91,7 @@ static void draw_clue_element(
     const uint32_t glyph_advance_extent
 ) {
     if (clue > GLYPH_COUNT - 1)
-        x_pos -= glyph_advance_extent / 2;// clang-format Language: C
+        x_pos -= glyph_advance_extent / 2;
 
     while (clue != 0) {
         draw_character(state, clue, x_pos, y_pos);

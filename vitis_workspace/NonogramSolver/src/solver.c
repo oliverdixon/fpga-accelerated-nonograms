@@ -14,12 +14,12 @@
 #include <xparameters.h>
 #include <xsolver_toplevel.h>
 
-#include "solver.h"
+#include "../../SolverCore/src/solver_params.h"
 #include "chunks.h"
 #include "ipcore.h"
 #include "logging.h"
 #include "puzzle.h"
-#include "../../SolverCore/src/solver_params.h"
+#include "solver.h"
 
 #define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
 #define IPCORE_COUNT (2)
@@ -28,7 +28,8 @@ static struct IPCore cores[IPCORE_COUNT];
 
 /**
  * @struct CellChoice
- * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a fixed point.
+ * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a
+ * fixed point.
  */
 struct CellChoice
 {
@@ -37,11 +38,15 @@ struct CellChoice
     bool valid;
 };
 
-__attribute__((section(".pattern_buffers"), aligned(64)))
-static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+__attribute__((
+    section(".pattern_buffers"),
+    aligned(64)
+)) static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
 
-__attribute__((section(".pattern_buffers"), aligned(64)))
-static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+__attribute__((
+    section(".pattern_buffers"),
+    aligned(64)
+)) static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
 
 static extent_t row_counts[MAX_SIZE];
 static extent_t col_counts[MAX_SIZE];
@@ -50,11 +55,10 @@ static line_t out_black[MAX_SIZE];
 static line_t out_white[MAX_SIZE];
 
 static struct CellChoice choose_unknown(
-    const line_t *const black,
-    const line_t *const white,
+    const line_t * const black,
+    const line_t * const white,
     const extent_t puzzle_extent
-)
-{
+) {
     struct CellChoice choice = {.valid = false};
 
     for (extent_t row_idx = 0; row_idx < puzzle_extent; ++row_idx) {
@@ -84,12 +88,11 @@ static struct CellChoice choose_unknown(
  * @return The return code from the HLS solver.
  */
 static enum SolverState run_core_sync(
-    struct IPCore *const ipcore,
-    const struct Puzzle *const puzzle_info,
-    const line_t *const in_black,
-    const line_t *const in_white
-)
-{
+    struct IPCore * const ipcore,
+    const struct Puzzle * const puzzle_info,
+    const line_t * const in_black,
+    const line_t * const in_white
+) {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
     memcpy(ipcore->in_black, in_black, board_bytes);
@@ -118,11 +121,10 @@ static enum SolverState run_core_sync(
  * @param job The job to assign to the IP core.
  */
 static void run_core_async(
-    struct IPCore *const ipcore,
-    const struct Puzzle *const puzzle_info,
-    const struct SearchJob *const job
-)
-{
+    struct IPCore * const ipcore,
+    const struct Puzzle * const puzzle_info,
+    const struct SearchJob * const job
+) {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
     ipcore->job = *job;
@@ -135,11 +137,10 @@ static void run_core_async(
 }
 
 static void make_propagated_job_from_core(
-    struct SearchJob *const job,
-    const struct IPCore *const core,
-    const struct Puzzle *const puzzle_info
-)
-{
+    struct SearchJob * const job,
+    const struct IPCore * const core,
+    const struct Puzzle * const puzzle_info
+) {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
     memcpy(job->black, core->out_black, board_bytes);
@@ -149,31 +150,24 @@ static void make_propagated_job_from_core(
     job->propagated = true;
 }
 
-static void drain_solver_notifications()
-{
+static void drain_solver_notifications() {
     uint32_t ignored = 0;
-    while (xTaskNotifyWait(0x00u, UINT32_MAX, &ignored, 0) == pdTRUE);
+    while (xTaskNotifyWait(0x00u, UINT32_MAX, &ignored, 0) == pdTRUE)
+        ;
 }
 
 static void explore_binary_children(
-    const struct SearchJob *const current_job,
-    const struct CellChoice *const choice,
-    const struct Puzzle *const puzzle_info,
-    const line_t *const propagated_black,
-    const line_t *const propagated_white,
-    enum SolverState *const black_status,
-    enum SolverState *const white_status
-)
-{
-    struct SearchJob black_child = {
-        .propagated = false,
-        .depth = current_job->depth + 1
-    };
+    const struct SearchJob * const current_job,
+    const struct CellChoice * const choice,
+    const struct Puzzle * const puzzle_info,
+    const line_t * const propagated_black,
+    const line_t * const propagated_white,
+    enum SolverState * const black_status,
+    enum SolverState * const white_status
+) {
+    struct SearchJob black_child = {.propagated = false, .depth = current_job->depth + 1};
 
-    struct SearchJob white_child = {
-        .propagated = false,
-        .depth = current_job->depth + 1
-    };
+    struct SearchJob white_child = {.propagated = false, .depth = current_job->depth + 1};
 
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
     memcpy(black_child.black, propagated_black, board_bytes);
@@ -181,7 +175,7 @@ static void explore_binary_children(
     memcpy(white_child.black, propagated_black, board_bytes);
     memcpy(white_child.white, propagated_white, board_bytes);
 
-    const line_t mask = (line_t) 1U << choice->col;
+    const line_t mask = (line_t)1U << choice->col;
     black_child.black[choice->row] |= mask;
     white_child.white[choice->row] |= mask;
 
@@ -191,22 +185,14 @@ static void explore_binary_children(
     drain_solver_notifications();
 
     // By convention, explore the black branch on Core 0, and the white branch on Core 1.
-    run_core_async(
-        &cores[0],
-        puzzle_info,
-        &black_child
-    );
+    run_core_async(&cores[0], puzzle_info, &black_child);
 
-    run_core_async(
-        &cores[1],
-        puzzle_info,
-        &white_child
-    );
+    run_core_async(&cores[1], puzzle_info, &white_child);
 
     while (*black_status == SOLVER_UNFINISHED || *white_status == SOLVER_UNFINISHED) {
         uint32_t notify_bits = 0;
         xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
-        
+
         if (notify_bits & cores[0].notify_bits) {
             ipcore_finish(&cores[0], puzzle_info);
             assert(!cores[0].busy && cores[0].return_code != SOLVER_UNFINISHED);
@@ -222,16 +208,12 @@ static void explore_binary_children(
 }
 
 static enum SearchResult search_two_core_dfs(
-    const struct Puzzle *const puzzle_info
-)
-{
+    const struct Puzzle * const puzzle_info
+) {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
     bool saw_unknown = false;
 
-    struct SearchJob current = {
-        .propagated = false,
-        .depth = 0
-    };
+    struct SearchJob current = {.propagated = false, .depth = 0};
 
     memset(current.black, 0, board_bytes);
     memset(current.white, 0, board_bytes);
@@ -258,18 +240,16 @@ static enum SearchResult search_two_core_dfs(
         line_t propagated_white[MAX_SIZE];
 
         if (current.propagated) {
-            // If this job came directly from a previous SOLVER_STUCK result, it is already propagated.
+            /* 
+             * If this job came directly from a previous SOLVER_STUCK result, it is already
+             * propagated.
+             */
             memcpy(propagated_black, current.black, board_bytes);
             memcpy(propagated_white, current.white, board_bytes);
             status = SOLVER_STUCK;
         } else {
             // Otherwise, allocate a core to run the job.
-            status = run_core_sync(
-                &cores[0],
-                puzzle_info,
-                current.black,
-                current.white
-            );
+            status = run_core_sync(&cores[0], puzzle_info, current.black, current.white);
 
             if (status == SOLVER_OK || status == SOLVER_STUCK) {
                 memcpy(propagated_black, cores[0].out_black, board_bytes);
@@ -293,16 +273,16 @@ static enum SearchResult search_two_core_dfs(
         }
 
         /*
-         * Inductive case: if the solver reports SOLVER_STUCK, spawn a couple of new jobs for each branch at the fixed
-         * point and allocate one to each solver IP core.
+         * Inductive case: if the solver reports SOLVER_STUCK, spawn a couple of new jobs for each
+         * branch at the fixed point and allocate one to each solver IP core.
          */
         const struct CellChoice choice =
-                choose_unknown(propagated_black, propagated_white, puzzle_info->width);
+            choose_unknown(propagated_black, propagated_white, puzzle_info->width);
 
         if (!choice.valid) {
             /*
-             * If there's no valid choice, no fixed point was reached. We didn't reach an explicit contradiction in the
-             * clue data, but this branch is useless.
+             * If there's no valid choice, no fixed point was reached. We didn't reach an explicit
+             * contradiction in the clue data, but this branch is useless.
              */
             saw_unknown = true;
             if (!ipcore_dequeue_job(&current))
@@ -311,7 +291,7 @@ static enum SearchResult search_two_core_dfs(
             continue;
         }
 
-        const line_t mask = (line_t) 1U << choice.col;
+        const line_t mask = (line_t)1U << choice.col;
         if ((propagated_black[choice.row] | propagated_white[choice.row]) & mask) {
             saw_unknown = true;
 
@@ -323,8 +303,10 @@ static enum SearchResult search_two_core_dfs(
 
         enum SolverState black_status = SOLVER_UNFINISHED;
         enum SolverState white_status = SOLVER_UNFINISHED;
-        explore_binary_children(&current, &choice, puzzle_info, propagated_black, propagated_white, &black_status,
-                                &white_status);
+        explore_binary_children(
+            &current, &choice, puzzle_info, propagated_black, propagated_white, &black_status,
+            &white_status
+        );
 
         // If one of the branches derived a solution, we're done.
         if (black_status == SOLVER_OK) {
@@ -378,10 +360,9 @@ static enum SearchResult search_two_core_dfs(
 }
 
 static unsigned int min_required_tail(
-    const struct ClueData *const block,
+    const struct ClueData * const block,
     const unsigned int start_idx
-)
-{
+) {
     if (start_idx >= block->count)
         return 0;
 
@@ -395,14 +376,13 @@ static unsigned int min_required_tail(
 
 static extent_t generate_pattern_induction(
     const extent_t puzzle_size,
-    const struct ClueData *const block,
+    const struct ClueData * const block,
     const unsigned int clue_idx,
     const unsigned int min_start_idx,
     const line_t partial_line,
-    line_t *const pattern_out,
+    line_t * const pattern_out,
     extent_t next_pattern_idx
-)
-{
+) {
     if (clue_idx == block->count) {
         // Base case: we've reached the end of the clues, so commit our current line.
         pattern_out[next_pattern_idx++] = partial_line;
@@ -410,14 +390,14 @@ static extent_t generate_pattern_induction(
     }
 
     const unsigned int block_len =
-            block->blocks[clue_idx]; // The length of the target continuous block.
+        block->blocks[clue_idx]; // The length of the target continuous block.
     const unsigned int latest_start_idx =
-            puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
+        puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
     for (unsigned int start_idx = min_start_idx; start_idx <= latest_start_idx; ++start_idx) {
         const line_t block_mask = ((1U << block_len) - 1) << start_idx;
         const unsigned next_idx =
-                clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
+            clue_idx + 1 == block->count ? start_idx + block_len : start_idx + block_len + 1;
 
         next_pattern_idx = generate_pattern_induction(
             puzzle_size, block, clue_idx + 1, next_idx, partial_line | block_mask, pattern_out,
@@ -431,9 +411,8 @@ static extent_t generate_pattern_induction(
 static extent_t generate_pattern(
     line_t dst[MAX_SIZE],
     const extent_t puzzle_size,
-    const struct ClueData *const block
-)
-{
+    const struct ClueData * const block
+) {
     if (block->count == 0) {
         dst[0] = 0;
         return 1;
@@ -454,16 +433,15 @@ static void compute_valid_patterns(
     const extent_t puzzle_extent,
     line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
     extent_t counts[MAX_SIZE],
-    const struct ClueData *const clues,
+    const struct ClueData * const clues,
     const unsigned int clue_count
-)
-{
+) {
     for (unsigned int clue_idx = 0; clue_idx < clue_count; ++clue_idx)
-        counts[clue_idx] = generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_extent, &clues[clue_idx]);
+        counts[clue_idx] =
+            generate_pattern(&dst[clue_idx * MAX_PATTERN_COUNT], puzzle_extent, &clues[clue_idx]);
 }
 
-bool solver_initialise_environment()
-{
+bool solver_initialise_environment() {
     static uint32_t base_addresses[IPCORE_COUNT] = {
         XPAR_SOLVER_TOPLEVEL_0_BASEADDR, XPAR_SOLVER_TOPLEVEL_1_BASEADDR
     };
@@ -474,16 +452,18 @@ bool solver_initialise_environment()
 
     assert(IPCORE_COUNT < 32);
     for (unsigned int core_idx = 0; core_idx < IPCORE_COUNT; ++core_idx)
-        if (!ipcore_initialise(&cores[core_idx], base_addresses[core_idx], interrupt_intrs[core_idx], 1U << core_idx))
+        if (!ipcore_initialise(
+                &cores[core_idx], base_addresses[core_idx], interrupt_intrs[core_idx],
+                1U << core_idx
+            ))
             return false;
 
     return true;
 }
 
 void solver_solve(
-    struct Puzzle *const puzzle_info
-)
-{
+    struct Puzzle * const puzzle_info
+) {
     assert(puzzle_info->width == puzzle_info->height);
     assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
 
@@ -506,10 +486,10 @@ void solver_solve(
         &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height
     );
 
-    Xil_DCacheFlushRange((UINTPTR) row_patterns, sizeof(row_patterns));
-    Xil_DCacheFlushRange((UINTPTR) row_counts, sizeof(row_counts));
-    Xil_DCacheFlushRange((UINTPTR) col_patterns, sizeof(col_patterns));
-    Xil_DCacheFlushRange((UINTPTR) col_counts, sizeof(col_counts));
+    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns));
+    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts));
+    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns));
+    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts));
 
     // Attempt to solve the Nonogram with two-core DFS.
 
