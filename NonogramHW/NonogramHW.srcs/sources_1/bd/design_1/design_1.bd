@@ -2658,7 +2658,7 @@
       },
       "solver_toplevel_0": {
         "vlnv": "xilinx.com:hls:solver_toplevel:1.0",
-        "ip_revision": "2114610361",
+        "ip_revision": "2114611382",
         "xci_name": "design_1_solver_toplevel_0_2",
         "xci_path": "ip/design_1_solver_toplevel_0_2/design_1_solver_toplevel_0_2.xci",
         "inst_hier_path": "solver_toplevel_0",
@@ -2692,7 +2692,7 @@
       },
       "solver_toplevel_1": {
         "vlnv": "xilinx.com:hls:solver_toplevel:1.0",
-        "ip_revision": "2114610361",
+        "ip_revision": "2114611382",
         "xci_name": "design_1_solver_toplevel_1_1",
         "xci_path": "ip/design_1_solver_toplevel_1_1/design_1_solver_toplevel_1_1.xci",
         "inst_hier_path": "solver_toplevel_1",
