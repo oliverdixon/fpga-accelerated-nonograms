@@ -1,15 +1,31 @@
+/**
+ * @file
+ * @brief Simple text-parsing implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <xil_printf.h>
 
 #include "logging.h"
 #include "serial.h"
 
-static char buffer[16];
+static char buffer[16]; /**< @brief Persistent buffer to receive bytes from the Rx serial line. */
 
+/**
+ * @brief Read a line, until some sort of natural terminator, from the Rx serial line.
+ * @param dst The destination buffer to receive the NULL-terminated line.
+ * @param max_length The maximum number of bytes to write into the buffer.
+ * @return The number of bytes written, excluding the NULL-terminator
+ */
 static unsigned int readline(
     char * const dst,
+    // ReSharper disable once CppDFAConstantParameter
     const unsigned int max_length
 ) {
+    // ReSharper disable once CppDFAConstantConditions
     if (max_length == 0)
+        // ReSharper disable once CppDFAUnreachableCode
         return 0;
 
     unsigned int idx = 0;
@@ -29,6 +45,7 @@ static unsigned int readline(
                 --idx;
                 print("\b \b");
             }
+
             continue;
         default:;
         }
@@ -46,7 +63,14 @@ static unsigned int readline(
     }
 }
 
+/**
+ * @brief Raise the given base to the given exponent.
+ * @param base The base.
+ * @param exp The exponent.
+ * @return The power.
+ */
 static uint32_t pow_uint32(
+    // ReSharper disable once CppDFAConstantParameter
     const uint32_t base,
     unsigned int exp
 ) {

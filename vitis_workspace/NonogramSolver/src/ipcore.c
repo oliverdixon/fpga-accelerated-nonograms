@@ -1,3 +1,10 @@
+/**
+ * @file
+ * @brief Solver HLS IP core manager implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <xil_cache.h>
 #include <xsolver_toplevel.h>
@@ -5,8 +12,6 @@
 #include "ipcore.h"
 #include "puzzle.h"
 #include "solver.h"
-
-static struct PendingJobs pending_jobs = {.count = 0};
 
 /**
  * @brief Clear any pending interrupts on the given solver core.
@@ -25,8 +30,8 @@ static uint32_t clear_pending_interrupts(
 
 /**
  * @brief ISR to receive interrupts from the solver IP cores and propagate notifications to the
- * solver task.
- * @param data Task payload as the IP core metadata.
+ *  solver task.
+ * @param data Task payload as a pointer to the IP core metadata.
  */
 static void finished_isr(
     void * const data
@@ -36,9 +41,7 @@ static void finished_isr(
     const uint32_t status = clear_pending_interrupts(&ipcore->solver);
 
     if ((status & 1) != 0)
-        xTaskNotifyFromISR(
-            ipcore->notify_task, ipcore->notify_bits, eSetBits, &higher_priority_task_woken
-        );
+        xTaskNotifyFromISR(ipcore->notify_task, ipcore->notify_bits, eSetBits, &higher_priority_task_woken);
 
     portYIELD_FROM_ISR(higher_priority_task_woken);
 }
@@ -51,7 +54,6 @@ bool ipcore_initialise(
 ) {
     ipcore->busy = true;
     ipcore->job.depth = 0;
-    ipcore->return_code = SOLVER_UNFINISHED;
     ipcore->job.propagated = false;
     ipcore->notify_task = xTaskGetCurrentTaskHandle();
     ipcore->notify_bits = notify_bits;
@@ -93,55 +95,41 @@ void ipcore_execute(
 
     XSolver_toplevel_Set_puzzle_size(&ipcore->solver, puzzle_info->width);
 
-    XSolver_toplevel_Set_in_black(&ipcore->solver, (UINTPTR)ipcore->in_black);
-    XSolver_toplevel_Set_in_white(&ipcore->solver, (UINTPTR)ipcore->in_white);
+    XSolver_toplevel_Set_in_black(&ipcore->solver, (UINTPTR)ipcore->job.black);
+    XSolver_toplevel_Set_in_white(&ipcore->solver, (UINTPTR)ipcore->job.white);
 
     XSolver_toplevel_Set_out_black(&ipcore->solver, (UINTPTR)ipcore->out_black);
     XSolver_toplevel_Set_out_white(&ipcore->solver, (UINTPTR)ipcore->out_white);
 
     const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
 
-    Xil_DCacheFlushRange((UINTPTR)ipcore->in_black, line_length);
-    Xil_DCacheFlushRange((UINTPTR)ipcore->in_white, line_length);
+    Xil_DCacheFlushRange((UINTPTR)ipcore->job.black, line_length); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheFlushRange((UINTPTR)ipcore->job.white, line_length); // NOLINT(*-narrowing-conversions)
 
-    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length);
-    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length);
+    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length); // NOLINT(*-narrowing-conversions)
 
     ipcore->busy = true;
-    ipcore->return_code = SOLVER_UNFINISHED;
     XSolver_toplevel_Start(&ipcore->solver);
 }
 
-void ipcore_finish(
+enum SolverState ipcore_finish(
     struct IPCore * const ipcore,
     const struct Puzzle * const puzzle_info
-) {
-    ipcore->return_code = (enum SolverState)XSolver_toplevel_Get_return(&ipcore->solver);
-
-    if (ipcore->return_code != SOLVER_UNFINISHED) {
+)
+{
+    if (XSolver_toplevel_IsDone(&ipcore->solver)) {
+        /*
+         * The out_{black,white} buffers are controlled by the FPGA, so invalidate the CPU's cache of them. This is
+         * distinct the flushing the "CPU-owned" buffers.
+         */
         const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
-        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length);
-        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length);
+        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length); // NOLINT(*-narrowing-conversions)
+        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length); // NOLINT(*-narrowing-conversions)
+
         ipcore->busy = false;
+        return (enum SolverState)XSolver_toplevel_Get_return(&ipcore->solver);
     }
-}
 
-bool ipcore_enqueue_job(
-    const struct SearchJob * const job
-) {
-    if (pending_jobs.count >= (MAX_SIZE * MAX_SIZE) + 1)
-        return false;
-
-    pending_jobs.jobs[pending_jobs.count++] = *job;
-    return true;
-}
-
-bool ipcore_dequeue_job(
-    struct SearchJob * const job
-) {
-    if (pending_jobs.count == 0)
-        return false;
-
-    *job = pending_jobs.jobs[--pending_jobs.count];
-    return true;
+    return SOLVER_UNFINISHED;
 }

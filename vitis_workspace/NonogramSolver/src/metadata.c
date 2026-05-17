@@ -1,3 +1,10 @@
+/**
+ * @file
+ * @brief Puzzle Metadata implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <lwip/def.h>
 #include <xil_printf.h>
@@ -6,16 +13,16 @@
 #include "metadata.h"
 
 uint8_t * metadata_hton(
-    const struct Metadata * const data,
+    const struct Metadata * const metadata,
     uint8_t * buffer_head
 ) {
     // Reorder seed to network order
-    const uint32_t net_seed = htonl(data->seed);
+    const uint32_t net_seed = htonl(metadata->seed);
     memcpy(buffer_head, &net_seed, sizeof(uint32_t));
     buffer_head += sizeof(uint32_t);
 
     // Append difficulty byte
-    *buffer_head = data->difficulty.size_index | (data->difficulty.tier << 4);
+    *buffer_head = metadata->difficulty.size_index | (metadata->difficulty.tier << 4);
 
     return buffer_head + sizeof(uint8_t);
 }
@@ -29,7 +36,7 @@ const uint8_t * metadata_parse(
 
     metadata->seed = ntohl(*(const uint32_t *)payload);
     metadata->difficulty.size_index = difficulty & 0x0F;
-    metadata->difficulty.tier = (difficulty >> 4) & 0x03;
+    metadata->difficulty.tier = difficulty >> 4 & 0x03;
 
     if (metadata->difficulty.tier > DIFFICULTY_HARD) {
         logging_printf("metadata_parse: Invalid difficulty tier %02x.", metadata->difficulty.tier);
@@ -50,8 +57,8 @@ void metadata_print(
 ) {
     assert(metadata->valid);
     xil_printf(
-        "Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n", metadata->seed,
-        metadata->difficulty.size_index, metadata->difficulty.tier
+        "Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n", metadata->seed, metadata->difficulty.size_index,
+        metadata->difficulty.tier
     );
 }
 
@@ -62,18 +69,12 @@ bool metadata_equal(
     if (lhs == NULL) {
         if (rhs == NULL)
             return true;
-        else
-            return false;
+        return false;
     }
 
-    if (rhs == NULL) {
-        if (lhs == NULL)
-            return true;
-        else
-            return false;
-    }
+    if (rhs == NULL)
+        return false;
 
     return lhs->valid == rhs->valid && lhs->seed == rhs->seed &&
-           lhs->difficulty.size_index == rhs->difficulty.size_index &&
-           lhs->difficulty.tier == rhs->difficulty.tier;
+           lhs->difficulty.size_index == rhs->difficulty.size_index && lhs->difficulty.tier == rhs->difficulty.tier;
 }

@@ -1,3 +1,10 @@
+/**
+ * @file
+ * @brief Puzzle result implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <lwip/sockets.h>
 #include <xil_printf.h>
@@ -8,16 +15,20 @@
 #include "puzzle.h"
 #include "result.h"
 
-/*
- * Message ID (1 byte)
- * Metadata
+/**
+ * @brief The length, in bytes, of a verification request message sent on the wire.
+ * @details
+ *  <ul>
+ *      <li>Message type ID</li>
+ *      <li>Puzzle Metadata</li>
+ *      <li>Solution bitmap (packed into bits on logical lines)</li>
+ *  </ul>
  */
-#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH                                                         \
-    (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
+#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
 
-static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH];
+static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH]; /**< @brief The persistent buffer to prepare requests. */
 
-int result_parse(
+bool result_parse(
     struct Result * const result,
     const struct Metadata * const metadata,
     const uint8_t * payload
@@ -31,7 +42,7 @@ int result_parse(
 
     if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {
         logging_puts("result_parse: quitting early due to bad metadata.");
-        return -1;
+        return false;
     }
 
     result->status = *payload++;
@@ -41,17 +52,17 @@ int result_parse(
     result->solve_time |= *payload++ << 8;
     result->solve_time |= *payload;
 
-    return 0;
+    return true;
 }
 
-int result_send(
+void result_send(
     const struct Puzzle * const puzzle,
     const int sock,
     const struct sockaddr_in * const dst_addr
 ) {
-    if (puzzle->solved_state == SEARCH_NOT_RUN)
+    if (puzzle->solved_state != SEARCH_SOLVED)
         // What's the point in submitting a solution if we don't have one?
-        return -1;
+        return;
 
     uint8_t * buffer_head = send_buf;
 
@@ -72,7 +83,7 @@ int result_send(
             uint8_t packed = 0;
 
             for (uint8_t bit = 0; bit < 8 && col_idx + bit < puzzle->width; ++bit)
-                if (row & (1U << (col_idx + bit)))
+                if (row & 1U << (col_idx + bit))
                     packed |= (uint8_t)(1U << (7U - bit));
 
             *buffer_head++ = packed;
@@ -81,12 +92,7 @@ int result_send(
 
     xSemaphoreGive(puzzle->solution_semaphore);
 
-    lwip_sendto(
-        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
-        sizeof(struct sockaddr_in)
-    );
-
-    return 0;
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr, sizeof(struct sockaddr_in));
 }
 
 void result_print(
@@ -101,7 +107,7 @@ void result_print(
     case RESULT_CORRECT:
         print("Server says: Correct!\r\n");
         break;
-    case RESULT_ERROR:
+    default:
         print("Server says: Error!\r\n");
         break;
     }

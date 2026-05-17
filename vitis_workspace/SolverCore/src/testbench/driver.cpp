@@ -41,6 +41,16 @@ static void print_board(
     }
 }
 
+/**
+ * @brief Compute the minimum number of cells required to place the remaining clue blocks.
+ * @param block The clue group describing one row or column.
+ * @param start_idx Index of the first clue block to include in the suffix calculation.
+ * @return The minimum number of cells required to place clues <code>start_idx..block->count - 1</code>, including
+ *  mandatory single-cell separators between adjacent remaining blocks.
+ * @details
+ *  This is used during pattern generation to determine how far the current clue block may be shifted to the right while
+ *  still leaving enough space for all later clue blocks.
+ */
 static unsigned int min_required_tail(
     const std::vector<extent_t> & block,
     const unsigned int start_idx
@@ -80,17 +90,13 @@ static void generate_pattern_induction(
     }
 
     const unsigned int block_len = block[clue_idx]; // The length of the target continuous block.
-    const unsigned int latest_start_idx =
-        puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
+    const unsigned int latest_start_idx = puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
     for (unsigned int start_idx = min_start_idx; start_idx <= latest_start_idx; ++start_idx) {
         const line_t block_mask = ((1U << block_len) - 1) << start_idx;
-        const unsigned int next_idx =
-            clue_idx + 1 == block.size() ? start_idx + block_len : start_idx + block_len + 1;
+        const unsigned int next_idx = clue_idx + 1 == block.size() ? start_idx + block_len : start_idx + block_len + 1;
 
-        generate_pattern_induction(
-            puzzle_size, block, clue_idx + 1, next_idx, partial_line | block_mask, patterns_out
-        );
+        generate_pattern_induction(puzzle_size, block, clue_idx + 1, next_idx, partial_line | block_mask, patterns_out);
     }
 }
 
@@ -115,6 +121,13 @@ static std::vector<line_t> generate_pattern(
     return pattern;
 }
 
+/**
+ * @brief Compute all valid patterns for the characterised puzzle.
+ * @param dst The destination pattern array.
+ * @param counts The destination counts array.
+ * @param clues The populated clue data.
+ * @param puzzle_size The extent of the square puzzle.
+ */
 static void compute_valid_patterns(
     line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
     extent_t counts[MAX_SIZE],
@@ -145,76 +158,44 @@ static void compute_valid_patterns(
 int main() {
     constexpr extent_t puzzle_size = 20;
 
+    // clang-format off
     const std::vector<std::vector<extent_t>> row_clues = {
         {01, 01, 01, 01, 01, 01},
         {01, 01, 01, 02, 01, 01, 01},
         {04, 01, 02, 01, 04},
         {06},
-        {
-            01,
-            01,
-            01,
-            01,
-        },
+        {01, 01, 01, 01},
         {01, 01, 02, 01, 01},
         {01, 01, 02, 04, 02, 01, 01},
         {01, 01, 02, 01, 01},
         {01, 01, 02, 02, 01, 01},
-        {
-            01,
-            02,
-            02,
-            01,
-        },
-        {
-            01,
-            02,
-            02,
-            01,
-        },
+        {01, 02, 02, 01},
+        {01, 02, 02, 01},
         {01, 01, 02, 02, 01, 01},
         {01, 01, 02, 01, 01},
         {01, 01, 02, 04, 02, 01, 01},
         {01, 01, 02, 01, 01},
-        {
-            01,
-            01,
-            01,
-            01,
-        },
+        {01, 01, 01, 01},
         {06},
         {04, 01, 02, 01, 04},
         {01, 01, 01, 02, 01, 01, 01},
         {01, 01, 01, 01, 01, 01}
     };
+    // clang-format on
 
+    // clang-format off
     const std::vector<std::vector<extent_t>> col_clues = {
         {00},
         {03, 01, 01, 01, 01, 03},
-        {
-            01,
-            01,
-            01,
-            01,
-        },
+        {01, 01, 01, 01},
         {03, 02, 02, 02, 03},
         {01, 01},
         {03, 03},
         {01, 01, 01, 01, 01, 01, 01, 01},
         {01, 01, 01, 04, 01, 01, 01},
         {02, 01, 04, 01, 02},
-        {
-            03,
-            03,
-            03,
-            03,
-        },
-        {
-            03,
-            03,
-            03,
-            03,
-        },
+        {03, 03, 03, 03},
+        {03, 03, 03, 03},
         {02, 01, 04, 01, 02},
         {01, 01, 01, 04, 01, 01, 01},
         {01, 01, 01, 01, 01, 01, 01, 01},
@@ -225,6 +206,7 @@ int main() {
         {03, 01, 01, 01, 01, 03},
         {00}
     };
+    // clang-format on
 
     assert(row_clues.size() == puzzle_size);
     assert(col_clues.size() == puzzle_size);
@@ -249,9 +231,8 @@ int main() {
     compute_valid_patterns(col_patterns, col_counts, col_clues, puzzle_size);
 
     // ... then solve.
-    const SearchResult status = search(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, out_black, out_white, 0
-    );
+    const SearchResult status =
+        search(row_patterns, row_counts, col_patterns, col_counts, puzzle_size, out_black, out_white, 0);
 
     std::cout << "status = " << status << "\n\n";
     print_board(out_black, out_white, puzzle_size);

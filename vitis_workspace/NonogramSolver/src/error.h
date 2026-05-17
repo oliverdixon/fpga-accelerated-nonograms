@@ -12,7 +12,7 @@
 
 #include "metadata.h"
 
-#define ERROR_MAX_LENGTH (200)
+#define ERROR_MAX_LENGTH (200) /**< @brief Protocol-defined maximum length of the error string, in bytes. */
 
 /**
  * @struct ServerError
@@ -20,20 +20,20 @@
  */
 struct ServerError
 {
-    struct Metadata metadata;
-    uint8_t original_msg_id;
-    uint8_t text_length;
-    char error_text[ERROR_MAX_LENGTH + 1];
+    struct Metadata metadata;              /**< @brief Optional Puzzle Metadata to which the ServerError relates. */
+    enum MessageType original_msg_id;      /**< @brief The type of message which caused the ServerError. */
+    uint8_t text_length;                   /**< @brief The length of the error text in bytes. */
+    char error_text[ERROR_MAX_LENGTH + 1]; /**< @brief A human-readable description of the ServerError. */
 };
 
 /**
  * @brief Parses a <code>MSG_ERROR</code> message from the server into the given structure.
  * @param dst The destination structure for the error message.
  * @param payload The bytes of the entire payload received from the server.
- * @return 0 on success, -1 on failure.
+ * @return Was the payload successfully parsed into the ServerError?
  * @pre The payload contains the <code>MSG_ERROR</code> identifier in the first byte.
  */
-int error_parse(
+bool error_parse(
     struct ServerError * dst,
     const uint8_t * payload
 );

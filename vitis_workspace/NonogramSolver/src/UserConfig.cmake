@@ -42,6 +42,7 @@ set(USER_COMPILE_SOURCES
 "result.c"
 "logging.c"
 "ipcore.c"
+"searchjob.c"
 )
 
 # -----------------------------------------

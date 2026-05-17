@@ -12,7 +12,7 @@
 #include "error.h"
 #include "logging.h"
 
-int error_parse(
+bool error_parse(
     struct ServerError * dst,
     const uint8_t * payload
 ) {
@@ -30,13 +30,13 @@ int error_parse(
 
     if (dst->text_length > ERROR_MAX_LENGTH) {
         logging_puts("error_parse: message too long.");
-        return -1;
+        return false;
     }
 
     memcpy(dst->error_text, payload, sizeof(uint8_t) * dst->text_length);
     dst->error_text[dst->text_length] = '\0';
 
-    return 0;
+    return true;
 }
 
 void error_print(
@@ -49,7 +49,7 @@ void error_print(
         print("Invalid metadata\r\n");
 
     xil_printf(
-        "\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n\r\n",
-        message->original_msg_id, message->text_length, message->error_text
+        "\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n\r\n", message->original_msg_id,
+        message->text_length, message->error_text
     );
 }

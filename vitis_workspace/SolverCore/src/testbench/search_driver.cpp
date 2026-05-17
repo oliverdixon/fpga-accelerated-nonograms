@@ -11,33 +11,35 @@
 
 #include "search_driver.hpp"
 
-#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
+#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE) /**< @brief Maximum recursion depth for the DFS solver. */
 
 namespace {
 
-struct CellRef
+/**
+ * @struct CellChoice
+ * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a fixed point.
+ */
+struct CellChoice
 {
-    extent_t row;
-    extent_t col;
-    bool valid;
+    extent_t row; /**< @brief The row index between 0 and <code>MAX_SIZE - 1</code>. */
+    extent_t col; /**< @brief The column index between 0 and <code>MAX_SIZE - 1</code>. */
+    bool valid;   /**< @brief Are the indices valid? */
 };
 
 /**
- * @brief Produce a reference to the first encountered cell without an assignment.
- * @param black Black cell assignments.
- * @param white White cell assignments.
- * @param puzzle_extent Extent of the square puzzle grid.
- * @return A CellRef containing indices of the first-encountered unassigned cell; if the
- *  <code>valid</code> flag is not set, the indices are garbage.
- * @post If the returned CellRef is valid, the row and column indices refer to a puzzle square that
- *  is not assigned.
+ * @brief Identify the next cell without a black or white cell assignment.
+ * @param black The black cell assignments.
+ * @param white The white cell assignments.
+ * @param puzzle_extent The extent of the square Puzzle.
+ * @return The CellChoice identifying the unassigned cell.
+ * @warning When used during search, this is quite a poor heuristic. Better ones exist!
  */
-CellRef choose_unknown(
+CellChoice choose_unknown(
     const line_t * const black,
     const line_t * const white,
     const extent_t puzzle_extent
 ) {
-    CellRef choice = {.valid = false};
+    CellChoice choice = {.valid = false};
 
     for (extent_t row_idx = 0; row_idx < puzzle_extent; ++row_idx) {
         const line_t known = black[row_idx] | white[row_idx];
@@ -90,8 +92,7 @@ SearchResult search_branch(
     std::memcpy(propagated_white, in_white, puzzle_size * sizeof(line_t));
 
     const SearchResult result = search(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black,
-        propagated_white, depth + 1
+        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black, propagated_white, depth + 1
     );
 
     if (result == SEARCH_SOLVED) {
@@ -154,8 +155,8 @@ SearchResult search(
     // Do an initial solve attempt with the input grid assignments to see if we have a trivial case.
 
     const auto status = static_cast<enum SolverState>(solver_toplevel(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, black, white,
-        propagated_black, propagated_white
+        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, black, white, propagated_black,
+        propagated_white
     ));
 
     if (status == SOLVER_CONTRADICTION)
@@ -173,7 +174,7 @@ SearchResult search(
      * then assume white; reset.
      */
 
-    const CellRef choice = choose_unknown(propagated_black, propagated_white, puzzle_size);
+    const CellChoice choice = choose_unknown(propagated_black, propagated_white, puzzle_size);
     const line_t col_mask = 1U << choice.col;
 
     if (!choice.valid)
@@ -189,8 +190,8 @@ SearchResult search(
     propagated_black[choice.row] |= col_mask;
 
     const SearchResult first_result = search_branch(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black,
-        propagated_white, black, white, depth
+        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black, propagated_white, black,
+        white, depth
     );
 
     propagated_black[choice.row] &= ~col_mask;
@@ -204,8 +205,8 @@ SearchResult search(
     propagated_white[choice.row] |= col_mask;
 
     const SearchResult second_result = search_branch(
-        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black,
-        propagated_white, black, white, depth
+        row_patterns, row_counts, col_patterns, col_counts, puzzle_size, propagated_black, propagated_white, black,
+        white, depth
     );
 
     propagated_white[choice.row] &= ~col_mask;
