@@ -1,14 +1,14 @@
 {
   "schema": "xilinx.com:schema:json_instance:1.0",
   "ip_inst": {
-    "xci_name": "design_1_axi_vdma_0_9",
+    "xci_name": "design_1_axi_vdma_0_3",
     "cell_name": "hdmi/axi_vdma_0",
     "component_reference": "xilinx.com:ip:axi_vdma:6.3",
-    "ip_revision": "24",
-    "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_9",
+    "ip_revision": "23",
+    "gen_directory": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_3",
     "parameters": {
       "component_parameters": {
-        "Component_Name": [ { "value": "design_1_axi_vdma_0_9", "resolve_type": "user", "usage": "all" } ],
+        "Component_Name": [ { "value": "design_1_axi_vdma_0_3", "resolve_type": "user", "usage": "all" } ],
         "C_FAMILY": [ { "value": "zynq", "resolve_type": "user", "usage": "all" } ],
         "c_m_axi_mm2s_data_width": [ { "value": "64", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "c_m_axis_mm2s_tdata_width": [ { "value": "32", "resolve_type": "user", "format": "long", "usage": "all" } ],
@@ -134,26 +134,26 @@
         "C_FAMILY": [ { "value": "zynq", "resolve_type": "generated", "usage": "all" } ]
       },
       "project_parameters": {
-        "ARCHITECTURE": [ { "value": "zynq", "resolve_type": "generated", "usage": "all" } ],
-        "BASE_BOARD_PART": [ { "value": "digilentinc.com:zybo-z7-10:part0:1.2", "resolve_type": "generated", "usage": "all" } ],
-        "BOARD_CONNECTIONS": [ { "value": "", "resolve_type": "generated", "usage": "all" } ],
-        "DEVICE": [ { "value": "xc7z010", "resolve_type": "generated", "usage": "all" } ],
-        "PACKAGE": [ { "value": "clg400", "resolve_type": "generated", "usage": "all" } ],
-        "PREFHDL": [ { "value": "VERILOG", "resolve_type": "generated", "usage": "all" } ],
-        "SILICON_REVISION": [ { "value": "", "resolve_type": "generated", "usage": "all" } ],
-        "SIMULATOR_LANGUAGE": [ { "value": "MIXED", "resolve_type": "generated", "usage": "all" } ],
-        "SPEEDGRADE": [ { "value": "-1", "resolve_type": "generated", "usage": "all" } ],
-        "STATIC_POWER": [ { "value": "", "resolve_type": "generated", "usage": "all" } ],
-        "TEMPERATURE_GRADE": [ { "value": "", "resolve_type": "generated", "usage": "all" } ]
+        "ARCHITECTURE": [ { "value": "zynq" } ],
+        "BASE_BOARD_PART": [ { "value": "digilentinc.com:zybo-z7-10:part0:1.2" } ],
+        "BOARD_CONNECTIONS": [ { "value": "" } ],
+        "DEVICE": [ { "value": "xc7z010" } ],
+        "PACKAGE": [ { "value": "clg400" } ],
+        "PREFHDL": [ { "value": "VERILOG" } ],
+        "SILICON_REVISION": [ { "value": "" } ],
+        "SIMULATOR_LANGUAGE": [ { "value": "MIXED" } ],
+        "SPEEDGRADE": [ { "value": "-1" } ],
+        "STATIC_POWER": [ { "value": "" } ],
+        "TEMPERATURE_GRADE": [ { "value": "" } ]
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "24" } ],
+        "IPREVISION": [ { "value": "23" } ],
         "MANAGED": [ { "value": "TRUE" } ],
-        "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_9" } ],
+        "OUTPUTDIR": [ { "value": "../../../../../../NonogramHW.gen/sources_1/bd/design_1/ip/design_1_axi_vdma_0_3" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],
         "SHAREDDIR": [ { "value": "../../ipshared" } ],
-        "SWVERSION": [ { "value": "2025.2" } ],
+        "SWVERSION": [ { "value": "2025.1" } ],
         "SYNTHESISFLOW": [ { "value": "OUT_OF_CONTEXT" } ]
       }
     },
@@ -1831,6 +1831,5 @@
         }
       }
     }
-  },
-  "checksum": "614e6ec4"
+  }
 }
