@@ -37,6 +37,15 @@ static line_t produce_line_mask(
     return (1U << col_idx) - 1U;
 }
 
+/**
+ * @brief Extract black and white masks for a single column.
+ * @param black Row-wise black cell assignment masks.
+ * @param white Row-wise white cell assignment masks.
+ * @param puzzle_size Number of rows in the puzzle.
+ * @param col_idx Index of the column to extract.
+ * @param known_black Output mask of black cells in the selected column.
+ * @param known_white Output mask of white cells in the selected column.
+ */
 static void get_column_masks(
     const line_t * const black,
     const line_t * const white,
@@ -48,7 +57,7 @@ static void get_column_masks(
     line_t black_result = 0;
     line_t white_result = 0;
 
-    const line_t col_bit = (line_t)1U << col_idx;
+    const line_t col_bit = 1U << col_idx;
     line_t row_bit = 1U;
 
     for (unsigned int row_idx = 0; row_idx < puzzle_size; ++row_idx) {
@@ -155,10 +164,7 @@ static enum RefinementResult refine_row(
     const line_t old_black = *out_black;
     const line_t old_white = *out_white;
 
-    if (!refine_line(
-            row_patterns, row_pattern_count, puzzle_size, old_black, old_white, &forced_black,
-            &forced_white
-        ))
+    if (!refine_line(row_patterns, row_pattern_count, puzzle_size, old_black, old_white, &forced_black, &forced_white))
         return REFINEMENT_CONTRADICTION;
 
     *out_black |= forced_black;
@@ -167,8 +173,7 @@ static enum RefinementResult refine_row(
     if (*out_black & *out_white)
         return REFINEMENT_CONTRADICTION;
 
-    return old_black == *out_black && old_white == *out_white ? REFINEMENT_UNCHANGED
-                                                              : REFINEMENT_CHANGED;
+    return old_black == *out_black && old_white == *out_white ? REFINEMENT_UNCHANGED : REFINEMENT_CHANGED;
 }
 
 /**
@@ -197,8 +202,7 @@ static enum RefinementResult refine_column(
     line_t forced_white;
 
     if (!refine_line(
-            col_patterns, col_pattern_count, puzzle_size, known_black, known_white, &forced_black,
-            &forced_white
+            col_patterns, col_pattern_count, puzzle_size, known_black, known_white, &forced_black, &forced_white
         ))
         return REFINEMENT_CONTRADICTION;
 
@@ -235,11 +239,9 @@ uint32_t solver_toplevel(
     line_t * const out_black,
     line_t * const out_white
 ) {
-#pragma HLS INTERFACE m_axi port = row_patterns offset = slave bundle = MAXI depth =               \
-    MAX_SIZE * MAX_PATTERN_COUNT
+#pragma HLS INTERFACE m_axi port = row_patterns offset = slave bundle = MAXI depth = MAX_SIZE * MAX_PATTERN_COUNT
 #pragma HLS INTERFACE m_axi port = row_counts offset = slave bundle = MAXI depth = MAX_SIZE
-#pragma HLS INTERFACE m_axi port = col_patterns offset = slave bundle = MAXI depth =               \
-    MAX_SIZE * MAX_PATTERN_COUNT
+#pragma HLS INTERFACE m_axi port = col_patterns offset = slave bundle = MAXI depth = MAX_SIZE * MAX_PATTERN_COUNT
 #pragma HLS INTERFACE m_axi port = col_counts offset = slave bundle = MAXI depth = MAX_SIZE
 #pragma HLS INTERFACE m_axi port = in_black offset = slave bundle = MAXI depth = MAX_SIZE
 #pragma HLS INTERFACE m_axi port = in_white offset = slave bundle = MAXI depth = MAX_SIZE
@@ -277,8 +279,8 @@ uint32_t solver_toplevel(
         // Refine the rows.
         for (unsigned int row_idx = 0; row_idx < puzzle_size; ++row_idx) {
             const enum RefinementResult result = refine_row(
-                &row_patterns[row_idx * MAX_PATTERN_COUNT], row_counts[row_idx], puzzle_size,
-                &black[row_idx], &white[row_idx]
+                &row_patterns[row_idx * MAX_PATTERN_COUNT], row_counts[row_idx], puzzle_size, &black[row_idx],
+                &white[row_idx]
             );
 
             if (result == REFINEMENT_CONTRADICTION)
@@ -291,8 +293,7 @@ uint32_t solver_toplevel(
         // Refine the columns.
         for (unsigned int col_idx = 0; col_idx < puzzle_size; ++col_idx) {
             const enum RefinementResult result = refine_column(
-                &col_patterns[col_idx * MAX_PATTERN_COUNT], col_counts[col_idx], col_idx,
-                puzzle_size, black, white
+                &col_patterns[col_idx * MAX_PATTERN_COUNT], col_counts[col_idx], col_idx, puzzle_size, black, white
             );
 
             if (result == REFINEMENT_CONTRADICTION)
