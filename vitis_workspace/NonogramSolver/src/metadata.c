@@ -6,11 +6,11 @@
  */
 
 #include <assert.h>
-#include <xil_printf.h>
 #include <lwip/def.h>
+#include <xil_printf.h>
 
-#include "metadata.h"
 #include "logging.h"
+#include "metadata.h"
 
 uint8_t * metadata_hton(
     const struct Metadata * const metadata,
@@ -57,8 +57,8 @@ void metadata_print(
 ) {
     assert(metadata->valid);
     xil_printf(
-        "Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n", metadata->seed,
-        metadata->difficulty.size_index, metadata->difficulty.tier
+        "Seed: %04x\r\n\tSize Index: %d\r\n\tDifficulty Tier: %d\r\n", metadata->seed, metadata->difficulty.size_index,
+        metadata->difficulty.tier
     );
 }
 
@@ -76,6 +76,5 @@ bool metadata_equal(
         return false;
 
     return lhs->valid == rhs->valid && lhs->seed == rhs->seed &&
-           lhs->difficulty.size_index == rhs->difficulty.size_index &&
-           lhs->difficulty.tier == rhs->difficulty.tier;
+           lhs->difficulty.size_index == rhs->difficulty.size_index && lhs->difficulty.tier == rhs->difficulty.tier;
 }

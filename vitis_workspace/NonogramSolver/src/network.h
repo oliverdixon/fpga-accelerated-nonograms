@@ -22,10 +22,10 @@
  */
 struct NetworkState
 {
-    int sock; /**< @brief The socket to the UDP/IP server. */
+    int sock;                      /**< @brief The socket to the UDP/IP server. */
     struct sockaddr_in local_addr; /**< @brief Our local binding address. */
-    struct sockaddr_in dst_addr; /**< @brief The server's address. */
-    SemaphoreHandle_t mutex; /**< @brief The mutex to protect the socket. */
+    struct sockaddr_in dst_addr;   /**< @brief The server's address. */
+    SemaphoreHandle_t mutex;       /**< @brief The mutex to protect the socket. */
 };
 
 /**
@@ -34,7 +34,7 @@ struct NetworkState
  * @param app The task for LwIP runtime to release once the network is ready.
  */
 void network_initialise(
-    struct NetworkState *network,
+    struct NetworkState * network,
     lwip_thread_fn app
 );
 

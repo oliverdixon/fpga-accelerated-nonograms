@@ -83,12 +83,12 @@ enum SizeIndex
  */
 struct Metadata
 {
-    bool valid; /**< @brief Are the other Metadata fields valid? */
+    bool valid;    /**< @brief Are the other Metadata fields valid? */
     uint32_t seed; /**< @brief The seed of the Puzzle. */
     struct
     {
         enum SizeIndex size_index : 4; /**< @brief The SizeIndex of the Puzzle, */
-        enum DifficultyTier tier : 2; /**< @brief The DifficultyTier of the Puzzle. */
+        enum DifficultyTier tier : 2;  /**< @brief The DifficultyTier of the Puzzle. */
     } difficulty; /**< @brief The packed difficulty information, formatted i.a.w. protocol requirements. */
 };
 

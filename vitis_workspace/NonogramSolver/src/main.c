@@ -5,8 +5,8 @@
  * @author Oliver Dixon <od641@york.ac.uk>
  */
 
-#include <assert.h>
 #include <FreeRTOS.h>
+#include <assert.h>
 
 #include "chunks.h"
 #include "error.h"
@@ -69,11 +69,11 @@ static void submit_protocol_task(void * data);
 
 static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE]; /**< @brief Monster stack for the DFS solver. */
 static StaticTask_t solve_puzzles_pcb; /**< @brief Statically allocated control block for the solver task. */
-static uint8_t recv_buffer[1024]; /**< @brief Persistent buffer for receiving UDP/IP messages from the server. */
-struct NetworkState network_state; /**< @brief Management block for the LwIP network state. */
+static uint8_t recv_buffer[1024];      /**< @brief Persistent buffer for receiving UDP/IP messages from the server. */
+struct NetworkState network_state;     /**< @brief Management block for the LwIP network state. */
 
-QueueHandle_t requests_queue; /**< @brief Metadata PODs for Puzzle procurement. */
-QueueHandle_t graphics_queue; /**< @brief Non-owning Puzzle references for visualisation. */
+QueueHandle_t requests_queue;  /**< @brief Metadata PODs for Puzzle procurement. */
+QueueHandle_t graphics_queue;  /**< @brief Non-owning Puzzle references for visualisation. */
 QueueHandle_t challenge_queue; /**< @brief Owning Puzzle references for solving. */
 QueueHandle_t solution_queue;  /**< @brief Owning Puzzle references for submitting and cleaning up. */
 
@@ -83,8 +83,7 @@ TaskHandle_t accept_input_task_handle; /**< @brief Metadata query task handle, t
  * @brief Entry point to initialise global structures and start the FreeRTOS scheduler.
  * @return Zero.
  */
-int main()
-{
+int main() {
     requests_queue = xQueueCreate(1, sizeof(struct Metadata));
     graphics_queue = xQueueCreate(1, sizeof(struct Puzzle *));
     challenge_queue = xQueueCreate(1, sizeof(struct Puzzle *));
@@ -106,10 +105,7 @@ static void accept_input_task(
 
     struct Metadata request_metadata = {.valid = true};
 
-    xTaskCreate(
-        &request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL,
-        DEFAULT_THREAD_PRIO - 1, NULL
-    );
+    xTaskCreate(&request_protocol_task, "request_protocol_task", THREAD_STACKSIZE, NULL, DEFAULT_THREAD_PRIO - 1, NULL);
 
     accept_input_task_handle = xTaskGetCurrentTaskHandle();
     xTaskNotify(accept_input_task_handle, 0, eNoAction);
@@ -320,8 +316,8 @@ static void request_protocol_task(
         if (xQueueReceive(requests_queue, &request_metadata, portMAX_DELAY) == pdTRUE) {
             // On receipt of a request, query the server to build a puzzle of the specified parameters.
             xSemaphoreTake(network_state.mutex, portMAX_DELAY);
-            struct Puzzle * const puzzle_info = build_puzzle_data(network_state.sock, &network_state.dst_addr,
-                &request_metadata);
+            struct Puzzle * const puzzle_info =
+                build_puzzle_data(network_state.sock, &network_state.dst_addr, &request_metadata);
             xSemaphoreGive(network_state.mutex);
 
             if (puzzle_info != NULL) {

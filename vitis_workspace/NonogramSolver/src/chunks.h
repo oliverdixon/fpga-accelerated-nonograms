@@ -21,7 +21,7 @@ struct Metadata;
  */
 struct ClueGroup
 {
-    uint8_t count; /**< @brief Number of clues */
+    uint8_t count;   /**< @brief Number of clues */
     uint8_t * clues; /**< @brief Clue data */
 };
 
@@ -31,12 +31,12 @@ struct ClueGroup
  */
 struct Chunk
 {
-    uint8_t chunk_id; /**< @brief Zero-based sequential ID of the chunk. */
-    uint8_t num_chunks; /**< @brief Total number of chunks. */
-    uint16_t offset; /**< @brief Offset of the Chunk ClueGroup first element within the total Puzzle clue data. */
+    uint8_t chunk_id;     /**< @brief Zero-based sequential ID of the chunk. */
+    uint8_t num_chunks;   /**< @brief Total number of chunks. */
+    uint16_t offset;      /**< @brief Offset of the Chunk ClueGroup first element within the total Puzzle clue data. */
     uint16_t data_length; /**< @brief Length of the clue data. */
-    struct ClueGroup * clue_data; /**< @brief Clue groups. */
-    unsigned int clue_group_count; /**< @brief Number of clue groups. */
+    struct ClueGroup * clue_data;     /**< @brief Clue groups. */
+    unsigned int clue_group_count;    /**< @brief Number of clue groups. */
     unsigned int max_clue_data_count; /**< @brief Clue count of the largest read group. */
 };
 
@@ -68,9 +68,9 @@ void chunk_request(
  * their size or numerosity.
  */
 bool chunk_parse(
-    struct Chunk *dst,
-    const struct Metadata *match_metadata,
-    const uint8_t *payload
+    struct Chunk * dst,
+    const struct Metadata * match_metadata,
+    const uint8_t * payload
 );
 
 /**

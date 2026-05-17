@@ -24,8 +24,8 @@ struct sockaddr_in;
 enum ResultCode
 {
     RESULT_INCORRECT = 0x00, /**< @brief The solution was definitely incorrect. */
-    RESULT_CORRECT = 0x01, /**< @brief The solution was definitely correct. */
-    RESULT_ERROR = 0x02 /**< @brief Some error occurred when checking the solution. */
+    RESULT_CORRECT = 0x01,   /**< @brief The solution was definitely correct. */
+    RESULT_ERROR = 0x02      /**< @brief Some error occurred when checking the solution. */
 };
 
 /**
@@ -47,9 +47,9 @@ struct Result
  * @pre The payload must represent a <code>MSG_RESULT</code> object.
  */
 bool result_parse(
-    struct Result *result,
-    const struct Metadata *metadata,
-    const uint8_t *payload
+    struct Result * result,
+    const struct Metadata * metadata,
+    const uint8_t * payload
 );
 
 /**
@@ -59,9 +59,9 @@ bool result_parse(
  * @param dst_addr The address of the Nonogram server.
  */
 void result_send(
-    const struct Puzzle *puzzle,
+    const struct Puzzle * puzzle,
     int sock,
-    const struct sockaddr_in *dst_addr
+    const struct sockaddr_in * dst_addr
 );
 
 /**

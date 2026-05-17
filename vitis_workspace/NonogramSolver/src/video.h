@@ -37,7 +37,7 @@ struct Puzzle;
  * @param video_state The destination HDMI state.
  * @return 0 on success, -1 on failure.
  */
-bool video_initialise(struct VideoState *video_state);
+bool video_initialise(struct VideoState * video_state);
 
 /**
  * @brief Renders the given puzzle grid and clue data (and solution grid, if applicable) to the

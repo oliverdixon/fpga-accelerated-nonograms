@@ -6,14 +6,14 @@
  */
 
 #include <assert.h>
-#include <xil_printf.h>
 #include <lwip/sockets.h>
+#include <xil_printf.h>
 
-#include "result.h"
+#include "../../SolverCore/src/solver_params.h"
 #include "logging.h"
 #include "metadata.h"
 #include "puzzle.h"
-#include "../../SolverCore/src/solver_params.h"
+#include "result.h"
 
 /**
  * @brief The length, in bytes, of a verification request message sent on the wire.
@@ -29,9 +29,9 @@
 static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH]; /**< @brief The persistent buffer to prepare requests. */
 
 bool result_parse(
-    struct Result *const result,
-    const struct Metadata *const metadata,
-    const uint8_t *payload
+    struct Result * const result,
+    const struct Metadata * const metadata,
+    const uint8_t * payload
 ) {
     assert(*payload == MSG_RESULT);
     payload += sizeof(uint8_t);
@@ -56,9 +56,9 @@ bool result_parse(
 }
 
 void result_send(
-    const struct Puzzle *const puzzle,
+    const struct Puzzle * const puzzle,
     const int sock,
-    const struct sockaddr_in *const dst_addr
+    const struct sockaddr_in * const dst_addr
 ) {
     if (puzzle->solved_state != SEARCH_SOLVED)
         // What's the point in submitting a solution if we don't have one?
@@ -92,10 +92,7 @@ void result_send(
 
     xSemaphoreGive(puzzle->solution_semaphore);
 
-    lwip_sendto(
-        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
-        sizeof(struct sockaddr_in)
-    );
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr, sizeof(struct sockaddr_in));
 }
 
 void result_print(

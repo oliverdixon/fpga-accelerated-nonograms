@@ -114,9 +114,10 @@ void ipcore_execute(
 }
 
 enum SolverState ipcore_finish(
-    struct IPCore *const ipcore,
-    const struct Puzzle *const puzzle_info
-) {
+    struct IPCore * const ipcore,
+    const struct Puzzle * const puzzle_info
+)
+{
     if (XSolver_toplevel_IsDone(&ipcore->solver)) {
         /*
          * The out_{black,white} buffers are controlled by the FPGA, so invalidate the CPU's cache of them. This is

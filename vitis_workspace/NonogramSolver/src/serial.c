@@ -7,8 +7,8 @@
 
 #include <xil_printf.h>
 
-#include "serial.h"
 #include "logging.h"
+#include "serial.h"
 
 static char buffer[16]; /**< @brief Persistent buffer to receive bytes from the Rx serial line. */
 

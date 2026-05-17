@@ -13,8 +13,8 @@
 #include "logging.h"
 
 bool error_parse(
-    struct ServerError *dst,
-    const uint8_t *payload
+    struct ServerError * dst,
+    const uint8_t * payload
 ) {
     assert(*payload == MSG_ERROR);
     payload += sizeof(uint8_t);
@@ -49,7 +49,7 @@ void error_print(
         print("Invalid metadata\r\n");
 
     xil_printf(
-        "\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n\r\n",
-        message->original_msg_id, message->text_length, message->error_text
+        "\tBad Message ID: %d\r\n\tText Length: %d\r\n\tError Text: %s\r\n\r\n", message->original_msg_id,
+        message->text_length, message->error_text
     );
 }

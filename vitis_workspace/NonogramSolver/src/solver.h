@@ -27,6 +27,6 @@ bool solver_initialise_environment();
  * @pre The Puzzle is square.
  * @pre The Puzzle contains as many clues as combined rows and columns.
  */
-enum SearchResult solver_solve(struct Puzzle *puzzle_info);
+enum SearchResult solver_solve(struct Puzzle * puzzle_info);
 
 #endif // SOLVER_H

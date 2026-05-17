@@ -20,8 +20,8 @@ struct SearchJob
 {
     line_t black[MAX_SIZE] __attribute__((aligned(64))); /**< @brief Black cell assignments */
     line_t white[MAX_SIZE] __attribute__((aligned(64))); /**< @brief White cell assignments */
-    unsigned int depth; /**< @brief Depth of the job in the DFS tree */
-    bool propagated; /**< @brief Indicates propagation state of the job */
+    unsigned int depth;                                  /**< @brief Depth of the job in the DFS tree */
+    bool propagated;                                     /**< @brief Indicates propagation state of the job */
 };
 
 struct Puzzle;
@@ -36,7 +36,7 @@ struct Puzzle;
  * @param already_propagated Has the given job already been propagated?
  */
 void searchjob_populate(
-    struct SearchJob *job,
+    struct SearchJob * job,
     const struct SearchJob * parent_job,
     const struct Puzzle * puzzle_info,
     const line_t * inherited_black,

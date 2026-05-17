@@ -13,9 +13,9 @@
 #include <FreeRTOS.h>
 #include <semphr.h>
 
+#include "../../SolverCore/src/solver_params.h"
 #include "chunks.h"
 #include "metadata.h"
-#include "../../SolverCore/src/solver_params.h"
 
 /**
  * @enum SearchResult
@@ -23,10 +23,10 @@
  */
 enum SearchResult
 {
-    SEARCH_SOLVED, /**< @brief The Puzzle was successfully solved. */
-    SEARCH_FAILED, /**< @brief The search failed due to an inconsistent Puzzle. */
+    SEARCH_SOLVED,  /**< @brief The Puzzle was successfully solved. */
+    SEARCH_FAILED,  /**< @brief The search failed due to an inconsistent Puzzle. */
     SEARCH_UNKNOWN, /**< @brief The search could not come to a definite conclusion. */
-    SEARCH_NOT_RUN /**< @brief The search has not been run. */
+    SEARCH_NOT_RUN  /**< @brief The search has not been run. */
 };
 
 /**
@@ -36,17 +36,17 @@ enum SearchResult
 struct Puzzle
 {
     struct Metadata metadata; /**< @brief Metadata for the Puzzle */
-    uint8_t width; /**< @brief Width of the Puzzle, in number of cells. */
-    uint8_t height; /**< @brief Height of the Puzzle, in number of cells. */
-    uint8_t num_chunks; /**< @brief Number of Chunks used to store the clues. */
-    uint16_t clue_bytes; /**< @brief Number of bytes used to transmit the clue data over the wire. */
+    uint8_t width;            /**< @brief Width of the Puzzle, in number of cells. */
+    uint8_t height;           /**< @brief Height of the Puzzle, in number of cells. */
+    uint8_t num_chunks;       /**< @brief Number of Chunks used to store the clues. */
+    uint16_t clue_bytes;      /**< @brief Number of bytes used to transmit the clue data over the wire. */
 
     unsigned int global_max_clue_data_count; /**< @brief Maximum number of clues in any group of the Puzzle. */
-    struct Chunk chunk; /**< @brief The single Chunk containing clue data. */
+    struct Chunk chunk;                      /**< @brief The single Chunk containing clue data. */
 
-    enum SearchResult solved_state; /**< @brief The last-known solution state of the Puzzle. */
+    enum SearchResult solved_state;       /**< @brief The last-known solution state of the Puzzle. */
     SemaphoreHandle_t solution_semaphore; /**< @brief A semaphore to protect the solution bitmap. */
-    line_t solution_bitmap[MAX_SIZE]; /**< @brief The solution bitmap indicating black-cell assignments. */
+    line_t solution_bitmap[MAX_SIZE];     /**< @brief The solution bitmap indicating black-cell assignments. */
 };
 
 /**
@@ -69,8 +69,8 @@ void puzzle_request(
  * @pre The payload must have type <code>MSG_PUZZLE_INFO</code>.
  */
 bool puzzle_parse(
-    struct Puzzle *puzzle,
-    const uint8_t *payload
+    struct Puzzle * puzzle,
+    const uint8_t * payload
 );
 
 /**

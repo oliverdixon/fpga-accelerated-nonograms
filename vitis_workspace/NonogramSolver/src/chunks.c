@@ -44,16 +44,13 @@ void chunk_request(
     // 3. Requested chunk ID (1 byte)
     *buffer_head++ = chunk_id;
 
-    lwip_sendto(
-        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
-        sizeof(struct sockaddr_in)
-    );
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr, sizeof(struct sockaddr_in));
 }
 
 bool chunk_parse(
-    struct Chunk *const dst,
-    const struct Metadata *const match_metadata,
-    const uint8_t *payload
+    struct Chunk * const dst,
+    const struct Metadata * const match_metadata,
+    const uint8_t * payload
 ) {
     assert(*payload == MSG_CHUNK_DATA);
     payload += sizeof(uint8_t);

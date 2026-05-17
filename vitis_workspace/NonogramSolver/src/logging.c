@@ -13,8 +13,9 @@
 
 #include "logging.h"
 
-#define LOG_LINE_LENGTH (64) /**< @brief Maximum line length in bytes of any (formatted or unformatted) log message. */
-#define LOG_QUEUE_SIZE (16) /**< @brief Number of buffered log messages. */
+#define LOG_LINE_LENGTH (64) /**< @brief Maximum line length in bytes of any (formatted or unformatted) log message.   \
+                              */
+#define LOG_QUEUE_SIZE (16)  /**< @brief Number of buffered log messages. */
 
 /**
  * @struct LogMessage
@@ -22,7 +23,7 @@
  */
 struct LogMessage
 {
-    const char * task_name; /**< @brief The FreeRTOS task name from which the message originates. */
+    const char * task_name;     /**< @brief The FreeRTOS task name from which the message originates. */
     char text[LOG_LINE_LENGTH]; /**< @brief The text of the message to log. */
 };
 

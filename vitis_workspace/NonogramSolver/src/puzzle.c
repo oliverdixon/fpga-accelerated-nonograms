@@ -6,13 +6,13 @@
  */
 
 #include <assert.h>
+#include <lwip/sockets.h>
 #include <string.h>
 #include <xil_printf.h>
-#include <lwip/sockets.h>
 
-#include "puzzle.h"
 #include "chunks.h"
 #include "logging.h"
+#include "puzzle.h"
 
 /**
  * @brief The length, in bytes, of a Puzzle request message sent on the wire.
@@ -39,15 +39,12 @@ void puzzle_request(
     // 2. Puzzle metadata
     buffer_head = metadata_hton(metadata, buffer_head);
 
-    lwip_sendto(
-        sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
-        sizeof(struct sockaddr_in)
-    );
+    lwip_sendto(sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr, sizeof(struct sockaddr_in));
 }
 
 bool puzzle_parse(
-    struct Puzzle *const puzzle,
-    const uint8_t *payload
+    struct Puzzle * const puzzle,
+    const uint8_t * payload
 ) {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
@@ -86,9 +83,8 @@ void puzzle_print(
         print("Puzzle:\r\n\t");
         metadata_print(&puzzle->metadata);
         xil_printf(
-            "\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
-            puzzle->width, puzzle->height, puzzle->num_chunks,
-            puzzle->clue_bytes
+            "\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n", puzzle->width, puzzle->height,
+            puzzle->num_chunks, puzzle->clue_bytes
         );
     } else
         print("Puzzle: INVALID\r\n");

@@ -20,9 +20,9 @@
  */
 struct ServerError
 {
-    struct Metadata metadata; /**< @brief Optional Puzzle Metadata to which the ServerError relates. */
-    enum MessageType original_msg_id; /**< @brief The type of message which caused the ServerError. */
-    uint8_t text_length; /**< @brief The length of the error text in bytes. */
+    struct Metadata metadata;              /**< @brief Optional Puzzle Metadata to which the ServerError relates. */
+    enum MessageType original_msg_id;      /**< @brief The type of message which caused the ServerError. */
+    uint8_t text_length;                   /**< @brief The length of the error text in bytes. */
     char error_text[ERROR_MAX_LENGTH + 1]; /**< @brief A human-readable description of the ServerError. */
 };
 
@@ -34,8 +34,8 @@ struct ServerError
  * @pre The payload contains the <code>MSG_ERROR</code> identifier in the first byte.
  */
 bool error_parse(
-    struct ServerError *dst,
-    const uint8_t *payload
+    struct ServerError * dst,
+    const uint8_t * payload
 );
 
 /**

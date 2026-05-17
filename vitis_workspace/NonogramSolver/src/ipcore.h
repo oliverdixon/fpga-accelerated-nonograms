@@ -15,8 +15,8 @@
 #include <task.h>
 #include <xsolver_toplevel.h>
 
-#include "searchjob.h"
 #include "../../SolverCore/src/solver_params.h"
+#include "searchjob.h"
 
 /**
  * @struct IPCore
@@ -25,10 +25,10 @@
  */
 struct IPCore
 {
-    bool busy; /**< @brief Lightweight single-task semaphore to indicate usage. */
-    XSolver_toplevel solver; /**< @brief Xilinx SW driver IP core handle. */
+    bool busy;                /**< @brief Lightweight single-task semaphore to indicate usage. */
+    XSolver_toplevel solver;  /**< @brief Xilinx SW driver IP core handle. */
     TaskHandle_t notify_task; /**< @brief Task to notify on interrupt from IP core. */
-    uint32_t notify_bits; /**< @brief Notification bits to set on interrupt.  */
+    uint32_t notify_bits;     /**< @brief Notification bits to set on interrupt.  */
 
     struct SearchJob job; /**< @brief Current search job assigned to the core. */
 
@@ -81,8 +81,8 @@ void ipcore_execute(
  * @return The state of the solver returned by the HLS top-level function, or SOLVER_UNFINISHED.
  */
 enum SolverState ipcore_finish(
-    struct IPCore *ipcore,
-    const struct Puzzle *puzzle_info
+    struct IPCore * ipcore,
+    const struct Puzzle * puzzle_info
 );
 
 #endif // IPCORE_H
