@@ -1,26 +1,21 @@
 #include <assert.h>
-#include <lwip/sockets.h>
 #include <xil_printf.h>
+#include <lwip/sockets.h>
 
-#include "../../SolverCore/src/solver_params.h"
+#include "result.h"
 #include "logging.h"
 #include "metadata.h"
 #include "puzzle.h"
-#include "result.h"
+#include "../../SolverCore/src/solver_params.h"
 
-/*
- * Message ID (1 byte)
- * Metadata
- */
-#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH                                                         \
-    (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
+#define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
 
 static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH];
 
-int result_parse(
-    struct Result * const result,
-    const struct Metadata * const metadata,
-    const uint8_t * payload
+bool result_parse(
+    struct Result *const result,
+    const struct Metadata *const metadata,
+    const uint8_t *payload
 ) {
     assert(*payload == MSG_RESULT);
     payload += sizeof(uint8_t);
@@ -31,7 +26,7 @@ int result_parse(
 
     if (!received_metadata.valid || !metadata_equal(metadata, &received_metadata)) {
         logging_puts("result_parse: quitting early due to bad metadata.");
-        return -1;
+        return false;
     }
 
     result->status = *payload++;
@@ -41,7 +36,7 @@ int result_parse(
     result->solve_time |= *payload++ << 8;
     result->solve_time |= *payload;
 
-    return 0;
+    return true;
 }
 
 int result_send(

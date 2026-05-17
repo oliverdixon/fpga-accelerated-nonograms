@@ -41,10 +41,10 @@ void chunk_request(
     );
 }
 
-int chunk_parse(
-    struct Chunk * const dst,
-    const struct Metadata * const match_metadata,
-    const uint8_t * payload
+bool chunk_parse(
+    struct Chunk *const dst,
+    const struct Metadata *const match_metadata,
+    const uint8_t *payload
 ) {
     assert(*payload == MSG_CHUNK_DATA);
     payload += sizeof(uint8_t);
@@ -57,7 +57,7 @@ int chunk_parse(
     // Verify that the received metadata matches what we expect.
     if (!received_metadata.valid || !metadata_equal(&received_metadata, match_metadata)) {
         logging_puts("chunk_parse: quitting early due to bad metadata.");
-        return -1;
+        return false;
     }
 
     dst->chunk_id = *payload++;
@@ -69,33 +69,33 @@ int chunk_parse(
     dst->data_length = *payload++ << 8;
     dst->data_length |= *payload++;
 
-    dst->clue_data = malloc(sizeof(struct ClueData) * dst->data_length);
+    dst->clue_data = malloc(sizeof(struct ClueGroup) * dst->data_length);
     const uint8_t * const clue_end = payload + sizeof(uint8_t) * dst->data_length;
 
     size_t line_idx = 0;
 
     for (; payload < clue_end; ++line_idx) {
         // Get the number of elements for this line and read them into the clue data.
-        struct ClueData * clue_line = &dst->clue_data[line_idx];
+        struct ClueGroup * clue_line = &dst->clue_data[line_idx];
         clue_line->count = *payload++;
 
         if (clue_line->count > dst->max_clue_data_count)
             dst->max_clue_data_count = clue_line->count;
 
-        clue_line->blocks = malloc(sizeof(uint8_t) * clue_line->count);
+        clue_line->clues = malloc(sizeof(uint8_t) * clue_line->count);
         for (uint8_t element_idx = 0; element_idx < clue_line->count; ++element_idx)
-            clue_line->blocks[element_idx] = *payload++;
+            clue_line->clues[element_idx] = *payload++;
     }
 
-    dst->clue_count = line_idx;
-    return 0;
+    dst->clue_group_count = line_idx;
+    return true;
 }
 
 void chunk_free(
     const struct Chunk * const chunk_data
 ) {
-    for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx)
-        free(chunk_data->clue_data[line_idx].blocks);
+    for (size_t line_idx = 0; line_idx < chunk_data->clue_group_count; ++line_idx)
+        free(chunk_data->clue_data[line_idx].clues);
 
     free(chunk_data->clue_data);
 }
@@ -109,14 +109,14 @@ void chunk_print(
         "Chunk data:\r\n\tChunk ID: %d\r\n\tChunk Count: %d\r\n\tOffset: %d"
         "\r\n\tData Length: %d\r\n\tClue Count (derived): %d\r\n",
         chunk_data->chunk_id, chunk_data->num_chunks, chunk_data->offset, chunk_data->data_length,
-        chunk_data->clue_count
+        chunk_data->clue_group_count
     );
 
-    for (size_t line_idx = 0; line_idx < chunk_data->clue_count; ++line_idx) {
-        const struct ClueData * clue_line = &chunk_data->clue_data[line_idx];
+    for (size_t line_idx = 0; line_idx < chunk_data->clue_group_count; ++line_idx) {
+        const struct ClueGroup * clue_line = &chunk_data->clue_data[line_idx];
         xil_printf("\tClue %02d: ", line_idx);
         for (uint8_t element_idx = 0; element_idx < clue_line->count; ++element_idx)
-            xil_printf("%02x ", clue_line->blocks[element_idx]);
+            xil_printf("%02x ", clue_line->clues[element_idx]);
         print("\r\n");
     }
 

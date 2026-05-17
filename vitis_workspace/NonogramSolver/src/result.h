@@ -3,6 +3,7 @@
 #ifndef RESULT_H
 #define RESULT_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 struct Metadata;
@@ -22,10 +23,10 @@ struct Result
     uint32_t solve_time;
 };
 
-int result_parse(
-    struct Result * result,
-    const struct Metadata * metadata,
-    const uint8_t * payload
+bool result_parse(
+    struct Result *result,
+    const struct Metadata *metadata,
+    const uint8_t *payload
 );
 
 int result_send(

@@ -9,10 +9,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <xil_cache.h>
-#include <xil_printf.h>
-#include <xil_types.h>
-#include <xparameters.h>
-#include <xsolver_toplevel.h>
 
 #include "../../SolverCore/src/solver_params.h"
 #include "chunks.h"
@@ -316,7 +312,7 @@ static enum SearchResult search_two_core_dfs(
 }
 
 static unsigned int min_required_tail(
-    const struct ClueData * const block,
+    const struct ClueGroup * const block,
     const unsigned int start_idx
 ) {
     if (start_idx >= block->count)
@@ -324,7 +320,7 @@ static unsigned int min_required_tail(
 
     unsigned int sum = 0;
     for (unsigned int idx = start_idx; idx < block->count; ++idx)
-        sum += block->blocks[idx];
+        sum += block->clues[idx];
 
     sum += block->count - start_idx - 1;
     return sum;
@@ -332,7 +328,7 @@ static unsigned int min_required_tail(
 
 static extent_t generate_pattern_induction(
     const extent_t puzzle_size,
-    const struct ClueData * const block,
+    const struct ClueGroup * const block,
     const unsigned int clue_idx,
     const unsigned int min_start_idx,
     const line_t partial_line,
@@ -346,7 +342,7 @@ static extent_t generate_pattern_induction(
     }
 
     const unsigned int block_len =
-        block->blocks[clue_idx]; // The length of the target continuous block.
+        block->clues[clue_idx]; // The length of the target continuous block.
     const unsigned int latest_start_idx =
         puzzle_size - block_len - min_required_tail(block, clue_idx + 1);
 
@@ -367,7 +363,7 @@ static extent_t generate_pattern_induction(
 static extent_t generate_pattern(
     line_t dst[MAX_SIZE],
     const extent_t puzzle_size,
-    const struct ClueData * const block
+    const struct ClueGroup * const block
 ) {
     if (block->count == 0) {
         dst[0] = 0;
@@ -389,7 +385,7 @@ static void compute_valid_patterns(
     const extent_t puzzle_extent,
     line_t dst[MAX_SIZE * MAX_PATTERN_COUNT],
     extent_t counts[MAX_SIZE],
-    const struct ClueData * const clues,
+    const struct ClueGroup * const clues,
     const unsigned int clue_count
 ) {
     for (unsigned int clue_idx = 0; clue_idx < clue_count; ++clue_idx)
@@ -417,11 +413,11 @@ bool solver_initialise_environment() {
     return true;
 }
 
-void solver_solve(
-    struct Puzzle * const puzzle_info
+enum SearchResult solver_solve(
+    struct Puzzle *const puzzle_info
 ) {
     assert(puzzle_info->width == puzzle_info->height);
-    assert(puzzle_info->chunk.clue_count == puzzle_info->width + puzzle_info->height);
+    assert(puzzle_info->chunk.clue_group_count == puzzle_info->width + puzzle_info->height);
 
     memset(row_patterns, 0, sizeof(row_patterns));
     memset(col_patterns, 0, sizeof(col_patterns));
@@ -462,4 +458,6 @@ void solver_solve(
 
     xSemaphoreGive(puzzle_info->solution_semaphore);
     puzzle_info->solved_state = result;
+
+    return result;
 }

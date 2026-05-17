@@ -40,9 +40,9 @@ void puzzle_request(
     const struct sockaddr_in * dst_addr
 );
 
-int puzzle_parse(
-    struct Puzzle * dst,
-    const uint8_t * payload
+bool puzzle_parse(
+    struct Puzzle *dst,
+    const uint8_t *payload
 );
 
 void puzzle_print(const struct Puzzle * puzzle_info);

@@ -23,9 +23,10 @@ bool solver_initialise_environment();
 /**
  * @brief Attempt to solve the described Puzzle and write solution data to the Puzzle bitmap.
  * @param puzzle_info The Puzzle to solve.
+ * @return The result of the search/solve procedure.
  * @pre The Puzzle is square.
  * @pre The Puzzle contains as many clues as combined rows and columns.
  */
-void solver_solve(struct Puzzle * puzzle_info);
+enum SearchResult solver_solve(struct Puzzle *puzzle_info);
 
 #endif // SOLVER_H

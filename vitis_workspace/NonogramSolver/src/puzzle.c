@@ -38,9 +38,9 @@ void puzzle_request(
     );
 }
 
-int puzzle_parse(
-    struct Puzzle * const dst,
-    const uint8_t * payload
+bool puzzle_parse(
+    struct Puzzle *const dst,
+    const uint8_t *payload
 ) {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
@@ -49,7 +49,7 @@ int puzzle_parse(
 
     if (!dst->metadata.valid) {
         logging_puts("puzzle_parse: quitting early due to bad metadata.");
-        return -1;
+        return false;
     }
 
     dst->width = *payload++;
@@ -69,7 +69,7 @@ int puzzle_parse(
     dst->solution_bitmap = bitmap_buffer;
     dst->solved_state = SEARCH_NOT_RUN;
 
-    return 0;
+    return true;
 }
 
 void puzzle_print(

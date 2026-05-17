@@ -100,31 +100,26 @@ static void draw_clue_element(
     }
 }
 
-int video_initialise(
-    struct VideoState * video_state
+bool video_initialise(
+    struct VideoState * const video_state
 ) {
     for (unsigned int fb_idx = 0; fb_idx < DISPLAY_NUM_FRAMES; ++fb_idx)
         video_state->frame_refs[fb_idx] = video_state->frame_buffers[fb_idx];
 
-    int status = DisplayInitialize(
-        &video_state->display_ctrl, XPAR_HDMI_AXI_VDMA_0_BASEADDR, XPAR_XVTC_0_BASEADDR,
-        XPAR_HDMI_AXI_DYNCLK_0_BASEADDR, video_state->frame_refs, FRAME_STRIDE
-    );
+    if (DisplayInitialize(&video_state->display_ctrl, XPAR_HDMI_AXI_VDMA_0_BASEADDR, XPAR_XVTC_0_BASEADDR,
+            XPAR_HDMI_AXI_DYNCLK_0_BASEADDR, video_state->frame_refs, FRAME_STRIDE) != 0)
+        return false;
 
-    if (status)
-        return status;
+    if (DisplayChangeFrame(&video_state->display_ctrl, 0) != 0)
+        return false;
 
-    status = DisplayChangeFrame(&video_state->display_ctrl, 0);
+    if (DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900) != 0)
+        return false;
 
-    if (status)
-        return status;
+    if (DisplayStart(&video_state->display_ctrl) != 0)
+        return false;
 
-    status = DisplaySetMode(&video_state->display_ctrl, &VMODE_1440x900);
-
-    if (status)
-        return status;
-
-    return DisplayStart(&video_state->display_ctrl);
+    return true;
 }
 
 void video_draw_puzzle(
@@ -158,7 +153,7 @@ void video_draw_puzzle(
     unsigned int col_clue_idx = puzzle_info->height;
     unsigned int row_clue_idx = 0;
 
-    const struct ClueData * const clue_data = puzzle_info->chunk.clue_data;
+    const struct ClueGroup * const clue_data = puzzle_info->chunk.clue_data;
 
     const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
 
@@ -175,11 +170,11 @@ void video_draw_puzzle(
          * By convention, column clues immediately succeed row clues. There are precisely
          * as many clues as rows/columns, so we just offset the index.
          */
-        const struct ClueData * const col_clue = &clue_data[col_clue_idx++];
+        const struct ClueGroup * const col_clue = &clue_data[col_clue_idx++];
         const uint32_t start_x = x_pos + (box_extent / 2) - (GLYPH_WIDTH / 2);
         for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
             draw_clue_element(
-                video_state, col_clue->blocks[element_idx], start_x,
+                video_state, col_clue->clues[element_idx], start_x,
                 (element_idx + 1) * (internal_padding + GLYPH_HEIGHT), GLYPH_WIDTH + glyph_spacing
             );
 
@@ -191,11 +186,11 @@ void video_draw_puzzle(
                  * Leftmost box on this row, so we might have some row clues.
                  * By convention, row clues come first, so we don't have to offset the index.
                  */
-                const struct ClueData * const row_clue = &clue_data[row_clue_idx++];
+                const struct ClueGroup * const row_clue = &clue_data[row_clue_idx++];
                 const uint32_t start_y = y_pos + (box_extent / 2) - (GLYPH_HEIGHT / 2);
                 for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
                     draw_clue_element(
-                        video_state, row_clue->blocks[element_idx],
+                        video_state, row_clue->clues[element_idx],
                         (element_idx + 1) * (internal_padding + GLYPH_WIDTH), start_y,
                         GLYPH_WIDTH + glyph_spacing
                     );

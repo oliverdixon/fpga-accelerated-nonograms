@@ -106,6 +106,10 @@ void ipcore_execute(
     Xil_DCacheFlushRange((UINTPTR)ipcore->job.black, line_length);
     Xil_DCacheFlushRange((UINTPTR)ipcore->job.white, line_length);
 
+    /*
+     * The out_{black,white} buffers are controlled by the FPGA, so invalidate the CPU's cache of them. This is distinct
+     * the flushing the "CPU-owned" buffers.
+     */
     Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length);
     Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length);
 

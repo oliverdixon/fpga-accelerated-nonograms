@@ -10,31 +10,34 @@
 #ifndef CHUNKS_H
 #define CHUNKS_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 struct Metadata;
 
 /**
- * @brief Clue line for a single row or column; each eight-bit integer represents a single clue.
+ * @struct ClueGroup
+ * @brief Grouped clue line for a single row or column; each eight-bit integer represents a single clue.
  */
-struct ClueData
+struct ClueGroup
 {
-    uint8_t count;
-    uint8_t * blocks;
+    uint8_t count; /**< @brief Number of clues */
+    uint8_t * clues; /**< @brief Clue data */
 };
 
 /**
+ * @struct Chunk
  * @brief A single chunk received from the Nonogram server containing clue lines.
  */
 struct Chunk
 {
-    uint8_t chunk_id;
-    uint8_t num_chunks;
-    uint16_t offset;
-    uint16_t data_length;
-    struct ClueData * clue_data;
-    unsigned int clue_count;
-    unsigned int max_clue_data_count;
+    uint8_t chunk_id; /**< @brief Zero-based sequential ID of the chunk. */
+    uint8_t num_chunks; /**< @brief Total number of chunks. */
+    uint16_t offset; /**< @brief Offset of the Chunk ClueGroup first element within the total Puzzle clue data. */
+    uint16_t data_length; /**< @brief Length of the clue data. */
+    struct ClueGroup * clue_data; /**< @brief Clue groups. */
+    unsigned int clue_group_count; /**< @brief Number of clue groups. */
+    unsigned int max_clue_data_count; /**< @brief Clue count of the largest read group. */
 };
 
 struct sockaddr_in;
@@ -59,15 +62,15 @@ void chunk_request(
  * @param match_metadata Metadata of the puzzle being requested, which the received Chunk is
  * expected to match.
  * @param payload The entire bytes received from the server.
- * @return 0 on success, -1 on failure (if the payload metadata didn't match the expected metadata).
+ * @return Was the Chunk successfully parsed?
  * @pre The payload contains the <code>MSG_CHUNK_DATA</code> identifier in the first byte.
  * @note This function performs dynamic allocation to store the clues, as there is no upper bound on
  * their size or numerosity.
  */
-int chunk_parse(
-    struct Chunk * dst,
-    const struct Metadata * match_metadata,
-    const uint8_t * payload
+bool chunk_parse(
+    struct Chunk *dst,
+    const struct Metadata *match_metadata,
+    const uint8_t *payload
 );
 
 /**

@@ -76,8 +76,9 @@ void ipcore_execute(
  * @brief Attempt to wind up a completed IP core.
  * @param ipcore The target IP core management structure.
  * @param puzzle_info The information of the Puzzle being refined by the IP core.
- * @details Invalidate CPU caches of FPGA-managed DDR regions and update the management structure.
- * @return The state of the solver returned by the HLS top-level function.
+ * @details Invalidate CPU caches of FPGA-managed DDR regions and update the management structure. If the HLS core is
+ *  still running, this function is a no-op.
+ * @return The state of the solver returned by the HLS top-level function, or SOLVER_UNFINISHED.
  */
 enum SolverState ipcore_finish(
     struct IPCore *ipcore,

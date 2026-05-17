@@ -16,7 +16,7 @@ vitis_workspace/Nonogram
 NonogramHW.ip_user_files/
 
 # Ignore Doxygen
-vitis_workspace/SolverCore/docs
+vitis_workspace/**/docs
 
 # Ignore startup artefacts from Vivado
 vivado*.jou
