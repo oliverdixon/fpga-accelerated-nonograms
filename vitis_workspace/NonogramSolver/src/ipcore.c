@@ -13,8 +13,6 @@
 #include "puzzle.h"
 #include "solver.h"
 
-static struct PendingJobs pending_jobs = {.count = 0};
-
 /**
  * @brief Clear any pending interrupts on the given solver core.
  * @param solver The solver from which to clear interrupts.
@@ -129,41 +127,4 @@ enum SolverState ipcore_finish(
     }
 
     return SOLVER_UNFINISHED;
-}
-
-void ipcore_populate_job(
-    struct SearchJob *const job,
-    const struct SearchJob * const parent_job,
-    const struct Puzzle * const puzzle_info,
-    const line_t * const inherited_black,
-    const line_t * const inherited_white,
-    const bool already_propagated
-) {
-    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
-
-    job->propagated = already_propagated;
-    job->depth = parent_job->depth + (already_propagated ? 0 : 1);
-
-    memcpy(job->black, inherited_black, board_bytes);
-    memcpy(job->white, inherited_white, board_bytes);
-}
-
-bool ipcore_enqueue_job(
-    const struct SearchJob * const job
-) {
-    if (pending_jobs.count >= (MAX_SIZE * MAX_SIZE) + 1)
-        return false;
-
-    pending_jobs.jobs[pending_jobs.count++] = *job;
-    return true;
-}
-
-bool ipcore_dequeue_job(
-    struct SearchJob * const job
-) {
-    if (pending_jobs.count == 0)
-        return false;
-
-    *job = pending_jobs.jobs[--pending_jobs.count];
-    return true;
 }

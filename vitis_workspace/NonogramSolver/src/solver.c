@@ -137,8 +137,8 @@ static void explore_binary_children(
     struct SearchJob * const black_job = &cores[0].job;
     struct SearchJob * const white_job = &cores[1].job;
 
-    ipcore_populate_job(black_job, current_job, puzzle_info, propagated_black, propagated_white, false);
-    ipcore_populate_job(white_job, current_job, puzzle_info, propagated_black, propagated_white, false);
+    searchjob_populate(black_job, current_job, puzzle_info, propagated_black, propagated_white, false);
+    searchjob_populate(white_job, current_job, puzzle_info, propagated_black, propagated_white, false);
 
     const line_t mask = (line_t)1U << choice->col;
     black_job->black[choice->row] |= mask;
@@ -185,7 +185,7 @@ static enum SearchResult search_two_core_dfs(
         if (current.depth > MAX_SEARCH_DEPTH) {
             saw_unknown = true;
 
-            if (!ipcore_dequeue_job(&current))
+            if (!searchjob_dequeue(&current))
                 return SEARCH_UNKNOWN;
 
             continue;
@@ -215,7 +215,7 @@ static enum SearchResult search_two_core_dfs(
 
         // Base case: if the job derived a contradiction, dequeue it and report back up the chain.
         if (status == SOLVER_CONTRADICTION) {
-            if (!ipcore_dequeue_job(&current))
+            if (!searchjob_dequeue(&current))
                 return saw_unknown ? SEARCH_UNKNOWN : SEARCH_FAILED;
 
             continue;
@@ -241,7 +241,7 @@ static enum SearchResult search_two_core_dfs(
              * contradiction in the clue data, but this branch is useless.
              */
             saw_unknown = true;
-            if (!ipcore_dequeue_job(&current))
+            if (!searchjob_dequeue(&current))
                 return SEARCH_UNKNOWN;
 
             continue;
@@ -251,7 +251,7 @@ static enum SearchResult search_two_core_dfs(
         if ((propagated_black[choice.row] | propagated_white[choice.row]) & mask) {
             saw_unknown = true;
 
-            if (!ipcore_dequeue_job(&current))
+            if (!searchjob_dequeue(&current))
                 return SEARCH_UNKNOWN;
 
             continue;
@@ -285,14 +285,14 @@ static enum SearchResult search_two_core_dfs(
         const bool white_stuck = white_status == SOLVER_STUCK;
 
         if (black_stuck)
-            ipcore_populate_job(&black_next, &cores[0].job, puzzle_info, cores[0].out_black, cores[0].out_white, true);
+            searchjob_populate(&black_next, &cores[0].job, puzzle_info, cores[0].out_black, cores[0].out_white, true);
 
         if (white_stuck)
-            ipcore_populate_job(&white_next, &cores[1].job, puzzle_info, cores[1].out_black, cores[1].out_white, true);
+            searchjob_populate(&white_next, &cores[1].job, puzzle_info, cores[1].out_black, cores[1].out_white, true);
 
         // Continue depth-first. If both are stuck, continue with the black branch and defer white.
         if (black_stuck && white_stuck) {
-            if (!ipcore_enqueue_job(&white_next))
+            if (!searchjob_enqueue(&white_next))
                 saw_unknown = true;
 
             current = black_next;
@@ -310,7 +310,7 @@ static enum SearchResult search_two_core_dfs(
         }
 
         // Both children contradicted. Backtrack to deferred work.
-        if (!ipcore_dequeue_job(&current))
+        if (!searchjob_dequeue(&current))
             return saw_unknown ? SEARCH_UNKNOWN : SEARCH_FAILED;
     }
 }
