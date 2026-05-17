@@ -14,9 +14,18 @@
 #include "logging.h"
 #include "metadata.h"
 
+/**
+ * @brief The length, in bytes, of a Chunk request message sent on the wire.
+ * @details
+ *  <ul>
+ *      <li>Message type ID</li>
+ *      <li>Puzzle Metadata</li>
+ *      <li>Chunk ID</li>
+ *  </ul>
+ */
 #define MESSAGE_REQUEST_CHUNK_LENGTH (1 + MESSAGE_METADATA_LENGTH + 1)
 
-static uint8_t send_buf[MESSAGE_REQUEST_CHUNK_LENGTH];
+static uint8_t send_buf[MESSAGE_REQUEST_CHUNK_LENGTH]; /**< @brief The persistent buffer to prepare Chunk requests. */
 
 void chunk_request(
     const uint8_t chunk_id,

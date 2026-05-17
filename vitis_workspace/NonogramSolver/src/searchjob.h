@@ -1,3 +1,5 @@
+// clang-format Language: C
+
 /**
  * @file
  * @brief DFS search job interface

@@ -8,22 +8,30 @@
 #include <assert.h>
 #include <string.h>
 #include <xil_cache.h>
-#include <xparameters.h>
 
+#include "video.h"
 #include "chunks.h"
 #include "glyph_bitmaps.h"
 #include "puzzle.h"
-#include "video.h"
 #include "zybo_z7_hdmi/vga_modes.h"
 
-#define FRAME_STRIDE (1440 * 4)
-#define FOREGROUND_COLOUR ((uint32_t)0x00FFFFFF);
+#define FRAME_STRIDE (1440 * 4) /**< @brief Number of pixels to stride for each scanline. */
+#define FOREGROUND_COLOUR ((uint32_t)0x00FFFFFF) /**< @brief Foreground colour for drawing. */
+#define BACKGROUND_COLOUR ((uint32_t)0x00000000) /**< @brief Background colour for drawing. */
 
+/**
+ * @brief Draw the glyph corresponding to the given item at the specified position.
+ * @param state The VideoState management block.
+ * @param item The character to render in Base 36.
+ * @param left_x The leftmost position, in pixels.
+ * @param top_y The topmost position, in pixels.
+ * @note If the given character cannot be rendered, a placeholder fallback glyph is produced in its place.
+ */
 static void draw_character(
     const struct VideoState * const state,
     const char item,
-    const uint32_t x,
-    const uint32_t y
+    const uint32_t left_x,
+    const uint32_t top_y
 ) {
     const uint32_t stride = state->display_ctrl.stride / 4;
     const glyph_word_t * const glyph = glyph_data[item < GLYPH_COUNT ? item : GLYPH_COUNT - 1];
@@ -32,11 +40,19 @@ static void draw_character(
     for (unsigned int col_idx = 0; col_idx < GLYPH_WIDTH; ++col_idx) {
         const glyph_word_t bits = glyph[col_idx];
         for (unsigned int row_idx = 0; row_idx < GLYPH_HEIGHT; ++row_idx)
-            if (bits & ((glyph_word_t)1U << row_idx))
-                frame[(y + row_idx) * stride + (x + col_idx)] = FOREGROUND_COLOUR;
+            if (bits & (glyph_word_t)1U << row_idx)
+                frame[(top_y + row_idx) * stride + (left_x + col_idx)] = FOREGROUND_COLOUR;
     }
 }
 
+/**
+ * @brief Draw an unfilled rectangle of the specified size at the specified position.
+ * @param state The VideoState management block.
+ * @param left_x The leftmost position, in pixels.
+ * @param top_y The topmost position, in pixels.
+ * @param width The width of the rectangle, in pixels.
+ * @param height The height of the rectangle, in pixels.
+ */
 static void draw_rectangle(
     const struct VideoState * const state,
     const uint32_t left_x,
@@ -64,6 +80,14 @@ static void draw_rectangle(
     }
 }
 
+/**
+ * @brief Draw a filled rectangle of the specified size at the specified position.
+ * @param state The VideoState management block.
+ * @param left_x The leftmost position, in pixels.
+ * @param top_y The topmost position, in pixels.
+ * @param width The width of the rectangle, in pixels.
+ * @param height The height of the rectangle, in pixels.
+ */
 static void draw_filled_rectangle(
     const struct VideoState * const state,
     const uint32_t left_x,
@@ -81,23 +105,6 @@ static void draw_filled_rectangle(
     for (unsigned int x = left_x; x < right_x; ++x)
         for (unsigned int y = top_y * stride; y < bottom_y; y += stride)
             frame[y + x] = FOREGROUND_COLOUR;
-}
-
-static void draw_clue_element(
-    const struct VideoState * const state,
-    uint8_t clue,
-    uint32_t x_pos,
-    const uint32_t y_pos,
-    const uint32_t glyph_advance_extent
-) {
-    if (clue > GLYPH_COUNT - 1)
-        x_pos -= glyph_advance_extent / 2;
-
-    while (clue != 0) {
-        draw_character(state, clue, x_pos, y_pos);
-        clue /= GLYPH_COUNT;
-        x_pos += glyph_advance_extent;
-    }
 }
 
 bool video_initialise(
@@ -126,10 +133,8 @@ void video_draw_puzzle(
     const struct VideoState * const video_state,
     const struct Puzzle * const puzzle_info
 ) {
-    // Blank the entire frame to black.
-    memset(
-        video_state->display_ctrl.framePtr[video_state->display_ctrl.curFrame], 0x00, MAX_FRAME * 4
-    );
+    // Blank the entire frame.
+    memset(video_state->display_ctrl.framePtr[video_state->display_ctrl.curFrame], BACKGROUND_COLOUR, MAX_FRAME * 4);
 
     /*
      * Draw 50x50 rectangles for each square with a bit of padding.
@@ -138,14 +143,13 @@ void video_draw_puzzle(
      * Clues take a maximum of two digits' worth of space (since the maximum grid
      * size is 15x15).
      */
-    static const unsigned int max_digits = 2;
-    static const unsigned int box_extent = 20;      // Pixel extent of boxes in both directions
+    static const unsigned int box_extent = 20; // Pixel extent of boxes in both directions
     static const unsigned int internal_padding = 5; // Padding between boxes and clues
     static const unsigned int stride = box_extent + internal_padding; // Stride for boxes
-    static const unsigned int glyph_spacing = 2; // Spacing between glyphs in the same clue
 
-    const unsigned int external_padding = (GLYPH_WIDTH + internal_padding + glyph_spacing) *
-                                          max_digits * puzzle_info->global_max_clue_data_count;
+    // External padding, i.e. the pixel skip in both directions before the grid starts.
+    const unsigned int external_padding = (GLYPH_EXTENT + internal_padding) *
+        (puzzle_info->global_max_clue_data_count + 1);
 
     unsigned int x_pos = external_padding;
     unsigned int y_pos = external_padding;
@@ -171,12 +175,10 @@ void video_draw_puzzle(
          * as many clues as rows/columns, so we just offset the index.
          */
         const struct ClueGroup * const col_clue = &clue_data[col_clue_idx++];
-        const uint32_t start_x = x_pos + (box_extent / 2) - (GLYPH_WIDTH / 2);
+        const uint32_t start_x = x_pos + box_extent / 2 - GLYPH_WIDTH / 2;
         for (unsigned int element_idx = 0; element_idx < col_clue->count; ++element_idx)
-            draw_clue_element(
-                video_state, col_clue->clues[element_idx], start_x,
-                (element_idx + 1) * (internal_padding + GLYPH_HEIGHT), GLYPH_WIDTH + glyph_spacing
-            );
+            draw_character(video_state, col_clue->clues[element_idx], start_x, (element_idx + 1) *
+                (internal_padding + GLYPH_HEIGHT));
 
         const line_t col_mask = 1U << col_idx;
 
@@ -187,13 +189,10 @@ void video_draw_puzzle(
                  * By convention, row clues come first, so we don't have to offset the index.
                  */
                 const struct ClueGroup * const row_clue = &clue_data[row_clue_idx++];
-                const uint32_t start_y = y_pos + (box_extent / 2) - (GLYPH_HEIGHT / 2);
+                const uint32_t start_y = y_pos + box_extent / 2 - GLYPH_HEIGHT / 2;
                 for (unsigned int element_idx = 0; element_idx < row_clue->count; ++element_idx)
-                    draw_clue_element(
-                        video_state, row_clue->clues[element_idx],
-                        (element_idx + 1) * (internal_padding + GLYPH_WIDTH), start_y,
-                        GLYPH_WIDTH + glyph_spacing
-                    );
+                    draw_character(video_state, row_clue->clues[element_idx], (element_idx + 1) *
+                        (internal_padding + GLYPH_WIDTH), start_y);
             }
 
             if (read_solution_bitmap &&

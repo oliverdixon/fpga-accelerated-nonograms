@@ -1,22 +1,31 @@
+/**
+ * @file
+ * @brief LwIP network management implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ * @warning LwIP setup is a complete mess.
+ */
+
 #include <assert.h>
 #include <lwip/dhcp.h>
 #include <lwip/init.h>
 #include <lwip/sockets.h>
 #include <netif/xadapter.h>
-#include <xil_printf.h>
-#include <xparameters.h>
 
-#include "logging.h"
 #include "network.h"
+#include "logging.h"
 
-#define THREAD_STACKSIZE 1024
+#define THREAD_STACKSIZE (1024) /**< @brief Number of words for an initialisation FreeRTOS task stack. */
+static uint8_t mac_addr[] = {0x00, 0x11, 0x22, 0x33, 0x00, 0x19}; /**< @brief Our MAC for the EMBS network. */
 
-static unsigned char mac_addr[] = {0x00, 0x11, 0x22, 0x33, 0x00, 0x19};
+static struct netif server_netif; /**< @brief The persistent network interface for the Zybo ethernet. */
+lwip_thread_fn application_task_fn; /**< @brief The task to release once the network is ready. */
 
-static struct netif server_netif;
-struct netif * echo_netif;
-lwip_thread_fn application_task_fn;
-
+/**
+ * @brief Serialise the given IPv4 address with a prefix onto the global logger.
+ * @param msg The prefix
+ * @param ip The address to serialise
+ */
 static void print_ip(
     const char * msg,
     const ip_addr_t * ip
@@ -26,7 +35,12 @@ static void print_ip(
     );
 }
 
+/**
+ * @brief FreeRTOS task to initialise LwIP management structures, bring up network interfaces, and persist DHCP lookup.
+ * @param data Unused task payload.
+ */
 static void persist_dhcp_task(
+    // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
 ) {
     (void)data;
@@ -55,6 +69,8 @@ static void persist_dhcp_task(
 
     logging_puts("Start DHCP lookup...");
     dhcp_start(netif);
+
+    // ReSharper disable once CppDFAEndlessLoop
     while (1) {
         vTaskDelay(DHCP_FINE_TIMER_MSECS / portTICK_RATE_MS);
         dhcp_fine_tmr();
@@ -65,10 +81,15 @@ static void persist_dhcp_task(
         }
     }
 
+    // ReSharper disable once CppDFAUnreachableCode
     vTaskDelete(NULL);
-    return;
 }
 
+/**
+ * @brief FreeRTOS task to prepare the addresses for communication with the Nonogram server and release the given
+ *  entry-point task.
+ * @param network_state Task payload, assumed to be the NetworkState management block for the active session.
+ */
 static void startup_task(
     void * const network_state
 ) {
@@ -103,29 +124,23 @@ static void startup_task(
         }
     }
 
-    // DHCP is connected and we've created the main task.
+    // DHCP is connected, and we've created the main task.
     vTaskDelete(NULL);
 }
 
-TaskHandle_t network_initialise(
-    struct NetworkState * const network,
-    lwip_thread_fn app
+void network_initialise(
+    struct NetworkState *const network,
+    const lwip_thread_fn app
 ) {
     application_task_fn = app;
-
-    TaskHandle_t handle;
-    xTaskCreate(
-        &startup_task, "startup_task", THREAD_STACKSIZE, network, DEFAULT_THREAD_PRIO, &handle
-    );
-
-    return handle;
+    xTaskCreate(&startup_task, "startup_task", THREAD_STACKSIZE, network, DEFAULT_THREAD_PRIO, NULL);
 }
 
 int network_bind_socket(
     struct sockaddr_in * const local_addr,
     const in_port_t local_port
 ) {
-    int sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    const int sock = lwip_socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sock < 0) {
         logging_puts("socket failed");
         vTaskDelete(NULL);

@@ -17,6 +17,13 @@
 #define GLYPH_HEIGHT (14) /**< @brief The height of the glyphs, in pixels. */
 #define GLYPH_COUNT (36) /**< @brief The number of glyphs, excluding the <code>?</code> error marker. */
 
+#if GLYPH_WIDTH > GLYPH_HEIGHT
+#define GLYPH_EXTENT (GLYPH_WIDTH)
+#else
+#define GLYPH_EXTENT (GLYPH_HEIGHT)
+#endif
+/**< @brief The maximum extent of the glyph bitmap, in pixels. */
+
 /**
  * @typedef glyph_word_t
  * @brief The datatype for glyph bitmap pixel data.

@@ -10,22 +10,21 @@
 #include <string.h>
 #include <xil_cache.h>
 
-#include "../../SolverCore/src/solver_params.h"
+#include "solver.h"
 #include "chunks.h"
 #include "ipcore.h"
 #include "logging.h"
 #include "puzzle.h"
-#include "solver.h"
+#include "../../SolverCore/src/solver_params.h"
 
-#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE)
-#define IPCORE_COUNT (2)
+#define MAX_SEARCH_DEPTH (MAX_SIZE * MAX_SIZE) /**< @brief Maximum recursion depth for the dual-core DFS solver. */
+#define IPCORE_COUNT (2) /**< @brief Number of solver IP cores available on the exported HW platform. */
 
-static struct IPCore cores[IPCORE_COUNT];
+static struct IPCore cores[IPCORE_COUNT]; /**< @brief Solver IP core management blocks */
 
 /**
  * @struct CellChoice
- * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a
- * fixed point.
+ * @brief Identifier for a cell, determined by its indices, and a flag to indicate if the cell is a fixed point.
  */
 struct CellChoice
 {
@@ -34,22 +33,32 @@ struct CellChoice
     bool valid; /**< @brief Are the indices valid? */
 };
 
+static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT]
 __attribute__((
     section(".pattern_buffers"),
     aligned(64)
-)) static line_t row_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+)); /**< @brief Row patterns given session ClueData. */
 
+static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT]
 __attribute__((
     section(".pattern_buffers"),
     aligned(64)
-)) static line_t col_patterns[MAX_SIZE * MAX_PATTERN_COUNT];
+)); /**< @brief Column patterns given session ClueData. */
 
-static extent_t row_counts[MAX_SIZE];
-static extent_t col_counts[MAX_SIZE];
+static extent_t row_counts[MAX_SIZE]; /**< @brief Counts of row patterns given session ClueData. */
+static extent_t col_counts[MAX_SIZE]; /**< @brief Counts of column patterns given session ClueData. */
 
-static line_t out_black[MAX_SIZE];
-static line_t out_white[MAX_SIZE];
+static line_t out_black[MAX_SIZE]; /**< @brief Final black assignments for active Puzzle. */
+static line_t out_white[MAX_SIZE]; /**< @brief Final white assignments for active Puzzle. */
 
+/**
+ * @brief Identify the next cell without a black or white cell assignment.
+ * @param black The black cell assignments.
+ * @param white The white cell assignments.
+ * @param puzzle_extent The extent of the square Puzzle.
+ * @return The CellChoice identifying the unassigned cell.
+ * @warning When used during search, this is quite a poor heuristic. Better ones exist!
+ */
 static struct CellChoice choose_unknown(
     const line_t * const black,
     const line_t * const white,
@@ -65,8 +74,6 @@ static struct CellChoice choose_unknown(
                 choice.valid = true;
                 choice.row = row_idx;
                 choice.col = col_idx;
-
-                assert((known & col_mask) == 0);
                 return choice;
             }
         }
@@ -114,6 +121,9 @@ static enum SolverState run_core_sync(
     return state;
 }
 
+/**
+ * @brief Burn through any pending notifications on the current FreeRTOS task.
+ */
 static void drain_solver_notifications() {
     uint32_t ignored = 0;
     while (xTaskNotifyWait(0x00u, UINT32_MAX, &ignored, 0) == pdTRUE)

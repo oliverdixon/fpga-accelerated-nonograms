@@ -1,3 +1,10 @@
+/**
+ * @file
+ * @brief Puzzle result implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
 #include <xil_printf.h>
 #include <lwip/sockets.h>
@@ -8,9 +15,18 @@
 #include "puzzle.h"
 #include "../../SolverCore/src/solver_params.h"
 
+/**
+ * @brief The length, in bytes, of a verification request message sent on the wire.
+ * @details
+ *  <ul>
+ *      <li>Message type ID</li>
+ *      <li>Puzzle Metadata</li>
+ *      <li>Solution bitmap (packed into bits on logical lines)</li>
+ *  </ul>
+ */
 #define MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH (1 + MESSAGE_METADATA_LENGTH + ((MAX_SIZE + 1) / 8) * MAX_SIZE)
 
-static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH];
+static uint8_t send_buf[MESSAGE_SUBMIT_SOLUTION_MAX_LENGTH]; /**< @brief The persistent buffer to prepare requests. */
 
 bool result_parse(
     struct Result *const result,
@@ -39,14 +55,14 @@ bool result_parse(
     return true;
 }
 
-int result_send(
-    const struct Puzzle * const puzzle,
+void result_send(
+    const struct Puzzle *const puzzle,
     const int sock,
-    const struct sockaddr_in * const dst_addr
+    const struct sockaddr_in *const dst_addr
 ) {
-    if (puzzle->solved_state == SEARCH_NOT_RUN)
+    if (puzzle->solved_state != SEARCH_SOLVED)
         // What's the point in submitting a solution if we don't have one?
-        return -1;
+        return;
 
     uint8_t * buffer_head = send_buf;
 
@@ -80,8 +96,6 @@ int result_send(
         sock, send_buf, buffer_head - send_buf, 0, (struct sockaddr *)dst_addr,
         sizeof(struct sockaddr_in)
     );
-
-    return 0;
 }
 
 void result_print(

@@ -10,11 +10,12 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "zybo_z7_hdmi/display_ctrl.h"
 
-#define MAX_FRAME (1440 * 900)
+#define MAX_FRAME (1440 * 900) /**< @brief Maximum frame size, in pixels. */
 
 /**
  * @struct VideoState
@@ -22,9 +23,9 @@
  */
 struct VideoState
 {
-    DisplayCtrl display_ctrl;
-    uint32_t frame_buffers[DISPLAY_NUM_FRAMES][MAX_FRAME] __attribute__((aligned(0x20)));
-    void * frame_refs[DISPLAY_NUM_FRAMES];
+    DisplayCtrl display_ctrl; /**< @brief Management block for the HDMI. */
+    uint32_t frame_buffers[DISPLAY_NUM_FRAMES][MAX_FRAME] __attribute__((aligned(0x20))); /**< @brief Frame data. */
+    void * frame_refs[DISPLAY_NUM_FRAMES]; /**< @brief References to each frame buffer. */
 };
 
 struct Chunk;

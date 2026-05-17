@@ -13,8 +13,8 @@
 
 #include "logging.h"
 
-#define LOG_LINE_LENGTH (64)
-#define LOG_QUEUE_SIZE (16)
+#define LOG_LINE_LENGTH (64) /**< @brief Maximum line length in bytes of any (formatted or unformatted) log message. */
+#define LOG_QUEUE_SIZE (16) /**< @brief Number of buffered log messages. */
 
 /**
  * @struct LogMessage
@@ -26,7 +26,7 @@ struct LogMessage
     char text[LOG_LINE_LENGTH]; /**< @brief The text of the message to log. */
 };
 
-static QueueHandle_t logging_queue;
+static QueueHandle_t logging_queue; /**< @brief The FreeRTOS queue for log messages. */
 
 /**
  * @brief FreeRTOS task to receive log messages from the global queue and produce them on the serial line.

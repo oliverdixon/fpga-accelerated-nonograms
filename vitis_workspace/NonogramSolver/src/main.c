@@ -353,10 +353,8 @@ static void submit_protocol_task(
             // Send the puzzle to the server for verification.
             xSemaphoreTake(network_state.mutex, portMAX_DELAY);
 
-            if (puzzle_info->solved_state == SEARCH_SOLVED &&
-                    result_send(puzzle_info, network_state.sock, &network_state.dst_addr) == 0 &&
-                    udp_receive_message(network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info->metadata))
-                // Only bother to send and report the results if we have a good-looking solution.
+            result_send(puzzle_info, network_state.sock, &network_state.dst_addr);
+            if (udp_receive_message(network_state.sock, &src_addr, &result, MSG_RESULT, &puzzle_info->metadata))
                 result_print(&result);
 
             xSemaphoreGive(network_state.mutex);

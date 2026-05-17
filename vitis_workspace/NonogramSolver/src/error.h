@@ -12,7 +12,7 @@
 
 #include "metadata.h"
 
-#define ERROR_MAX_LENGTH (200)
+#define ERROR_MAX_LENGTH (200) /**< @brief Protocol-defined maximum length of the error string, in bytes. */
 
 /**
  * @struct ServerError

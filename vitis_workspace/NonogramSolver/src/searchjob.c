@@ -13,16 +13,15 @@
 #include "puzzle.h"
 
 /**
- * @struct PendingJobs
  * @brief Deferred work queue for the backtracking DFS, bounded above by the maximum search depth.
  */
-struct PendingJobs
+static struct
 {
     struct SearchJob jobs[MAX_SIZE * MAX_SIZE + 1]; /**< @brief Deferred work */
     extent_t count; /**< @brief Number of deferred jobs */
+} pending_jobs = {
+    .count = 0
 };
-
-static struct PendingJobs pending_jobs = {.count = 0};
 
 void searchjob_populate(
     struct SearchJob *const job,
