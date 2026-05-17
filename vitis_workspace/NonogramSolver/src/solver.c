@@ -438,17 +438,17 @@ enum SearchResult solver_solve(
         &puzzle_info->chunk.clue_data[puzzle_info->width], puzzle_info->height
     );
 
-    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns));
-    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts));
-    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns));
-    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts));
+    Xil_DCacheFlushRange((UINTPTR)row_patterns, sizeof(row_patterns)); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheFlushRange((UINTPTR)row_counts, sizeof(row_counts)); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheFlushRange((UINTPTR)col_patterns, sizeof(col_patterns)); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheFlushRange((UINTPTR)col_counts, sizeof(col_counts)); // NOLINT(*-narrowing-conversions)
 
     // Attempt to solve the Nonogram with two-core DFS.
 
     const enum SearchResult result = search_two_core_dfs(puzzle_info);
     logging_printf("Search completed with status: %d", result);
 
-    // Populate the solution bitmap (set bits indicate white cells).
+    // Populate the solution bitmap (set bits indicate black/filled cells).
 
     xSemaphoreTake(puzzle_info->solution_semaphore, portMAX_DELAY);
 

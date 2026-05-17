@@ -155,7 +155,7 @@ void video_draw_puzzle(
 
     const struct ClueGroup * const clue_data = puzzle_info->chunk.clue_data;
 
-    const bool read_solution_bitmap = puzzle_info->solved_state != SEARCH_NOT_RUN;
+    const bool read_solution_bitmap = puzzle_info->solved_state == SEARCH_SOLVED;
 
     /*
      * If the puzzle is solved, we want access to the solution bitmap so it can be

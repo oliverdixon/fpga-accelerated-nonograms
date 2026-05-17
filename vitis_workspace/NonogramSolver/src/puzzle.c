@@ -1,23 +1,30 @@
+/**
+ * @file
+ * @brief Puzzle implementation
+ * @date 2026-05-17
+ * @author Oliver Dixon <od641@york.ac.uk>
+ */
+
 #include <assert.h>
-#include <lwip/sockets.h>
 #include <string.h>
 #include <xil_printf.h>
+#include <lwip/sockets.h>
 
+#include "puzzle.h"
 #include "chunks.h"
 #include "logging.h"
-#include "puzzle.h"
-#include "solver.h"
 
-/*
- * Message ID (1 byte)
- * Metadata
+/**
+ * @brief The length, in bytes, of a Puzzle request message sent on the wire.
+ * @details
+ *  <ul>
+ *      <li>Message type ID</li>
+ *      <li>Puzzle Metadata</li>
+ *  </ul>
  */
 #define MESSAGE_REQUEST_INFO_LENGTH (1 + MESSAGE_METADATA_LENGTH)
 
-static uint8_t send_buf[MESSAGE_REQUEST_INFO_LENGTH];
-static line_t bitmap_buffer[MAX_SIZE];
-static SemaphoreHandle_t bitmap_mutex = NULL;
-static StaticSemaphore_t bitmap_mutex_state;
+static uint8_t send_buf[MESSAGE_REQUEST_INFO_LENGTH]; /**< @brief The persistent buffer to prepare Puzzle requests. */
 
 void puzzle_request(
     const struct Metadata * const metadata,
@@ -39,51 +46,49 @@ void puzzle_request(
 }
 
 bool puzzle_parse(
-    struct Puzzle *const dst,
+    struct Puzzle *const puzzle,
     const uint8_t *payload
 ) {
     assert(*payload == MSG_PUZZLE_INFO);
     payload += sizeof(uint8_t);
 
-    payload = metadata_parse(&dst->metadata, payload);
+    payload = metadata_parse(&puzzle->metadata, payload);
 
-    if (!dst->metadata.valid) {
+    if (!puzzle->metadata.valid) {
         logging_puts("puzzle_parse: quitting early due to bad metadata.");
         return false;
     }
 
-    dst->width = *payload++;
-    dst->height = *payload++;
-    dst->num_chunks = *payload++;
+    puzzle->width = *payload++;
+    puzzle->height = *payload++;
+    puzzle->num_chunks = *payload++;
 
-    dst->clue_bytes = *payload++ << 8;
-    dst->clue_bytes |= *payload;
+    puzzle->clue_bytes = *payload++ << 8;
+    puzzle->clue_bytes |= *payload;
 
-    dst->global_max_clue_data_count = 0;
-    dst->solution_bitmap = bitmap_buffer;
+    puzzle->global_max_clue_data_count = 0;
+    puzzle->solved_state = SEARCH_NOT_RUN;
 
-    if (bitmap_mutex == NULL)
-        bitmap_mutex = xSemaphoreCreateMutexStatic(&bitmap_mutex_state);
+    if ((puzzle->solution_semaphore = xSemaphoreCreateMutex()) == NULL)
+        return false;
 
-    dst->solution_semaphore = bitmap_mutex;
-    dst->solution_bitmap = bitmap_buffer;
-    dst->solved_state = SEARCH_NOT_RUN;
+    memset(puzzle->solution_bitmap, 0, sizeof(line_t) * puzzle->width);
 
     return true;
 }
 
 void puzzle_print(
-    const struct Puzzle * const puzzle_info
+    const struct Puzzle * const puzzle
 ) {
     print("\r\n");
 
-    if (puzzle_info->metadata.valid) {
+    if (puzzle->metadata.valid) {
         print("Puzzle:\r\n\t");
-        metadata_print(&puzzle_info->metadata);
+        metadata_print(&puzzle->metadata);
         xil_printf(
             "\tWidth: %d\r\n\tHeight: %d\r\n\tChunk Count: %d\r\n\tClue Bytes: %d\r\n",
-            puzzle_info->width, puzzle_info->height, puzzle_info->num_chunks,
-            puzzle_info->clue_bytes
+            puzzle->width, puzzle->height, puzzle->num_chunks,
+            puzzle->clue_bytes
         );
     } else
         print("Puzzle: INVALID\r\n");
@@ -94,7 +99,16 @@ void puzzle_print(
 void puzzle_free(
     struct Puzzle * const puzzle
 ) {
-    memset(bitmap_buffer, 0, sizeof(line_t) * MAX_SIZE);
+    if (puzzle->solution_semaphore != NULL) {
+        /*
+         * We need to make sure the semaphore is free, but vSemaphoreDelete indicates that it shouldn't be held by any
+         * task.
+         */
+        xSemaphoreTake(puzzle->solution_semaphore, portMAX_DELAY);
+        xSemaphoreGive(puzzle->solution_semaphore);
+        vSemaphoreDelete(puzzle->solution_semaphore);
+    }
+
     chunk_free(&puzzle->chunk);
     free(puzzle);
 }

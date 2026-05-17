@@ -18,25 +18,66 @@
 #include "solver.h"
 #include "video.h"
 
-#define THREAD_STACKSIZE (1024)
+#define THREAD_STACKSIZE (1024) /**< @brief Number of words for a standard FreeRTOS task stack. */
 
-static void accept_input_task(void *);
-static void request_protocol_task(void *);
-static void draw_puzzles_task(void *);
-static void solve_puzzles_task(void *);
-static void submit_protocol_task(void *);
+/**
+ * @brief FreeRTOS task to accept Puzzle specifications on the serial line and enqueue them on the requests queue.
+ * @details This task does not participate in ownership semantics of Puzzle objects. It encodes a Metadata object to
+ *  partially characterise a Puzzle and enqueues a copy of the (tiny) object onto the requests queue.
+ * @param data Unused task payload.
+ */
+static void accept_input_task(void * data);
 
-static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE];
-static StaticTask_t solve_puzzles_pcb;
-static uint8_t recv_buffer[1024];
-struct NetworkState network_state;
+/**
+ * @brief FreeRTOS task to receive Metadata specification requests from the requests queue, synchronously send and
+ *  receive a full Puzzle specification from the server.
+ * @details This task dynamically allocates memory for a single-chunk Puzzle specification and populates with clue data
+ *  i.a.w. the Metadata request which arrived on the requests queue. The Puzzle is then broadcast on the graphics queue
+ *  and challenge queues for visualisation and solving, respectively. Following the multicast, this task relinquishes
+ *  ownership of the Puzzle specification.
+ * @param data Unused task payload.
+ */
+static void request_protocol_task(void * data);
 
-QueueHandle_t requests_queue;  // Metadata for puzzle procurement.
-QueueHandle_t graphics_queue;  // PUZZLE_INFO messages for drawing.
-QueueHandle_t challenge_queue; // PUZZLE_INFO messages for solving.
-QueueHandle_t solution_queue;  // PUZZLE_INFO messages for verifying.
+/**
+ * @brief FreeRTOS task to receive Puzzle specifications on the graphics queue and visualise them on the HDMI.
+ * @details This task receives observing references to the Puzzle management structure on the graphics queue and
+ *  temporarily raises its own relative priority to render their grid representation (and clue data and filled cells, if
+ *  applicable) on the frame buffer.
+ * @param data Unused task payload.
+ */
+static void draw_puzzles_task(void * data);
 
-TaskHandle_t accept_input_task_handle;
+/**
+ * @brief FreeRTOS task to receive solved Puzzle specifications on the challenge queue and attempt to solve them.
+ * @details This task receives an owning reference to an unsolved Puzzle specification on the challenge queue and
+ *  attempts to solve it. Following that, it sends an observing reference to the graphics queue to visualise the
+ *  filled cells, and passes the owning reference to the solution queue to wrap up the process.
+ * @param data Unused task payload.
+ */
+static void solve_puzzles_task(void * data);
+
+/**
+ * @brief FreeRTOS task to receive solved Puzzle specifications from the solution queue and wind up the process.
+ * @details This task performs the final stages of the solve procedure. In particular, it synchronously sends and
+ *  receives the solution to the server for verification and timing, and takes full ownership of the Puzzle management
+ *  structure to free any dynamically allocated memory. Finally, it signals to @ref accept_input_task to accept another
+ *  Metadata specification.
+ * @param data Unused task payload.
+ */
+static void submit_protocol_task(void * data);
+
+static StackType_t solve_puzzles_stack[16 * THREAD_STACKSIZE]; /**< @brief Monster stack for the DFS solver. */
+static StaticTask_t solve_puzzles_pcb; /**< @brief Statically allocated control block for the solver task. */
+static uint8_t recv_buffer[1024]; /**< @brief Persistent buffer for receiving UDP/IP messages from the server. */
+struct NetworkState network_state; /**< @brief Management block for the LwIP network state. */
+
+QueueHandle_t requests_queue; /**< @brief Metadata PODs for Puzzle procurement. */
+QueueHandle_t graphics_queue; /**< @brief Non-owning Puzzle references for visualisation. */
+QueueHandle_t challenge_queue; /**< @brief Owning Puzzle references for solving. */
+QueueHandle_t solution_queue;  /**< @brief Owning Puzzle references for submitting and cleaning up. */
+
+TaskHandle_t accept_input_task_handle; /**< @brief Metadata query task handle, to be notified when ready to go. */
 
 /**
  * @brief Entry point to initialise global structures and start the FreeRTOS scheduler.
@@ -57,12 +98,6 @@ int main()
     return 0;
 }
 
-/**
- * @brief FreeRTOS task to accept Puzzle specifications on the serial line and enqueue them on the requests queue.
- * @details This task does not participate in ownership semantics of Puzzle objects. It encodes a Metadata object to
- *  partially characterise a Puzzle and enqueues a copy of the (tiny) object onto the requests queue.
- * @param data Unused task payload.
- */
 static void accept_input_task(
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
@@ -100,13 +135,6 @@ static void accept_input_task(
     vTaskSuspend(NULL);
 }
 
-/**
- * @brief FreeRTOS task to receive Puzzle specifications on the graphics queue and visualise them on the HDMI.
- * @details This task receives observing references to the Puzzle management structure on the graphics queue and
- *  temporarily raises its own relative priority to render their grid representation (and clue data and filled cells, if
- *  applicable) on the frame buffer.
- * @param data Unused task payload.
- */
 static void draw_puzzles_task(
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
@@ -135,13 +163,6 @@ static void draw_puzzles_task(
     vTaskDelete(NULL);
 }
 
-/**
- * @brief FreeRTOS task to receive solved Puzzle specifications on the challenge queue and attempt to solve them.
- * @details This task receives an owning reference to an unsolved Puzzle specification on the challenge queue and
- *  attempts to solve it. Following that, it sends an observing reference to the graphics queue to visualise the
- *  filled cells, and passes the owning reference to the solution queue to wrap up the process.
- * @param data Unused task payload.
- */
 static void solve_puzzles_task(
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
@@ -157,7 +178,7 @@ static void solve_puzzles_task(
     // ReSharper disable once CppDFAEndlessLoop
     while (1)
         if (xQueueReceive(challenge_queue, &puzzle_info, portMAX_DELAY) == pdTRUE) {
-            if (solver_solve(puzzle_info))
+            if (solver_solve(puzzle_info) == SEARCH_SOLVED)
                 xQueueSend(graphics_queue, &puzzle_info, portMAX_DELAY);
 
             xQueueSend(solution_queue, &puzzle_info, portMAX_DELAY);
@@ -237,7 +258,7 @@ static struct Puzzle * build_puzzle_data(
 ) {
     static struct sockaddr_in src_addr;
 
-    struct Puzzle * const puzzle_info = malloc(sizeof(struct Puzzle));
+    struct Puzzle * const puzzle_info = calloc(1, sizeof(struct Puzzle));
     if (puzzle_info == NULL)
         return NULL;
 
@@ -276,15 +297,6 @@ static struct Puzzle * build_puzzle_data(
     return puzzle_info;
 }
 
-/**
- * @brief FreeRTOS task to receive Metadata specification requests from the requests queue, synchronously send and
- *  receive a full Puzzle specification from the server.
- * @details This task dynamically allocates memory for a single-chunk Puzzle specification and populates with clue data
- *  i.a.w. the Metadata request which arrived on the requests queue. The Puzzle is then broadcast on the graphics queue
- *  and challenge queues for visualisation and solving, respectively. Following the multicast, this task relinquishes
- *  ownership of the Puzzle specification.
- * @param data Unused task payload.
- */
 static void request_protocol_task(
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
@@ -325,14 +337,6 @@ static void request_protocol_task(
     vTaskDelete(NULL);
 }
 
-/**
- * @brief FreeRTOS task to receive solved Puzzle specifications from the solution queue and wind up the process.
- * @details This task performs the final stages of the solve procedure. In particular, it synchronously sends and
- *  receives the solution to the server for verification and timing, and takes full ownership of the Puzzle management
- *  structure to free any dynamically allocated memory. Finally, it signals to @ref accept_input_task to accept another
- *  Metadata specification.
- * @param data Unused task payload.
- */
 static void submit_protocol_task(
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     void * const data
@@ -357,16 +361,7 @@ static void submit_protocol_task(
 
             xSemaphoreGive(network_state.mutex);
             result.status = RESULT_ERROR;
-
-            /*
-             * This puzzle is done (and the serial line is clear), so query for the next. The semaphore is common, so
-             * we take its handle and make sure to return it for the next puzzle.
-             */
-            const SemaphoreHandle_t puzzle_semaphore = puzzle_info->solution_semaphore;
-            xSemaphoreTake(puzzle_semaphore, portMAX_DELAY);
             puzzle_free(puzzle_info);
-            xSemaphoreGive(puzzle_semaphore);
-
             xTaskNotify(accept_input_task_handle, 0, eNoAction);
         }
 

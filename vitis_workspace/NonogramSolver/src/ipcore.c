@@ -103,15 +103,11 @@ void ipcore_execute(
 
     const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
 
-    Xil_DCacheFlushRange((UINTPTR)ipcore->job.black, line_length);
-    Xil_DCacheFlushRange((UINTPTR)ipcore->job.white, line_length);
+    Xil_DCacheFlushRange((UINTPTR)ipcore->job.black, line_length); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheFlushRange((UINTPTR)ipcore->job.white, line_length); // NOLINT(*-narrowing-conversions)
 
-    /*
-     * The out_{black,white} buffers are controlled by the FPGA, so invalidate the CPU's cache of them. This is distinct
-     * the flushing the "CPU-owned" buffers.
-     */
-    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length);
-    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length);
+    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length); // NOLINT(*-narrowing-conversions)
+    Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length); // NOLINT(*-narrowing-conversions)
 
     ipcore->busy = true;
     XSolver_toplevel_Start(&ipcore->solver);
@@ -122,11 +118,15 @@ enum SolverState ipcore_finish(
     const struct Puzzle *const puzzle_info
 ) {
     if (XSolver_toplevel_IsDone(&ipcore->solver)) {
+        /*
+         * The out_{black,white} buffers are controlled by the FPGA, so invalidate the CPU's cache of them. This is
+         * distinct the flushing the "CPU-owned" buffers.
+         */
         const unsigned int line_length = sizeof(line_t) * puzzle_info->width;
-        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length);
-        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length);
-        ipcore->busy = false;
+        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_black, line_length); // NOLINT(*-narrowing-conversions)
+        Xil_DCacheInvalidateRange((UINTPTR)ipcore->out_white, line_length); // NOLINT(*-narrowing-conversions)
 
+        ipcore->busy = false;
         return (enum SolverState)XSolver_toplevel_Get_return(&ipcore->solver);
     }
 

@@ -67,7 +67,7 @@ int result_send(
             uint8_t packed = 0;
 
             for (uint8_t bit = 0; bit < 8 && col_idx + bit < puzzle->width; ++bit)
-                if (row & (1U << (col_idx + bit)))
+                if (row & 1U << (col_idx + bit))
                     packed |= (uint8_t)(1U << (7U - bit));
 
             *buffer_head++ = packed;
@@ -96,7 +96,7 @@ void result_print(
     case RESULT_CORRECT:
         print("Server says: Correct!\r\n");
         break;
-    case RESULT_ERROR:
+    default:
         print("Server says: Error!\r\n");
         break;
     }

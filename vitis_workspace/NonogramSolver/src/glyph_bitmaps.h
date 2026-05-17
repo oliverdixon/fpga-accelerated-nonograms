@@ -13,14 +13,26 @@
 
 #include <stdint.h>
 
-#define GLYPH_WIDTH (10)
-#define GLYPH_HEIGHT (14)
-#define GLYPH_COUNT (36)
+#define GLYPH_WIDTH (10) /**< @brief The width of the glyphs, in pixels. */
+#define GLYPH_HEIGHT (14) /**< @brief The height of the glyphs, in pixels. */
+#define GLYPH_COUNT (36) /**< @brief The number of glyphs, excluding the <code>?</code> error marker. */
 
+/**
+ * @typedef glyph_word_t
+ * @brief The datatype for glyph bitmap pixel data.
+ */
 typedef uint16_t glyph_word_t;
 
+/**
+ * @brief The bijection between the glyph characters and their corresponding bitmaps, excluding the <code>?</code> error
+ *  marker.
+ */
 static const char glyph_chars[GLYPH_COUNT + 1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+/**
+ * @brief Glyph pixel bitmap data for Arabic numerals and uppercase Latin letters, plus a terminating <code>?</code>
+ *  symbol to use for unknown characters.
+ */
 static const glyph_word_t glyph_data[GLYPH_COUNT + 1][GLYPH_WIDTH] = {
     /* 0 */ { 0x03F0, 0x0FFC, 0x1C0E, 0x3003, 0x30C3, 0x30C3, 0x3807, 0x1FFE, 0x07F8, 0x0000 },
     /* 1 */ { 0x0000, 0x3006, 0x3006, 0x3003, 0x3FFF, 0x3FFF, 0x3000, 0x3000, 0x3000, 0x0000 },
