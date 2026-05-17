@@ -33,9 +33,9 @@ static struct IPCore cores[IPCORE_COUNT];
  */
 struct CellChoice
 {
-    extent_t row;
-    extent_t col;
-    bool valid;
+    extent_t row; /**< @brief The row index between 0 and <code>MAX_SIZE - 1</code>. */
+    extent_t col; /**< @brief The column index between 0 and <code>MAX_SIZE - 1</code>. */
+    bool valid; /**< @brief Are the indices valid? */
 };
 
 __attribute__((
@@ -86,6 +86,7 @@ static struct CellChoice choose_unknown(
  * @param in_black The input black cell assignment lines.
  * @param in_white The input white cell assignment lines.
  * @return The return code from the HLS solver.
+ * @post The IP core was released following the job.
  */
 static enum SolverState run_core_sync(
     struct IPCore * const ipcore,
@@ -95,59 +96,26 @@ static enum SolverState run_core_sync(
 ) {
     const size_t board_bytes = puzzle_info->width * sizeof(line_t);
 
-    memcpy(ipcore->in_black, in_black, board_bytes);
-    memcpy(ipcore->in_white, in_white, board_bytes);
+    memcpy(ipcore->job.black, in_black, board_bytes);
+    memcpy(ipcore->job.white, in_white, board_bytes);
 
     ipcore_execute(ipcore, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
 
+    // Wait until we receive (and verify) a notification signalling the completion of the IP core.
+    enum SolverState state = SOLVER_UNFINISHED;
     uint32_t notify_bits = 0;
-    xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
 
-    // We shouldn't be receiving any notifications that don't pertain to our core.
-    assert(ipcore->notify_bits & notify_bits);
-    ipcore_finish(ipcore, puzzle_info);
+    while (state == SOLVER_UNFINISHED) {
+        xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
 
-    // Similarly, the IP core should be cleaned up and ready for re-use.
+        if ((notify_bits & ipcore->notify_bits) == 0)
+            continue;
+
+        state = ipcore_finish(ipcore, puzzle_info);
+    }
+
     assert(!ipcore->busy);
-    assert(ipcore->return_code != SOLVER_UNFINISHED);
-
-    return ipcore->return_code;
-}
-
-/**
- * @brief Execute a job asynchronously on a single core.
- * @param ipcore The IP core to execute.
- * @param puzzle_info The Puzzle to solve.
- * @param job The job to assign to the IP core.
- */
-static void run_core_async(
-    struct IPCore * const ipcore,
-    const struct Puzzle * const puzzle_info,
-    const struct SearchJob * const job
-) {
-    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
-
-    ipcore->job = *job;
-
-    memcpy(ipcore->in_black, job->black, board_bytes);
-    memcpy(ipcore->in_white, job->white, board_bytes);
-
-    ipcore_execute(ipcore, puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
-    ipcore->busy = true;
-}
-
-static void make_propagated_job_from_core(
-    struct SearchJob * const job,
-    const struct IPCore * const core,
-    const struct Puzzle * const puzzle_info
-) {
-    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
-
-    memcpy(job->black, core->out_black, board_bytes);
-    memcpy(job->white, core->out_white, board_bytes);
-
-    job->depth = core->job.depth;
-    job->propagated = true;
+    return state;
 }
 
 static void drain_solver_notifications() {
@@ -165,45 +133,33 @@ static void explore_binary_children(
     enum SolverState * const black_status,
     enum SolverState * const white_status
 ) {
-    struct SearchJob black_child = {.propagated = false, .depth = current_job->depth + 1};
+    // By convention, explore the black branch on Core 0, and the white branch on Core 1.
+    struct SearchJob * const black_job = &cores[0].job;
+    struct SearchJob * const white_job = &cores[1].job;
 
-    struct SearchJob white_child = {.propagated = false, .depth = current_job->depth + 1};
-
-    const size_t board_bytes = puzzle_info->width * sizeof(line_t);
-    memcpy(black_child.black, propagated_black, board_bytes);
-    memcpy(black_child.white, propagated_white, board_bytes);
-    memcpy(white_child.black, propagated_black, board_bytes);
-    memcpy(white_child.white, propagated_white, board_bytes);
+    ipcore_populate_job(black_job, current_job, puzzle_info, propagated_black, propagated_white, false);
+    ipcore_populate_job(white_job, current_job, puzzle_info, propagated_black, propagated_white, false);
 
     const line_t mask = (line_t)1U << choice->col;
-    black_child.black[choice->row] |= mask;
-    white_child.white[choice->row] |= mask;
+    black_job->black[choice->row] |= mask;
+    white_job->white[choice->row] |= mask;
 
     *black_status = SOLVER_UNFINISHED;
     *white_status = SOLVER_UNFINISHED;
 
     drain_solver_notifications();
-
-    // By convention, explore the black branch on Core 0, and the white branch on Core 1.
-    run_core_async(&cores[0], puzzle_info, &black_child);
-
-    run_core_async(&cores[1], puzzle_info, &white_child);
+    ipcore_execute(&cores[0], puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
+    ipcore_execute(&cores[1], puzzle_info, row_patterns, row_counts, col_patterns, col_counts);
 
     while (*black_status == SOLVER_UNFINISHED || *white_status == SOLVER_UNFINISHED) {
         uint32_t notify_bits = 0;
         xTaskNotifyWait(0x00, UINT32_MAX, &notify_bits, portMAX_DELAY);
 
-        if (notify_bits & cores[0].notify_bits) {
-            ipcore_finish(&cores[0], puzzle_info);
-            assert(!cores[0].busy && cores[0].return_code != SOLVER_UNFINISHED);
-            *black_status = cores[0].return_code;
-        }
+        if (*black_status == SOLVER_UNFINISHED && notify_bits & cores[0].notify_bits)
+            *black_status = ipcore_finish(&cores[0], puzzle_info);
 
-        if (notify_bits & cores[1].notify_bits) {
-            ipcore_finish(&cores[1], puzzle_info);
-            assert(!cores[1].busy && cores[1].return_code != SOLVER_UNFINISHED);
-            *white_status = cores[1].return_code;
-        }
+        if (*white_status == SOLVER_UNFINISHED && notify_bits & cores[1].notify_bits)
+            *white_status = ipcore_finish(&cores[1], puzzle_info);
     }
 }
 
@@ -329,10 +285,10 @@ static enum SearchResult search_two_core_dfs(
         const bool white_stuck = white_status == SOLVER_STUCK;
 
         if (black_stuck)
-            make_propagated_job_from_core(&black_next, &cores[0], puzzle_info);
+            ipcore_populate_job(&black_next, &cores[0].job, puzzle_info, cores[0].out_black, cores[0].out_white, true);
 
         if (white_stuck)
-            make_propagated_job_from_core(&white_next, &cores[1], puzzle_info);
+            ipcore_populate_job(&white_next, &cores[1].job, puzzle_info, cores[1].out_black, cores[1].out_white, true);
 
         // Continue depth-first. If both are stuck, continue with the black branch and defer white.
         if (black_stuck && white_stuck) {

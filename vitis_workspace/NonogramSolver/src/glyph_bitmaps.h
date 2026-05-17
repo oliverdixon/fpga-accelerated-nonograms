@@ -13,13 +13,13 @@
 
 #include <stdint.h>
 
-#define GLYPH_WIDTH 10
-#define GLYPH_HEIGHT 14
-#define GLYPH_COUNT 36
+#define GLYPH_WIDTH (10)
+#define GLYPH_HEIGHT (14)
+#define GLYPH_COUNT (36)
 
 typedef uint16_t glyph_word_t;
 
-static const char glyph_chars[GLYPH_COUNT] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char glyph_chars[GLYPH_COUNT + 1] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 static const glyph_word_t glyph_data[GLYPH_COUNT + 1][GLYPH_WIDTH] = {
     /* 0 */ { 0x03F0, 0x0FFC, 0x1C0E, 0x3003, 0x30C3, 0x30C3, 0x3807, 0x1FFE, 0x07F8, 0x0000 },
