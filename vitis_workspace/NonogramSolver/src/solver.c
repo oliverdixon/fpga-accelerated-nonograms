@@ -465,18 +465,13 @@ static extent_t generate_pattern_induction(
  *      function delegates to <code>generate_pattern_induction()</code> to recursively place each clue block in all
  *      legal positions.
  *  </p>
- * @pre dst != NULL
- * @pre block != NULL
  */
 static extent_t generate_pattern(
     line_t dst[MAX_PATTERN_COUNT],
     const extent_t puzzle_size,
     const struct ClueGroup * const block
 ) {
-    assert(dst != NULL);
-    assert(block != NULL);
-
-    if (block->count == 0) {
+    if (block == NULL || block->count == 0) {
         dst[0] = 0;
         return 1;
     }
