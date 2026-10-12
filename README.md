@@ -79,6 +79,10 @@ assignments are reduced on the ARM and DFS continues as usual.
 ![A screenshot of a solved 20x20 Nonogram](https://github.com/oliverdixon/embs-assessment/blob/master/images/regular_22x22.jpg?raw=true)
 
 ## Open Day Demos
+
+### On display in the Hardware Lab
 ![On display in the Hardware Lab!](https://github.com/oliverdixon/embs-assessment/blob/master/images/hw_lab_demo.jpg?raw=true)
+
+### On display in the Pod
 ![On display in the Pod!](https://github.com/oliverdixon/embs-assessment/blob/master/images/pod_demo.jpg?raw=true)
 
